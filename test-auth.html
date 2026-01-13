@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת אימות</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>בדיקת אימות - מייד עד</h1>
+    
+    <div class="form-group">
+        <label>אימייל:</label>
+        <input type="email" id="email" placeholder="test@example.com">
+    </div>
+    
+    <div class="form-group">
+        <label>סיסמה:</label>
+        <input type="password" id="password" placeholder="סיסמה">
+    </div>
+    
+    <button onclick="testRegister()">הרשמה</button>
+    <button onclick="testLogin()">התחברות</button>
+    <button onclick="clearResult()">נקה</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        
+        async function testRegister() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            console.log('Testing registration:', { email, password: '***' });
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', response.status, data);
+                
+                if (response.ok) {
+                    showResult('success', `✅ הרשמה הצליחה!<br>משתמש: ${data.data.user.email}<br>יש טוקן: ${!!data.data.accessToken}`);
+                } else {
+                    showResult('error', `❌ שגיאה בהרשמה: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showResult('error', `❌ שגיאת רשת: ${error.message}`);
+            }
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            console.log('Testing login:', { email, password: '***' });
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', response.status, data);
+                
+                if (response.ok) {
+                    showResult('success', `✅ התחברות הצליחה!<br>משתמש: ${data.data.user.email}<br>שם: ${data.data.user.name || 'לא הוגדר'}`);
+                } else {
+                    showResult('error', `❌ שגיאה בהתחברות: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showResult('error', `❌ שגיאת רשת: ${error.message}`);
+            }
+        }
+        
+        function showResult(type, message) {
+            const result = document.getElementById('result');
+            result.className = type;
+            result.innerHTML = message;
+        }
+        
+        function clearResult() {
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('result').className = '';
+        }
+    </script>
+</body>
+</html>

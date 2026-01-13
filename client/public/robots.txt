@@ -1,0 +1,13 @@
+# Sitemap for SEO
+User-agent: *
+Allow: /
+
+Sitemap: https://meyadleyad.com/sitemap.xml
+
+# Disallow admin pages
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /messages/
+
+# Crawl delay
+Crawl-delay: 10
