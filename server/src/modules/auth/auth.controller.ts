@@ -16,6 +16,18 @@ export class AuthController {
     }
   }
 
+  async registerServiceProvider(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await authService.registerServiceProvider(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;

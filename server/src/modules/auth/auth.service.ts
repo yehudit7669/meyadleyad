@@ -94,6 +94,114 @@ export class AuthService {
     };
   }
 
+  async registerServiceProvider(data: {
+    serviceProviderType: 'BROKER' | 'LAWYER' | 'APPRAISER' | 'DESIGNER_ARCHITECT' | 'MORTGAGE_ADVISOR';
+    firstName: string;
+    lastName: string;
+    phonePersonal: string;
+    email: string;
+    password: string;
+    businessName: string;
+    businessAddress: string;
+    businessPhone?: string;
+    website?: string;
+    brokerLicenseNumber?: string;
+    brokerCityId?: string;
+    weeklyDigestOptIn: boolean;
+    termsAccepted: boolean;
+    declarationAccepted: boolean;
+  }) {
+    console.log('AuthService.registerServiceProvider called with:', { 
+      ...data, 
+      password: '***' 
+    });
+
+    // בדיקה שהמייל לא קיים
+    const existingUser = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingUser) {
+      console.log('User already exists:', data.email);
+      throw new ConflictError('Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // יצירת verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpires = new Date();
+    verificationExpires.setHours(verificationExpires.getHours() + 24);
+
+    // קביעת role בהתאם לסוג נותן השירות
+    const role = data.serviceProviderType === 'BROKER' ? 'BROKER' : 'SERVICE_PROVIDER';
+
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        role: role as any,
+        userType: 'SERVICE_PROVIDER' as any,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        name: `${data.firstName} ${data.lastName}`, // שמירה גם ב-name לתאימות לאחור
+        phonePersonal: data.phonePersonal,
+        phone: data.phonePersonal, // גם ב-phone לתאימות לאחור
+        serviceProviderType: data.serviceProviderType as any,
+        businessName: data.businessName,
+        companyName: data.businessName, // גם ב-companyName לתאימות לאחור
+        businessAddress: data.businessAddress,
+        businessPhone: data.businessPhone || undefined,
+        website: data.website || undefined,
+        brokerLicenseNumber: data.brokerLicenseNumber || undefined,
+        licenseNumber: data.brokerLicenseNumber || undefined, // גם ב-licenseNumber לתאימות לאחור
+        brokerCityId: data.brokerCityId || undefined,
+        weeklyDigestOptIn: data.weeklyDigestOptIn,
+        termsAcceptedAt: data.termsAccepted ? new Date() : undefined,
+        declarationAcceptedAt: data.declarationAccepted ? new Date() : undefined,
+        isEmailVerified: false,
+        isVerified: false,
+        verificationToken,
+        verificationExpires,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        name: true,
+        role: true,
+        userType: true,
+        serviceProviderType: true,
+        businessName: true,
+        phonePersonal: true,
+      },
+    });
+
+    console.log('Service provider created successfully:', user.id);
+
+    // שליחת מייל אימות
+    try {
+      await this.emailService.sendVerificationEmail(user.email, verificationToken);
+      console.log('✅ Verification email sent to:', user.email);
+    } catch (error) {
+      console.error('❌ Failed to send verification email:', error);
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    console.log('Service provider registration complete');
+    return {
+      user: {
+        ...user,
+        isAdmin: user.role === 'ADMIN',
+        isBroker: user.role === 'BROKER',
+        isServiceProvider: true,
+      },
+      ...tokens,
+    };
+  }
+
   async login(email: string, password: string) {
     console.log('AuthService.login called for:', email);
     
@@ -117,18 +225,24 @@ export class AuthService {
     console.log('Password valid, generating tokens');
     const tokens = await this.generateTokens(user.id, user.email, user.role);
 
-    console.log('Login successful for user:', user.id);
+    console.log('✅ LOGIN SUCCESS - CURRENT USER ROLE:', user.role, 'userType:', user.userType, 'serviceProviderType:', user.serviceProviderType);
+    
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
         role: user.role,
+        userType: user.userType,
+        serviceProviderType: user.serviceProviderType,
         isAdmin: user.role === 'ADMIN',
         isBroker: user.role === 'BROKER',
         phone: user.phone,
+        phonePersonal: user.phonePersonal,
         companyName: user.companyName,
         avatar: user.avatar,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
       ...tokens,
     };

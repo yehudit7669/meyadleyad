@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
+import { User, ServiceProviderRegistrationData } from '../types';
 import { authService } from '../services/auth.service';
 
 interface AuthContextType {
@@ -7,6 +7,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
+  registerServiceProvider: (data: ServiceProviderRegistrationData) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   setUser: (user: User | null) => void;
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (token && savedUser) {
         try {
           const user = await authService.getCurrentUser();
+          console.log('🔐 AUTH USER LOADED:', { role: user.role, userType: user.userType, serviceProviderType: user.serviceProviderType, isBroker: user.isBroker });
           setUser(user);
           localStorage.setItem('user', JSON.stringify(user));
         } catch (error) {
@@ -44,7 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     console.log('useAuth.login called with:', { email });
     const response = await authService.login(email, password);
-    console.log('Login response received:', { user: response.user });
+    console.log('✅ LOGIN RESPONSE - AUTH USER:', { 
+      role: response.user.role, 
+      userType: response.user.userType, 
+      serviceProviderType: response.user.serviceProviderType,
+      isBroker: response.user.isBroker 
+    });
     localStorage.setItem('accessToken', response.accessToken);
     localStorage.setItem('refreshToken', response.refreshToken);
     localStorage.setItem('user', JSON.stringify(response.user));
@@ -63,6 +70,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('User state updated after registration');
   };
 
+  const registerServiceProvider = async (data: ServiceProviderRegistrationData) => {
+    console.log('useAuth.registerServiceProvider called');
+    const response = await authService.registerServiceProvider(data);
+    console.log('Service provider registration response received:', { user: response.user });
+    localStorage.setItem('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+    localStorage.setItem('user', JSON.stringify(response.user));
+    setUser(response.user);
+    console.log('User state updated after service provider registration');
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -74,7 +92,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, setUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      register, 
+      registerServiceProvider,
+      logout, 
+      updateUser, 
+      setUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );

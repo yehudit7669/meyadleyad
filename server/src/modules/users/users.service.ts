@@ -9,10 +9,16 @@ export class UsersService {
         id: true,
         email: true,
         name: true,
+        firstName: true,
+        lastName: true,
         phone: true,
+        phonePersonal: true,
         role: true,
+        userType: true,
+        serviceProviderType: true,
         avatar: true,
         companyName: true,
+        businessName: true,
         licenseNumber: true,
         description: true,
         website: true,
@@ -26,11 +32,14 @@ export class UsersService {
       throw new NotFoundError('User not found');
     }
 
+    console.log('✅ GET PROFILE - CURRENT USER ROLE:', user.role, 'userType:', user.userType, 'serviceProviderType:', user.serviceProviderType);
+
     return {
       ...user,
       emailVerified: user.isEmailVerified, // Alias for frontend
       isAdmin: user.role === 'ADMIN',
       isBroker: user.role === 'BROKER',
+      isServiceProvider: user.userType === 'SERVICE_PROVIDER',
     };
   }
 

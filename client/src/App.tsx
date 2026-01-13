@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { HelmetProvider } from 'react-helmet-async';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './hooks/useAuth';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -18,6 +19,10 @@ import EditAd from './pages/EditAd';
 import MyAds from './pages/MyAds';
 import Profile from './pages/Profile';
 import BrokerProfile from './pages/BrokerProfile';
+import MyBrokerProfile from './pages/MyBrokerProfile';
+import PublicBrokerPage from './pages/PublicBrokerPage';
+import ServiceProviderProfile from './pages/ServiceProviderProfile';
+import ProviderPublicPage from './pages/ProviderPublicPage';
 import AdminDashboard from './pages/AdminDashboard';
 import UserManagement from './pages/UserManagement';
 import CityPage from './pages/CityPage';
@@ -77,6 +82,7 @@ const App: React.FC = () => {
           <QueryClientProvider client={queryClient}>
             <BrowserRouter>
               <AuthProvider>
+                <Toaster position="top-center" />
                 {/* Skip to Content Link for Accessibility */}
                 <a href="#main-content" className="skip-link">
                   דלג לתוכן הראשי
@@ -118,12 +124,20 @@ const App: React.FC = () => {
                   
                   {/* User Routes */}
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/broker/my-profile" element={<ProtectedRoute><MyBrokerProfile /></ProtectedRoute>} />
+                  <Route path="/service-provider/my-profile" element={<ProtectedRoute><ServiceProviderProfile /></ProtectedRoute>} />
                   <Route path="/profile/ads" element={<ProtectedRoute><MyAds /></ProtectedRoute>} />
                   <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                   <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
                   <Route path="/appointments/me" element={<ProtectedRoute><MyAppointments /></ProtectedRoute>} />
                   <Route path="/appointments/owner" element={<ProtectedRoute><OwnerAppointments /></ProtectedRoute>} />
+                  
+                  {/* Broker Routes */}
                   <Route path="/broker/:id" element={<BrokerProfile />} />
+                  <Route path="/brokers/:id" element={<PublicBrokerPage />} />
+                  
+                  {/* Service Provider Routes */}
+                  <Route path="/providers/:id" element={<ProviderPublicPage />} />
                   
                   {/* Admin Routes */}
                   <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

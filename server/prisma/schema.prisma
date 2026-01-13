@@ -141,6 +141,7 @@ model City {
   Ad           Ad[]
   Neighborhood Neighborhood[]
   Street       Street[]
+  BrokerUsers  User[]         @relation("BrokerCity")
 
   @@index([name])
   @@index([slug])
@@ -206,44 +207,78 @@ model Street {
 }
 
 model User {
-  id                   String           @id @default(uuid())
-  email                String           @unique
+  id                   String                 @id @default(uuid())
+  email                String                 @unique
   password             String?
   name                 String?
   phone                String?
-  role                 UserRole         @default(USER)
-  googleId             String?          @unique
+  role                 UserRole               @default(USER)
+  googleId             String?                @unique
   avatar               String?
-  isVerified           Boolean          @default(false)
-  verificationToken    String?          @unique
+  isVerified           Boolean                @default(false)
+  verificationToken    String?                @unique
   resetToken           String?
   resetTokenExpiry     DateTime?
   companyName          String?
   licenseNumber        String?
   description          String?
   website              String?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  isEmailVerified      Boolean          @default(false)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  isEmailVerified      Boolean                @default(false)
   resetPasswordExpires DateTime?
-  resetPasswordToken   String?          @unique
+  resetPasswordToken   String?                @unique
   verificationExpires  DateTime?
-  brokerLogoApproved   Boolean          @default(false)
+  brokerLogoApproved   Boolean                @default(false)
+  // Service Provider fields
+  userType             UserType?              @default(USER)
+  firstName            String?
+  lastName             String?
+  phonePersonal        String?
+  serviceProviderType  ServiceProviderType?
+  businessName         String?
+  businessAddress      String?
+  businessPhone        String?
+  brokerLicenseNumber  String?
+  brokerCityId         String?
+  weeklyDigestOptIn    Boolean                @default(true)
+  termsAcceptedAt      DateTime?
+  declarationAcceptedAt DateTime?
+  pendingEmail         String?                // For email change requests
+  // Additional Service Provider fields
+  phoneBusinessOffice  String?                // Business office phone
+  officeAddress        String?                // Current approved office address
+  officeAddressPending String?                // Pending office address change
+  officeAddressStatus  ApprovalStatus         @default(APPROVED)
+  logoUrlPending       String?                // Pending logo URL
+  logoStatus           ApprovalStatus         @default(APPROVED)
+  aboutBusiness        String?                // Current approved about text
+  aboutBusinessPending String?                // Pending about text
+  aboutBusinessStatus  ApprovalStatus         @default(APPROVED)
+  publishOfficeAddress Boolean                @default(false)
+  businessHours        Json?                  // JSON: { sun: [{from, to}], mon: [], ... }
+  weeklyDigestSubscribed Boolean              @default(false)
   Ad                   Ad[]
   RefreshToken         RefreshToken[]
   EmailLog             EmailLog[]
   BrandingConfig       BrandingConfig[]
   UserPreference       UserPreference?
-  AppointmentRequester Appointment[]            @relation("AppointmentRequester")
-  AppointmentOwner     Appointment[]            @relation("AppointmentOwner")
+  AppointmentRequester Appointment[]          @relation("AppointmentRequester")
+  AppointmentOwner     Appointment[]          @relation("AppointmentOwner")
   UserAudit            UserAudit[]
   Favorite             Favorite[]
   UserAppointmentPolicy UserAppointmentPolicy?
+  BrokerCity           City?                  @relation("BrokerCity", fields: [brokerCityId], references: [id])
+  OfficeAddressChangeRequest OfficeAddressChangeRequest[]
+  HighlightRequest     HighlightRequest[]
+  DataExportRequest    DataExportRequest[]
+  AccountDeletionRequest AccountDeletionRequest[]
 
   @@index([email])
   @@index([googleId])
   @@index([resetPasswordToken])
   @@index([verificationToken])
+  @@index([brokerCityId])
 }
 
 model WhatsAppGroup {
@@ -307,6 +342,20 @@ enum UserRole {
   USER
   BROKER
   ADMIN
+  SERVICE_PROVIDER
+}
+
+enum UserType {
+  USER
+  SERVICE_PROVIDER
+}
+
+enum ServiceProviderType {
+  BROKER
+  LAWYER
+  APPRAISER
+  DESIGNER_ARCHITECT
+  MORTGAGE_ADVISOR
 }
 
 enum EmailType {
@@ -421,6 +470,7 @@ model UserAudit {
   userId    String
   action    String   // UPDATE_PROFILE, UPDATE_PREFS, DELETE_AD, DELETE_REQ, etc.
   meta      Json?
+  ip        String?  // IP address of the user
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -500,4 +550,149 @@ model ImportLog {
   @@index([adminId])
   @@index([importType])
   @@index([createdAt])
+}
+
+// ============================================
+// BROKER PROFILE MODELS
+// ============================================
+
+model BrokerOffice {
+  id                      String             @id @default(cuid())
+  brokerOwnerUserId       String             @unique
+  businessName            String
+  businessAddressApproved String
+  businessAddressPending  String?
+  businessPhone           String?
+  website                 String?
+  aboutBusinessApproved   String?
+  aboutBusinessPending    String?
+  publishOfficeAddress    Boolean            @default(false)
+  logoUrlApproved         String?
+  logoUrlPending          String?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  BrokerTeamMember        BrokerTeamMember[]
+
+  @@index([brokerOwnerUserId])
+}
+
+model BrokerTeamMember {
+  id        String       @id @default(cuid())
+  officeId  String
+  fullName  String
+  email     String
+  phone     String
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  office    BrokerOffice @relation(fields: [officeId], references: [id], onDelete: Cascade)
+
+  @@index([officeId])
+  @@index([email])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorUserId String?
+  actionType String  // UPDATE_PROFILE, UPDATE_OFFICE, ADD_TEAM, DELETE_AD, etc.
+  entityType String? // BROKER_OFFICE, TEAM_MEMBER, AD, USER, etc.
+  entityId   String?
+  metadata   Json?   // Additional details
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([actionType])
+  @@index([entityType])
+  @@index([createdAt])
+}
+
+model FeaturedRequest {
+  id         String              @id @default(cuid())
+  userId     String
+  adId       String
+  status     FeaturedRequestStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([adId])
+  @@index([status])
+}
+
+enum FeaturedRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model DataExportRequest {
+  id         String              @id @default(cuid())
+  userId     String
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     DataRequestStatus   @default(PENDING)
+  exportUrl  String?
+  createdAt  DateTime            @default(now())
+  processedAt DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model AccountDeletionRequest {
+  id         String              @id @default(cuid())
+  userId     String
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     DataRequestStatus   @default(PENDING)
+  reason     String?
+  createdAt  DateTime            @default(now())
+  processedAt DateTime?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OfficeAddressChangeRequest {
+  id          String              @id @default(cuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newAddress  String
+  status      ApprovalStatus      @default(PENDING)
+  adminNotes  String?
+  createdAt   DateTime            @default(now())
+  processedAt DateTime?
+  processedBy String?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model HighlightRequest {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestType String         // 'SERVICE_CARD' or 'BUSINESS_PAGE'
+  reason      String?
+  status      ApprovalStatus @default(PENDING)
+  adminNotes  String?
+  createdAt   DateTime       @default(now())
+  processedAt DateTime?
+  processedBy String?
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum DataRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

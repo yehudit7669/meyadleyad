@@ -111,7 +111,7 @@ const Header: React.FC = () => {
                   {profileMenuOpen && (
                     <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
                       <Link
-                        to="/profile"
+                        to={user.role === 'BROKER' ? '/broker/my-profile' : '/profile'}
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                         onClick={() => setProfileMenuOpen(false)}
                       >

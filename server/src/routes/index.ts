@@ -14,6 +14,8 @@ import brandingRoutes from '../modules/branding/branding.routes';
 import profileRoutes from '../modules/profile/profile.routes';
 import appointmentsRoutes from '../modules/appointments/appointments.routes';
 import appointmentsAdminRoutes from '../modules/appointments/appointments.admin.routes';
+import brokerRoutes from '../modules/broker/broker.routes';
+import serviceProviderRoutes from '../modules/service-provider/service-provider.routes';
 
 // New admin modules
 import userManagementRoutes from '../modules/admin/user-management.routes';
@@ -42,6 +44,8 @@ router.use('/search', searchRoutes);
 router.use('/parasha', parashaRoutes);
 router.use('/profile', profileRoutes);
 router.use('/appointments', appointmentsRoutes);
+router.use('/broker', brokerRoutes); // New broker routes
+router.use('/service-providers', serviceProviderRoutes); // Service provider routes
 
 // New admin routes
 router.use('/admin/users', userManagementRoutes);

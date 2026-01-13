@@ -612,6 +612,12 @@ export const profileService = {
     const response = await api.post('/profile/account/delete-request');
     return response.data as any;
   },
+
+  // Audit Log
+  getAuditLog: async (limit?: number) => {
+    const response = await api.get('/profile/audit-log', { params: { limit } });
+    return (response.data as any).data;
+  },
 };
 
 // Appointments Service (מערכת פגישות להצגת נכסים)
@@ -699,4 +705,63 @@ export const adminAppointmentsService = {
   },
 };
 
+// =============== SERVICE PROVIDER SERVICES ===============
+export const serviceProviderService = {
+  // Get service provider profile
+  getProfile: async () => {
+    const response = await api.get('/service-providers/profile/me');
+    return (response.data as any).data;
+  },
+
+  // Update service provider profile
+  updateProfile: async (data: any) => {
+    const response = await api.patch('/service-providers/profile/me', data);
+    return (response.data as any).data;
+  },
+
+  // Request office address change
+  requestOfficeAddressChange: async (newAddress: string) => {
+    const response = await api.post('/service-providers/profile/office-address-request', { newAddress });
+    return response.data as any;
+  },
+
+  // Request data export
+  requestDataExport: async () => {
+    const response = await api.post('/service-providers/account/export-request');
+    return response.data as any;
+  },
+
+  // Request account deletion
+  requestAccountDeletion: async (reason?: string) => {
+    const response = await api.post('/service-providers/account/delete-request', { reason });
+    return response.data as any;
+  },
+
+  // Request highlight
+  requestHighlight: async (data: { requestType: 'SERVICE_CARD' | 'BUSINESS_PAGE'; reason?: string }) => {
+    const response = await api.post('/service-providers/highlight-request', data);
+    return response.data as any;
+  },
+
+  // Get public profile
+  getPublicProfile: async (id: string) => {
+    const response = await api.get(`/service-providers/${id}`);
+    return (response.data as any).data;
+  },
+
+  // Get audit log
+  getAuditLog: async (limit?: number) => {
+    const response = await api.get('/service-providers/audit-log', { params: { limit } });
+    return (response.data as any).data;
+  },
+};
+
+// =============== BROKER SERVICES ===============
+export const brokerService = {
+  // Get audit log
+  getAuditLog: async (limit?: number) => {
+    const response = await api.get('/broker/audit-log', { params: { limit } });
+    return (response.data as any).data;
+  },
+};
 

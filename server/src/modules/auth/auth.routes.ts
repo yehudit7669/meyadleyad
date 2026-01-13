@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from './auth.controller';
 import { validate } from '../../middlewares/validate';
-import { registerSchema, loginSchema, googleAuthSchema, refreshTokenSchema } from './auth.validation';
+import { registerSchema, registerServiceProviderSchema, loginSchema, googleAuthSchema, refreshTokenSchema } from './auth.validation';
 import { authenticate } from '../../middlewares/auth';
 import { UsersController } from '../users/users.controller';
 
@@ -10,6 +10,7 @@ const authController = new AuthController();
 const usersController = new UsersController();
 
 router.post('/register', validate(registerSchema), authController.register);
+router.post('/register-service-provider', validate(registerServiceProviderSchema), authController.registerServiceProvider);
 router.post('/login', validate(loginSchema), authController.login);
 router.post('/google', validate(googleAuthSchema), authController.googleAuth);
 router.post('/refresh', validate(refreshTokenSchema), authController.refreshToken);

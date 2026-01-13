@@ -188,11 +188,14 @@ npm run dev
 
 ## 👤 משתמשי דמו
 
-לאחר הרצת `prisma:seed`, המערכת תכיל:
+לאחר הרצת `prisma:seed`, המערכת תכיל משתמשי ניהול בלבד (ללא דירות לדוגמא):
 
 - **Admin**: admin@meyadleyad.com / admin123456
 - **Broker**: broker@example.com / broker123456
 - **User**: user@example.com / user123456
+- **Service Provider**: lawyer@example.com / sp123456
+
+**הערה:** המערכת לא יוצרת דירות לדוגמא אוטומטית - רק תוכן שמשתמשים יוצרים ידנית.
 
 ## 🔑 פיצ'רים עיקריים
 

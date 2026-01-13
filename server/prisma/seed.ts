@@ -59,6 +59,37 @@ async function main() {
   });
   console.log('✅ Created regular user');
 
+  // Create sample service provider
+  const spPassword = await bcrypt.hash('sp123456', 10);
+  const serviceProvider = await prisma.user.upsert({
+    where: { email: 'lawyer@example.com' },
+    update: {},
+    create: {
+      email: 'lawyer@example.com',
+      password: spPassword,
+      name: 'עו"ד משה ישראלי',
+      role: 'SERVICE_PROVIDER',
+      userType: 'SERVICE_PROVIDER',
+      serviceProviderType: 'LAWYER',
+      isVerified: true,
+      phonePersonal: '050-1112222',
+      phoneBusinessOffice: '03-5556666',
+      businessName: 'משרד עורכי דין ישראלי ושות\'',
+      officeAddress: 'רחוב הרצל 10, בית שמש',
+      aboutBusiness: 'משרד עורכי דין מוביל המתמחה בתחום הנדל"ן, עסקאות קרקע ועסקאות מקרקעין. ניסיון של מעל 15 שנה בייצוג לקוחות בעסקאות מורכבות.',
+      publishOfficeAddress: true,
+      businessHours: {
+        sun: [{ from: '09:00', to: '17:00' }],
+        mon: [{ from: '09:00', to: '17:00' }],
+        tue: [{ from: '09:00', to: '17:00' }],
+        wed: [{ from: '09:00', to: '17:00' }],
+        thu: [{ from: '09:00', to: '17:00' }],
+      },
+      weeklyDigestSubscribed: true,
+    },
+  });
+  console.log('✅ Created service provider user');
+
   // Create cities
   const cities = [
     { name: 'Beit Shemesh', nameHe: 'בית שמש', slug: 'beit-shemesh', latitude: 31.7450, longitude: 34.9896 },
@@ -249,193 +280,8 @@ async function main() {
 
   console.log('✅ Created category fields');
 
-  // Create sample ads
-  const telAviv = await prisma.city.findUnique({ where: { slug: 'tel-aviv' } });
-  const apartmentsForSaleCat = await prisma.category.findUnique({ where: { slug: 'apartments-for-sale' } });
-
-  if (telAviv && apartmentsForSaleCat) {
-    await prisma.ad.create({
-      data: {
-        id: createId(),
-        title: 'דירת 4 חדרים מרווחת בתל אביב',
-        description: 'דירה מדהימה בלב תל אביב, משופצת לחלוטין, עם נוף פתוח ומרפסת שמש.\nהדירה כוללת 4 חדרים, 2 חדרי רחצה, מטבח מודרני וחניה.\nקרוב לתחבורה ציבורית, בתי ספר וקניונים.',
-        price: 2500000,
-        userId: broker.id,
-        categoryId: apartmentsForSaleCat.id,
-        cityId: telAviv.id,
-        address: 'רחוב הרצל 123',
-        latitude: 32.0853,
-        longitude: 34.7818,
-        customFields: {
-          rooms: 4,
-          floor: 3,
-          size: 110,
-          parking: true,
-          elevator: true,
-          balcony: true,
-        },
-        status: 'APPROVED',
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
-
-    await prisma.ad.create({
-      data: {
-        id: createId(),
-        title: 'דירת 3 חדרים להשקעה',
-        description: 'דירה נהדרת להשקעה או למגורים, ממוקמת באזור מבוקש.\nמשופצת חלקית, פוטנציאל רב.',
-        price: 1800000,
-        userId: user.id,
-        categoryId: apartmentsForSaleCat.id,
-        cityId: telAviv.id,
-        address: 'שדרות רוטשילד 45',
-        customFields: {
-          rooms: 3,
-          floor: 2,
-          size: 85,
-          parking: false,
-          elevator: false,
-          balcony: true,
-        },
-        status: 'PENDING',
-        updatedAt: new Date(),
-      },
-    });
-  }
-
-  // Create additional real estate sample ads
-  const jerusalemCity = await prisma.city.findUnique({ where: { slug: 'jerusalem' } });
-  const rentCategory = await prisma.category.findUnique({ where: { slug: 'apartments-for-rent' } });
-  const commercialCategory = await prisma.category.findUnique({ where: { slug: 'commercial-real-estate' } });
-  const saleCategory = await prisma.category.findUnique({ where: { slug: 'apartments-for-sale' } });
-
-  // Create luxury apartment for sale with images
-  if (telAviv && saleCategory) {
-    const luxuryAd = await prisma.ad.create({
-      data: {
-        id: createId(),
-        title: 'דירת פנטהאוז יוקרתית 5 חדרים בצפון תל אביב',
-        description: 'דירת יוקרה ייחודית בקומה 12 עם נוף פנורמי לים.\n\nהדירה כוללת:\n• 5 חדרים מרווחים + יחידת הורים מפוארת\n• 2 מרפסות שמש גדולות\n• מטבח מעוצב עם מוצרי חשמל יוקרתיים\n• 3 חדרי אמבטיה מעוצבים\n• ממ״ד מרווח\n• מחסן צמוד\n• 2 חניות מקורות\n\nהבניין:\n• בניין בוטיק יוקרתי\n• 2 מעליות שבת\n• חדר כושר מאובזר\n• לובי מפואר\n• אבטחה 24/7\n\nמיקום מעולה:\n• 5 דקות הליכה מהים\n• קרוב לפארק הירקון\n• סמוך לבתי ספר ומעונות\n• תחבורה ציבורית בסמוך',
-        price: 4800000,
-        userId: broker.id,
-        categoryId: saleCategory.id,
-        cityId: telAviv.id,
-        address: 'רחוב ז\'בוטינסקי 150',
-        latitude: 32.0853,
-        longitude: 34.7818,
-        customFields: {
-          rooms: 5,
-          floor: 12,
-          size: 140,
-          parking: true,
-          elevator: true,
-          balcony: true,
-          furnished: false,
-        },
-        status: 'APPROVED',
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-        AdImage: {
-          create: [
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-              order: 0,
-            },
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-              order: 1,
-            },
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=800',
-              order: 2,
-            },
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-              order: 3,
-            },
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800',
-              order: 4,
-            },
-          ],
-        },
-      },
-    });
-    console.log('✅ Created luxury penthouse ad with images (ID: ' + luxuryAd.id + ')');
-  }
-
-  if (jerusalemCity && rentCategory) {
-    await prisma.ad.create({
-      data: {
-        id: createId(),
-        title: 'דירת 3 חדרים להשכרה בירושלים',
-        description: 'דירה מרוהטת במלואה, זמינה לכניסה מיידית.\nכוללת: מזגנים, מטבח מאובזר, מכונת כביסה.\nבניין עם מעלית, קרוב לתחבורה ציבורית.',
-        price: 5500,
-        userId: broker.id,
-        categoryId: rentCategory.id,
-        cityId: jerusalemCity.id,
-        address: 'רחוב יפו 78',
-        latitude: 31.7683,
-        longitude: 35.2137,
-        customFields: {
-          rooms: 3,
-          floor: 4,
-          size: 75,
-          furnished: true,
-          parking: true,
-          elevator: true,
-        },
-        status: 'APPROVED',
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-        AdImage: {
-          create: [
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
-              order: 0,
-            },
-            {
-              id: createId(),
-              url: 'https://images.unsplash.com/photo-1502672260066-6bc35f0ea4a0?w=800',
-              order: 1,
-            },
-          ],
-        },
-      },
-    });
-  }
-
-  if (telAviv && commercialCategory) {
-    await prisma.ad.create({
-      data: {
-        id: createId(),
-        title: 'משרד להשכרה במרכז תל אביב',
-        description: 'משרד יוקרתי במיקום מרכזי, 80 מ״ר, מתאים לסטארט-אפ או משרד עורכי דין.\nכולל: חניה, מעלית, מזגן, אינטרנט.',
-        price: 12000,
-        userId: broker.id,
-        categoryId: commercialCategory.id,
-        cityId: telAviv.id,
-        address: 'רחוב רוטשילד 25',
-        customFields: {
-          size: 80,
-          parking: true,
-          elevator: true,
-        },
-        status: 'APPROVED',
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
-  }
-
-  console.log('✅ Created sample real estate ads');
+  // Note: Sample ads removed - only user-created ads will exist
+  console.log('✅ No sample ads created - database ready for user content');
 
   // Create default branding config
   const brandingConfig = await prisma.brandingConfig.upsert({

@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { profileService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
+import { isBroker, isServiceProvider } from '../utils/userHelpers';
 import ProfileHeader from '../components/profile/ProfileHeader';
 import MyAdsTab from '../components/profile/MyAdsTab';
 import FavoritesTab from '../components/profile/FavoritesTab';
@@ -13,6 +16,19 @@ type TabType = 'my-ads' | 'favorites' | 'personal' | 'appointments' | 'communica
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState<TabType>('my-ads');
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect brokers to broker profile
+  useEffect(() => {
+    if (authUser?.role === 'BROKER' || isBroker(authUser)) {
+      console.log('🔄 REDIRECTING BROKER TO BROKER PROFILE');
+      navigate('/broker/my-profile', { replace: true });
+    } else if (isServiceProvider(authUser)) {
+      console.log('🔄 REDIRECTING SERVICE PROVIDER TO SERVICE PROVIDER PROFILE');
+      navigate('/service-provider/my-profile', { replace: true });
+    }
+  }, [authUser, navigate]);
 
   const { data: user } = useQuery({
     queryKey: ['personal-details'],

@@ -32,4 +32,7 @@ router.patch('/appointments/:appointmentId/cancel', ProfileController.cancelAppo
 // Account Management
 router.post('/account/delete-request', ProfileController.requestAccountDeletion);
 
+// Audit Log
+router.get('/audit-log', ProfileController.getAuditLog);
+
 export default router;

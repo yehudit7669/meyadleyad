@@ -1,8 +1,8 @@
 -- CreateEnum
 CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'RESCHEDULE_REQUESTED');
 
--- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+-- DropIndex (if exists)
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "RefreshToken" ALTER COLUMN "id" DROP DEFAULT;

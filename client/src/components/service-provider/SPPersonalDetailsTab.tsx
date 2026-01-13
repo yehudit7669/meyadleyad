@@ -1,0 +1,193 @@
+import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { serviceProviderService } from '../../services/api';
+import { toast } from 'react-hot-toast';
+
+interface Props {
+  profile: any;
+  onUpdate: () => void;
+}
+
+const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: profile.name || '',
+    phonePersonal: profile.phonePersonal || '',
+    phoneBusinessOffice: profile.phoneBusinessOffice || '',
+  });
+  const [newOfficeAddress, setNewOfficeAddress] = useState('');
+
+  const updateMutation = useMutation({
+    mutationFn: serviceProviderService.updateProfile,
+    onSuccess: () => {
+      toast.success('הפרטים עודכנו בהצלחה');
+      setIsEditing(false);
+      onUpdate();
+    },
+    onError: () => {
+      toast.error('שגיאה בעדכון הפרטים');
+    },
+  });
+
+  const addressChangeMutation = useMutation({
+    mutationFn: serviceProviderService.requestOfficeAddressChange,
+    onSuccess: () => {
+      toast.success('בקשת שינוי כתובת נשלחה ומחכה לאישור מנהל');
+      setNewOfficeAddress('');
+      onUpdate();
+    },
+    onError: () => {
+      toast.error('שגיאה בשליחת בקשת שינוי כתובת');
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate(formData);
+  };
+
+  const handleAddressChange = () => {
+    if (!newOfficeAddress.trim()) {
+      toast.error('נא להזין כתובת משרד');
+      return;
+    }
+    addressChangeMutation.mutate(newOfficeAddress);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">פרטים אישיים</h2>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            ערוך פרטים
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
+          {isEditing ? (
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          ) : (
+            <p className="text-gray-900 py-2">{profile.name || 'לא צוין'}</p>
+          )}
+        </div>
+
+        {/* Email (Read-only) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">אימייל</label>
+          <p className="text-gray-900 py-2">{profile.email}</p>
+          <p className="text-xs text-gray-500 mt-1">לשינוי אימייל, השתמש בתהליך האימות</p>
+        </div>
+
+        {/* Personal Phone */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">טלפון אישי</label>
+          {isEditing ? (
+            <input
+              type="tel"
+              value={formData.phonePersonal}
+              onChange={(e) => setFormData({ ...formData, phonePersonal: e.target.value })}
+              placeholder="05XXXXXXXX"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          ) : (
+            <p className="text-gray-900 py-2">{profile.phonePersonal || 'לא צוין'}</p>
+          )}
+        </div>
+
+        {/* Business Phone */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">טלפון העסק</label>
+          {isEditing ? (
+            <input
+              type="tel"
+              value={formData.phoneBusinessOffice}
+              onChange={(e) => setFormData({ ...formData, phoneBusinessOffice: e.target.value })}
+              placeholder="05XXXXXXXX או טלפון קווי"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          ) : (
+            <p className="text-gray-900 py-2">{profile.phoneBusinessOffice || 'לא צוין'}</p>
+          )}
+        </div>
+      </div>
+
+      {isEditing && (
+        <div className="flex gap-4">
+          <button
+            onClick={handleSave}
+            disabled={updateMutation.isPending}
+            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            {updateMutation.isPending ? 'שומר...' : 'שמור שינויים'}
+          </button>
+          <button
+            onClick={() => {
+              setIsEditing(false);
+              setFormData({
+                name: profile.name || '',
+                phonePersonal: profile.phonePersonal || '',
+                phoneBusinessOffice: profile.phoneBusinessOffice || '',
+              });
+            }}
+            className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+          >
+            ביטול
+          </button>
+        </div>
+      )}
+
+      {/* Office Address Section */}
+      <div className="border-t pt-6 mt-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">כתובת משרד</h3>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p className="text-sm text-blue-800">
+            <strong>כתובת נוכחית:</strong> {profile.officeAddress || 'לא הוגדרה'}
+          </p>
+          {profile.officeAddressPending && profile.officeAddressStatus === 'PENDING' && (
+            <p className="text-sm text-orange-600 mt-2">
+              <strong>בקשת שינוי ממתינה:</strong> {profile.officeAddressPending}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">בקשת שינוי כתובת משרד</label>
+          <p className="text-xs text-gray-500 mb-2">
+            שינוי כתובת המשרד דורש אישור מנהל. הכתובת תעודכן רק לאחר אישור.
+          </p>
+          <div className="flex gap-4">
+            <input
+              type="text"
+              value={newOfficeAddress}
+              onChange={(e) => setNewOfficeAddress(e.target.value)}
+              placeholder="הזן כתובת משרד חדשה"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={handleAddressChange}
+              disabled={addressChangeMutation.isPending}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {addressChangeMutation.isPending ? 'שולח...' : 'שלח בקשה'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SPPersonalDetailsTab;

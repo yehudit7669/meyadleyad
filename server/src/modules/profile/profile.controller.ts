@@ -466,4 +466,21 @@ export class ProfileController {
       next(error);
     }
   }
+
+  // ============ Audit Log ============
+  static async getAuditLog(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user.id;
+      const limit = parseInt(req.query.limit as string) || 100;
+
+      const logs = await AuditService.getAuditLog(userId, limit);
+
+      res.json({
+        success: true,
+        data: logs,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

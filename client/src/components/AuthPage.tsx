@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
+import ServiceProviderWizard from './ServiceProviderWizard';
+import { ServiceProviderRegistrationData } from '../types';
 
 type AuthMode = 'login' | 'signup';
+type SignupType = 'regular' | 'service-provider' | null;
 
 interface AuthPageProps {
   initialMode?: AuthMode;
@@ -11,11 +14,13 @@ interface AuthPageProps {
 
 const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [signupType, setSignupType] = useState<SignupType>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
-  const { login, register } = useAuth();
+  const [registrationType, setRegistrationType] = useState<SignupType>(null);
+  const { login, register, registerServiceProvider } = useAuth();
   const navigate = useNavigate();
 
   // Login form state
@@ -97,10 +102,51 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
       
       // הצגת הודעת הצלחה על שליחת מייל אימות
       setRegisteredEmail(signupData.email);
+      setRegistrationType('regular');
       setRegistrationSuccess(true);
     } catch (err: any) {
       console.error('Registration error:', err);
       console.error('Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || 'שגיאה בהרשמה';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleServiceProviderSubmit = async (wizardData: any) => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const data: ServiceProviderRegistrationData = {
+        serviceProviderType: wizardData.serviceProviderType,
+        firstName: wizardData.firstName,
+        lastName: wizardData.lastName,
+        phonePersonal: wizardData.phonePersonal,
+        email: wizardData.email,
+        password: wizardData.password,
+        businessName: wizardData.businessName,
+        businessAddress: wizardData.businessAddress,
+        businessPhone: wizardData.businessPhone || undefined,
+        website: wizardData.website || undefined,
+        brokerLicenseNumber: wizardData.brokerLicenseNumber || undefined,
+        brokerCityId: wizardData.brokerCityId || undefined,
+        weeklyDigestOptIn: wizardData.weeklyDigestOptIn,
+        termsAccepted: wizardData.termsAccepted,
+        declarationAccepted: wizardData.declarationAccepted,
+      };
+
+      console.log('Attempting service provider registration');
+      await registerServiceProvider(data);
+      console.log('Service provider registration successful');
+      
+      // הצגת הודעת הצלחה
+      setRegisteredEmail(wizardData.email);
+      setRegistrationType('service-provider');
+      setRegistrationSuccess(true);
+    } catch (err: any) {
+      console.error('Service provider registration error:', err);
       const errorMessage = err.response?.data?.message || 'שגיאה בהרשמה';
       setError(errorMessage);
     } finally {
@@ -135,14 +181,33 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
         {/* Registration Success Message */}
         {registrationSuccess ? (
           <div className="bg-white rounded-lg shadow-xl p-8 text-center">
-            <div className="text-6xl mb-4">📧</div>
-            <h2 className="text-2xl font-bold mb-2 text-green-600">נרשמת בהצלחה!</h2>
-            <p className="text-gray-600 mb-4">
-              נשלח מייל אימות לכתובת: <strong>{registeredEmail}</strong>
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              בדוק את תיבת הדואר שלך (כולל תיקיית הספאם) ולחץ על הקישור לאימות כדי להפעיל את החשבון.
-            </p>
+            <div className="text-6xl mb-4">{registrationType === 'service-provider' ? '✅' : '📧'}</div>
+            <h2 className="text-2xl font-bold mb-2 text-green-600">
+              {registrationType === 'service-provider' ? 'ההרשמה הושלמה בהצלחה!' : 'נרשמת בהצלחה!'}
+            </h2>
+            
+            {registrationType === 'service-provider' ? (
+              <>
+                <p className="text-gray-700 mb-4 leading-relaxed">
+                  תוכל להוסיף מידע נוסף על העסק שלך, כולל <strong>אודות</strong>, <strong>לוגו</strong>, ופרטי מתווכים נוספים – באזור האישי שלך.
+                </p>
+                <p className="text-gray-700 mb-6 leading-relaxed">
+                  אם יש לכם יותר ממתווך אחד במשרד – ניתן להוסיף אותם לפרופיל דרך <strong>"ניהול צוות"</strong> באזור האישי.
+                </p>
+                <p className="text-sm text-gray-500 mb-6">
+                  נשלח מייל אימות לכתובת: <strong>{registeredEmail}</strong>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-4">
+                  נשלח מייל אימות לכתובת: <strong>{registeredEmail}</strong>
+                </p>
+                <p className="text-sm text-gray-500 mb-6">
+                  בדוק את תיבת הדואר שלך (כולל תיקיית הספאם) ולחץ על הקישור לאימות כדי להפעיל את החשבון.
+                </p>
+              </>
+            )}
             <div className="space-y-3">
               <button
                 onClick={() => {
@@ -167,6 +232,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   onClick={() => {
                     setMode('login');
                     setError('');
+                    setSignupType(null);
                   }}
                   className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                     mode === 'login'
@@ -180,6 +246,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   onClick={() => {
                     setMode('signup');
                     setError('');
+                    setSignupType(null);
                   }}
                   className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                     mode === 'signup'
@@ -195,8 +262,48 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
               </p>
             </div>
 
+            {/* Signup Type Selection */}
+            {mode === 'signup' && !signupType && (
+              <div className="mb-8">
+                <h3 className="text-xl font-bold mb-4 text-center">בחר את סוג ההרשמה</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setSignupType('regular')}
+                    className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all text-center"
+                  >
+                    <div className="text-4xl mb-2">👤</div>
+                    <div className="font-bold text-lg mb-1">משתמש רגיל</div>
+                    <div className="text-sm text-gray-600">
+                      לפרסום ומציאת נכסים
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={() => setSignupType('service-provider')}
+                    className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all text-center"
+                  >
+                    <div className="text-4xl mb-2">💼</div>
+                    <div className="font-bold text-lg mb-1">נותן שירות</div>
+                    <div className="text-sm text-gray-600">
+                      מתווך, עו"ד, שמאי ועוד
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Service Provider Wizard */}
+            {mode === 'signup' && signupType === 'service-provider' && (
+              <ServiceProviderWizard
+                onSubmit={handleServiceProviderSubmit}
+                onCancel={() => setSignupType(null)}
+                loading={loading}
+                error={error}
+              />
+            )}
+
             <div className="card">
-              {error && (
+              {error && signupType !== 'service-provider' && (
                 <div
                   id="auth-error"
                   role="alert"
@@ -208,24 +315,28 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
               )}
 
           {/* Google Login Button - משותף לשני המצבים */}
-          <div className="mb-6">
-            <GoogleLoginButton
-              onError={setError}
-              text={mode === 'signup' ? 'הירשם עם Google' : 'התחבר עם Google'}
-            />
-          </div>
+          {(mode === 'login' || (mode === 'signup' && signupType === 'regular')) && (
+            <div className="mb-6">
+              <GoogleLoginButton
+                onError={setError}
+                text={mode === 'signup' ? 'הירשם עם Google' : 'התחבר עם Google'}
+              />
+            </div>
+          )}
 
           {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+          {(mode === 'login' || (mode === 'signup' && signupType === 'regular')) && (
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  {mode === 'signup' ? 'או הירשם עם אימייל' : 'או'}
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                {mode === 'signup' ? 'או הירשם עם אימייל' : 'או'}
-              </span>
-            </div>
-          </div>
+          )}
 
           {/* Login Form */}
           {mode === 'login' && (
@@ -299,7 +410,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
           )}
 
           {/* Signup Form */}
-          {mode === 'signup' && (
+          {mode === 'signup' && signupType === 'regular' && (
             <form key="signup-form" onSubmit={handleSignupSubmit} className="space-y-4">
               <div>
                 <label htmlFor="signup-email" className="block text-sm font-medium mb-2">
@@ -417,40 +528,44 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
           )}
 
           {/* Footer Links */}
-          <div className="mt-6 text-center">
-            {mode === 'login' ? (
-              <>
-                <p className="text-gray-600 mb-2">
-                  עדיין אין לכם חשבון?{' '}
+          {(mode === 'login' || signupType === 'regular') && (
+            <div className="mt-6 text-center">
+              {mode === 'login' ? (
+                <>
+                  <p className="text-gray-600 mb-2">
+                    עדיין אין לכם חשבון?{' '}
+                    <button
+                      onClick={() => {
+                        setMode('signup');
+                        setError('');
+                        setSignupType(null);
+                      }}
+                      className="text-primary-600 hover:underline font-medium"
+                    >
+                      הרשמה
+                    </button>
+                  </p>
+                  <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
+                    שכחת סיסמה?
+                  </Link>
+                </>
+              ) : (
+                <p className="text-gray-600">
+                  כבר יש לך חשבון?{' '}
                   <button
                     onClick={() => {
-                      setMode('signup');
+                      setMode('login');
                       setError('');
+                      setSignupType(null);
                     }}
                     className="text-primary-600 hover:underline font-medium"
                   >
-                    הרשמה
+                    התחברות
                   </button>
                 </p>
-                <Link to="/forgot-password" className="text-sm text-primary-600 hover:underline">
-                  שכחת סיסמה?
-                </Link>
-              </>
-            ) : (
-              <p className="text-gray-600">
-                כבר יש לך חשבון?{' '}
-                <button
-                  onClick={() => {
-                    setMode('login');
-                    setError('');
-                  }}
-                  className="text-primary-600 hover:underline font-medium"
-                >
-                  התחברות
-                </button>
-              </p>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
           </>
         )}

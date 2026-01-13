@@ -1,5 +1,5 @@
 import api from './api';
-import { AuthResponse, User } from '../types';
+import { AuthResponse, User, ServiceProviderRegistrationData } from '../types';
 
 export const authService = {
   async register(data: {
@@ -14,6 +14,19 @@ export const authService = {
     console.log('authService.register - sending request:', { ...data, password: '***' });
     const response = await api.post<{ data: AuthResponse }>('/auth/register', data);
     console.log('authService.register - response received:', { status: response.status, hasData: !!response.data });
+    return response.data.data;
+  },
+
+  async registerServiceProvider(data: ServiceProviderRegistrationData) {
+    console.log('authService.registerServiceProvider - sending request:', { 
+      ...data, 
+      password: '***' 
+    });
+    const response = await api.post<{ data: AuthResponse }>('/auth/register-service-provider', data);
+    console.log('authService.registerServiceProvider - response received:', { 
+      status: response.status, 
+      hasData: !!response.data 
+    });
     return response.data.data;
   },
 
