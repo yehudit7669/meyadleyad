@@ -115,7 +115,7 @@ ${data.step3.purpose === 'HOSTING' ? 'אירוח מלא' : 'לינה בלבד'}
       categoryId: category.id,
       cityId: data.step1.cityId,
       streetId: data.step1.streetId,
-      houseNumber: String(data.step1.houseNumber),
+      houseNumber: Number(data.step1.houseNumber) || 0,
       customFields,
       contactName: data.step4.contactName || undefined,
       contactPhone: data.step4.contactPhone,

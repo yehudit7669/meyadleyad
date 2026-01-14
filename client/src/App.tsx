@@ -1,6 +1,6 @@
 import Analytics from './pages/admin/Analytics';
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { HelmetProvider } from 'react-helmet-async';
@@ -10,6 +10,7 @@ import { AuthProvider } from './hooks/useAuth';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
+import AdminLayout from './components/admin/AdminLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -23,7 +24,6 @@ import MyBrokerProfile from './pages/MyBrokerProfile';
 import PublicBrokerPage from './pages/PublicBrokerPage';
 import ServiceProviderProfile from './pages/ServiceProviderProfile';
 import ProviderPublicPage from './pages/ProviderPublicPage';
-import AdminDashboard from './pages/AdminDashboard';
 import UserManagement from './pages/UserManagement';
 import CityPage from './pages/CityPage';
 import CategoryPage from './pages/CategoryPage';
@@ -53,10 +53,18 @@ import CategoriesManager from './pages/admin/CategoriesManager';
 import ImportCitiesStreets from './pages/admin/ImportCitiesStreets';
 import ImportAds from './pages/admin/ImportAds';
 import MailingManager from './pages/admin/MailingManager';
-import Settings from './pages/admin/Settings';
 import ScheduledAds from './pages/admin/ScheduledAds';
 import PendingAds from './pages/PendingAds';
 import AdminAdsManagement from './pages/AdminAdsManagement';
+// New Admin Pages
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminAdsPage from './pages/admin/AdminAdsPage';
+import NewspaperLayoutPage from './pages/admin/NewspaperLayoutPage';
+import ContentDistributionPage from './pages/admin/ContentDistributionPage';
+import BrandingMediaPage from './pages/admin/BrandingMediaPage';
+import ImportsPage from './pages/admin/ImportsPage';
+import BackupsPage from './pages/admin/BackupsPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -139,21 +147,31 @@ const App: React.FC = () => {
                   {/* Service Provider Routes */}
                   <Route path="/providers/:id" element={<ProviderPublicPage />} />
                   
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-                  <Route path="/admin/pending" element={<AdminRoute><PendingAds /></AdminRoute>} />
-                  <Route path="/admin/ads-management" element={<AdminRoute><AdminAdsManagement /></AdminRoute>} />
-                  <Route path="/admin/users" element={<AdminRoute><UserManagement /></AdminRoute>} />
-                  <Route path="/admin/appointments" element={<AdminRoute><AppointmentsAdmin /></AdminRoute>} />
-                  <Route path="/admin/branding-logo" element={<AdminRoute><BrandingLogoSettings /></AdminRoute>} />
-                  <Route path="/admin/scheduled-ads" element={<AdminRoute><ScheduledAds /></AdminRoute>} />
-                  <Route path="/admin/audit-log" element={<AdminRoute><AuditLog /></AdminRoute>} />
-                  <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
-                  <Route path="/admin/categories" element={<AdminRoute><CategoriesManager /></AdminRoute>} />
-                  <Route path="/admin/import-cities" element={<AdminRoute><ImportCitiesStreets /></AdminRoute>} />
-                  <Route path="/admin/import-ads" element={<AdminRoute><ImportAds /></AdminRoute>} />
-                  <Route path="/admin/mailing" element={<AdminRoute><MailingManager /></AdminRoute>} />
-                  <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
+                  {/* Admin Routes - wrapped in AdminLayout */}
+                  <Route path="/admin" element={<AdminRoute><Navigate to="/admin/dashboard" replace /></AdminRoute>} />
+                  <Route path="/admin/dashboard" element={<AdminRoute><AdminLayout><AdminDashboardPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/pending" element={<AdminRoute><AdminLayout><PendingAds /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/ads" element={<AdminRoute><AdminLayout><AdminAdsPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/newspaper" element={<AdminRoute><AdminLayout><NewspaperLayoutPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/users" element={<AdminRoute><AdminLayout><UserManagement /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdmin /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/content" element={<AdminRoute><AdminLayout><ContentDistributionPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/branding" element={<AdminRoute><AdminLayout><BrandingMediaPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/imports" element={<AdminRoute><AdminLayout><ImportsPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/audit" element={<AdminRoute><AdminLayout><AuditLog /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/backups" element={<AdminRoute><AdminLayout><BackupsPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettingsPage /></AdminLayout></AdminRoute>} />
+                  
+                  {/* Legacy Admin Routes - keep for backward compatibility */}
+                  <Route path="/admin/ads-management" element={<AdminRoute><AdminLayout><AdminAdsManagement /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/branding-logo" element={<AdminRoute><AdminLayout><BrandingLogoSettings /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/scheduled-ads" element={<AdminRoute><AdminLayout><ScheduledAds /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/audit-log" element={<AdminRoute><AdminLayout><AuditLog /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/categories" element={<AdminRoute><AdminLayout><CategoriesManager /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/import-cities" element={<AdminRoute><AdminLayout><ImportCitiesStreets /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/import-ads" element={<AdminRoute><AdminLayout><ImportAds /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/mailing" element={<AdminRoute><AdminLayout><MailingManager /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/analytics" element={<AdminRoute><AdminLayout><Analytics /></AdminLayout></AdminRoute>} />
                   
                   {/* Search & Category Routes */}
                   <Route path="/category/:slug" element={<CategoryPage />} />

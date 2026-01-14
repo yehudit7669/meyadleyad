@@ -26,6 +26,7 @@ import pdfExportRoutes from '../modules/admin/pdf-export.routes';
 import importRoutes from '../modules/admin/import.routes';
 import auditLogRoutes from '../modules/admin/audit-log.routes';
 import categoryManagementRoutes from '../modules/admin/category-management.routes';
+import adminDashboardRoutes from '../modules/admin/admin-dashboard.routes';
 
 const router = Router();
 
@@ -48,6 +49,7 @@ router.use('/broker', brokerRoutes); // New broker routes
 router.use('/service-providers', serviceProviderRoutes); // Service provider routes
 
 // New admin routes
+router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/users', userManagementRoutes);
 router.use('/admin/analytics', analyticsRoutes);
 router.use('/admin/appointments-new', appointmentsAdminNewRoutes);

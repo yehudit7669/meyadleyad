@@ -59,6 +59,13 @@ export const FIELD_LABELS: Record<string, string> = {
   masterUnit: 'יחידת הורים',
   sleepingOnly: 'לינה בלבד',
   
+  // דירה לשבת
+  isPaid: 'אירוח בתשלום',
+  parasha: 'פרשה',
+  purpose: 'מטרת האירוח',
+  balconiesCount: 'מספר מרפסות',
+  priceRequested: 'מחיר מבוקש',
+  
   // רכב
   year: 'שנה',
   mileage: 'קילומטראז׳',
@@ -117,6 +124,12 @@ export const ENUM_VALUES: Record<string, Record<string, string>> = {
     FURNISHED: 'מרוהט',
     UNFURNISHED: 'לא מרוהט',
   },
+  
+  // מטרת אירוח (דירה לשבת)
+  purpose: {
+    HOSTING: 'אירוח מלא',
+    SLEEPING: 'לינה בלבד',
+  },
 };
 
 /**
@@ -130,6 +143,31 @@ export function formatFieldValue(key: string, value: any): string {
   // Enum values - תרגום ערכים באנגלית
   if (typeof value === 'string' && ENUM_VALUES[key]?.[value]) {
     return ENUM_VALUES[key][value];
+  }
+  
+  // תרגום propertyType גם אם לא בenums (fallback)
+  if (key === 'propertyType' && typeof value === 'string') {
+    const propertyTypes: Record<string, string> = {
+      APARTMENT: 'דירה',
+      HOUSE: 'בית פרטי',
+      GARDEN_APARTMENT: 'דירת גן',
+      PENTHOUSE: 'פנטהאוז',
+      DUPLEX: 'דופלקס',
+      STUDIO: 'סטודיו',
+      COTTAGE: 'קוטג\'',
+      VILLA: 'וילה',
+      TOWNHOUSE: 'בית טורי',
+    };
+    return propertyTypes[value] || value;
+  }
+  
+  // תרגום purpose (מטרת אירוח)
+  if (key === 'purpose' && typeof value === 'string') {
+    const purposes: Record<string, string> = {
+      HOSTING: 'אירוח מלא',
+      SLEEPING: 'לינה בלבד',
+    };
+    return purposes[value] || value;
   }
 
   // Boolean

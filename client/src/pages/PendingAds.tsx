@@ -33,6 +33,8 @@ export default function PendingAds() {
   const [rejectingAdId, setRejectingAdId] = useState<string | null>(null);
   const [previewAdId, setPreviewAdId] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<'date' | 'views'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // סינונים
   const [filters, setFilters] = useState({
@@ -92,7 +94,7 @@ export default function PendingAds() {
     rejectMutation.mutate({ id, reason });
   };
   
-  // סינון מודעות
+  // סינון ומיון מודעות
   const filteredAds = (data?.ads || []).filter((ad: any) => {
     let matches = true;
     
@@ -119,7 +121,26 @@ export default function PendingAds() {
     }
     
     return matches;
+  }).sort((a: any, b: any) => {
+    if (sortBy === 'views') {
+      const viewsA = a.views || 0;
+      const viewsB = b.views || 0;
+      return sortOrder === 'desc' ? viewsB - viewsA : viewsA - viewsB;
+    } else {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    }
   });
+
+  const handleSort = (field: 'date' | 'views') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -211,10 +232,31 @@ export default function PendingAds() {
                   <table className="w-full">
                     <thead className="bg-gray-100 border-b-2 border-gray-200">
                       <tr>
-                        <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">תאריך</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">
+                          <button 
+                            onClick={() => handleSort('date')}
+                            className="flex items-center gap-1 hover:text-blue-600"
+                          >
+                            תאריך
+                            {sortBy === 'date' && (
+                              <span>{sortOrder === 'desc' ? '↓' : '↑'}</span>
+                            )}
+                          </button>
+                        </th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">כתובת</th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">סוג נכס</th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">שם מפרסם</th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">
+                          <button 
+                            onClick={() => handleSort('views')}
+                            className="flex items-center gap-1 hover:text-blue-600 mx-auto"
+                          >
+                            צפיות
+                            {sortBy === 'views' && (
+                              <span>{sortOrder === 'desc' ? '↓' : '↑'}</span>
+                            )}
+                          </button>
+                        </th>
                         <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">תצוגה</th>
                         <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">פעולה</th>
                       </tr>
@@ -248,6 +290,13 @@ export default function PendingAds() {
                                 <div className="text-xs text-gray-700">{ad.User.phone}</div>
                               )}
                             </div>
+                          </td>
+                          
+                          {/* צפיות */}
+                          <td className="px-4 py-4 text-center">
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                              👁️ {ad.views || 0}
+                            </span>
                           </td>
                           
                           {/* תצוגה */}

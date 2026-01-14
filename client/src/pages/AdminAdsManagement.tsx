@@ -32,6 +32,8 @@ const getStatusLabel = (status: string): string => {
 
 export default function AdminAdsManagement() {
   const queryClient = useQueryClient();
+  const [sortBy, setSortBy] = useState<'date' | 'views'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filters, setFilters] = useState({
     status: '',
     search: '',
@@ -74,6 +76,28 @@ export default function AdminAdsManagement() {
 
   const ads = data?.ads || [];
   const pagination = data?.pagination || { page: 1, totalPages: 1, total: 0 };
+
+  // Sort ads
+  const sortedAds = [...ads].sort((a, b) => {
+    if (sortBy === 'views') {
+      const aViews = a.views || 0;
+      const bViews = b.views || 0;
+      return sortOrder === 'desc' ? bViews - aViews : aViews - bViews;
+    } else {
+      const aDate = new Date(a.createdAt).getTime();
+      const bDate = new Date(b.createdAt).getTime();
+      return sortOrder === 'desc' ? bDate - aDate : aDate - bDate;
+    }
+  });
+
+  const handleSort = (column: 'date' | 'views') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
 
   return (
       <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
@@ -176,8 +200,17 @@ export default function AdminAdsManagement() {
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase">
                         סטטוס
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase">
-                        תאריכים
+                      <th 
+                        className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('date')}
+                      >
+                        תאריך {sortBy === 'date' && (sortOrder === 'desc' ? '↓' : '↑')}
+                      </th>
+                      <th 
+                        className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('views')}
+                      >
+                        צפיות {sortBy === 'views' && (sortOrder === 'desc' ? '↓' : '↑')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-900 uppercase">
                         פעולות
@@ -185,7 +218,7 @@ export default function AdminAdsManagement() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {ads.map((ad: any) => (
+                    {sortedAds.map((ad: any) => (
                       <tr key={ad.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           #{ad.adNumber || ad.id.slice(0, 8)}
@@ -194,14 +227,6 @@ export default function AdminAdsManagement() {
                           <div className="max-w-xs">
                             <div className="font-medium text-gray-900">{ad.title}</div>
                             <div className="text-xs text-gray-700">{ad.Category?.nameHe}</div>
-                            {typeof ad.views === 'number' && (
-                              <span
-                                className="inline-block bg-blue-100 text-blue-800 text-xs rounded-full px-2 py-0.5 mt-1"
-                                title="מספר צפיות"
-                              >
-                                👁️ {ad.views} צפיות
-                              </span>
-                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
@@ -240,6 +265,11 @@ export default function AdminAdsManagement() {
                           {ad.expiresAt && (
                             <div>פקיעה: {new Date(ad.expiresAt).toLocaleDateString('he-IL')}</div>
                           )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                            👁️ {ad.views || 0}
+                          </span>
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <Link
