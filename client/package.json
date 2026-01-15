@@ -1,6 +1,7 @@
 {
   "name": "meyadleyad-client",
   "version": "1.0.0",
+  "type": "module",
   "description": "Production-ready classified ads platform - Frontend",
   "private": true,
   "scripts": {

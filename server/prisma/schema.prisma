@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Ad {
-  id                    String        @id
+  id                    String             @id
   title                 String
   description           String
   price                 Float?
@@ -19,34 +19,35 @@ model Ad {
   latitude              Float?
   longitude             Float?
   customFields          Json?
-  status                AdStatus      @default(PENDING)
+  status                AdStatus           @default(PENDING)
   rejectionReason       String?
-  rejectedReason        String?       // סיבת דחייה
-  views                 Int           @default(0)
-  contactClicks         Int           @default(0)
-  whatsappSent          Boolean       @default(false)
+  views                 Int                @default(0)
+  contactClicks         Int                @default(0)
+  whatsappSent          Boolean            @default(false)
   whatsappSentAt        DateTime?
-  expiresAt             DateTime?     // תאריך פקיעת תוקף
-  publishedAt           DateTime?     // תאריך עלייה לאוויר
-  removedAt             DateTime?     // תאריך הסרה
-  createdAt             DateTime      @default(now())
+  expiresAt             DateTime?
+  publishedAt           DateTime?
+  createdAt             DateTime           @default(now())
   updatedAt             DateTime
-  adNumber              Int           @unique @default(autoincrement())
-  neighborhood          String?
-  streetId              String?
+  adNumber              Int                @unique @default(autoincrement())
   adType                String?
-  isWanted              Boolean       @default(false)
+  neighborhood          String?
+  rejectedReason        String?
+  removedAt             DateTime?
+  streetId              String?
+  isWanted              Boolean            @default(false)
   requestedLocationText String?
-  Category              Category      @relation(fields: [categoryId], references: [id])
-  City                  City?         @relation(fields: [cityId], references: [id])
-  Street                Street?       @relation(fields: [streetId], references: [id])
-  User                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Category              Category           @relation(fields: [categoryId], references: [id])
+  City                  City?              @relation(fields: [cityId], references: [id])
+  Street                Street?            @relation(fields: [streetId], references: [id])
+  User                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   AdImage               AdImage[]
-  EmailLog              EmailLog[]
   AdminAdLog            AdminAdLog[]
   Appointment           Appointment[]
   AvailabilitySlot      AvailabilitySlot[]
+  EmailLog              EmailLog[]
   Favorite              Favorite[]
+  NewspaperAd           NewspaperAd[]
 
   @@index([adNumber])
   @@index([categoryId])
@@ -58,14 +59,14 @@ model Ad {
 }
 
 model AdImage {
-  id         String   @id
-  adId       String
-  url        String
-  originalUrl String? // URL to original file (before watermark)
-  brandedUrl  String? // URL to watermarked file
-  order      Int      @default(0)
-  createdAt  DateTime @default(now())
-  Ad         Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  id          String   @id
+  adId        String
+  url         String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  brandedUrl  String?
+  originalUrl String?
+  Ad          Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
 
   @@index([adId])
 }
@@ -207,72 +208,71 @@ model Street {
 }
 
 model User {
-  id                   String                 @id @default(uuid())
-  email                String                 @unique
-  password             String?
-  name                 String?
-  phone                String?
-  role                 UserRole               @default(USER)
-  googleId             String?                @unique
-  avatar               String?
-  isVerified           Boolean                @default(false)
-  verificationToken    String?                @unique
-  resetToken           String?
-  resetTokenExpiry     DateTime?
-  companyName          String?
-  licenseNumber        String?
-  description          String?
-  website              String?
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  isEmailVerified      Boolean                @default(false)
-  resetPasswordExpires DateTime?
-  resetPasswordToken   String?                @unique
-  verificationExpires  DateTime?
-  brokerLogoApproved   Boolean                @default(false)
-  // Service Provider fields
-  userType             UserType?              @default(USER)
-  firstName            String?
-  lastName             String?
-  phonePersonal        String?
-  serviceProviderType  ServiceProviderType?
-  businessName         String?
-  businessAddress      String?
-  businessPhone        String?
-  brokerLicenseNumber  String?
-  brokerCityId         String?
-  weeklyDigestOptIn    Boolean                @default(true)
-  termsAcceptedAt      DateTime?
-  declarationAcceptedAt DateTime?
-  pendingEmail         String?                // For email change requests
-  // Additional Service Provider fields
-  phoneBusinessOffice  String?                // Business office phone
-  officeAddress        String?                // Current approved office address
-  officeAddressPending String?                // Pending office address change
-  officeAddressStatus  ApprovalStatus         @default(APPROVED)
-  logoUrlPending       String?                // Pending logo URL
-  logoStatus           ApprovalStatus         @default(APPROVED)
-  aboutBusiness        String?                // Current approved about text
-  aboutBusinessPending String?                // Pending about text
-  aboutBusinessStatus  ApprovalStatus         @default(APPROVED)
-  publishOfficeAddress Boolean                @default(false)
-  businessHours        Json?                  // JSON: { sun: [{from, to}], mon: [], ... }
-  weeklyDigestSubscribed Boolean              @default(false)
-  Ad                   Ad[]
-  RefreshToken         RefreshToken[]
-  EmailLog             EmailLog[]
-  BrandingConfig       BrandingConfig[]
-  UserPreference       UserPreference?
-  AppointmentRequester Appointment[]          @relation("AppointmentRequester")
-  AppointmentOwner     Appointment[]          @relation("AppointmentOwner")
-  UserAudit            UserAudit[]
-  Favorite             Favorite[]
-  UserAppointmentPolicy UserAppointmentPolicy?
-  BrokerCity           City?                  @relation("BrokerCity", fields: [brokerCityId], references: [id])
+  id                         String                       @id @default(uuid())
+  email                      String                       @unique
+  password                   String?
+  name                       String?
+  phone                      String?
+  role                       UserRole                     @default(USER)
+  googleId                   String?                      @unique
+  avatar                     String?
+  isVerified                 Boolean                      @default(false)
+  verificationToken          String?                      @unique
+  resetToken                 String?
+  resetTokenExpiry           DateTime?
+  companyName                String?
+  licenseNumber              String?
+  description                String?
+  website                    String?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  isEmailVerified            Boolean                      @default(false)
+  resetPasswordExpires       DateTime?
+  resetPasswordToken         String?                      @unique
+  verificationExpires        DateTime?
+  brokerLogoApproved         Boolean                      @default(false)
+  brokerCityId               String?
+  brokerLicenseNumber        String?
+  businessAddress            String?
+  businessName               String?
+  businessPhone              String?
+  declarationAcceptedAt      DateTime?
+  firstName                  String?
+  lastName                   String?
+  pendingEmail               String?
+  phonePersonal              String?
+  serviceProviderType        ServiceProviderType?
+  termsAcceptedAt            DateTime?
+  userType                   UserType?                    @default(USER)
+  weeklyDigestOptIn          Boolean                      @default(true)
+  aboutBusiness              String?
+  aboutBusinessPending       String?
+  aboutBusinessStatus        ApprovalStatus               @default(APPROVED)
+  businessHours              Json?
+  logoStatus                 ApprovalStatus               @default(APPROVED)
+  logoUrlPending             String?
+  officeAddress              String?
+  officeAddressPending       String?
+  officeAddressStatus        ApprovalStatus               @default(APPROVED)
+  phoneBusinessOffice        String?
+  publishOfficeAddress       Boolean                      @default(false)
+  weeklyDigestSubscribed     Boolean                      @default(false)
+  AccountDeletionRequest     AccountDeletionRequest[]
+  Ad                         Ad[]
+  AppointmentOwner           Appointment[]                @relation("AppointmentOwner")
+  AppointmentRequester       Appointment[]                @relation("AppointmentRequester")
+  BrandingConfig             BrandingConfig[]
+  DataExportRequest          DataExportRequest[]
+  EmailLog                   EmailLog[]
+  Favorite                   Favorite[]
+  HighlightRequest           HighlightRequest[]
+  NewspaperAdCreated         NewspaperAd[]                @relation("NewspaperAdCreator")
   OfficeAddressChangeRequest OfficeAddressChangeRequest[]
-  HighlightRequest     HighlightRequest[]
-  DataExportRequest    DataExportRequest[]
-  AccountDeletionRequest AccountDeletionRequest[]
+  RefreshToken               RefreshToken[]
+  BrokerCity                 City?                        @relation("BrokerCity", fields: [brokerCityId], references: [id])
+  UserAppointmentPolicy      UserAppointmentPolicy?
+  UserAudit                  UserAudit[]
+  UserPreference             UserPreference?
 
   @@index([email])
   @@index([googleId])
@@ -302,8 +302,8 @@ model EmailLog {
   recipientEmail String
   errorMessage   String?
   createdAt      DateTime    @default(now())
-  User           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
-  Ad             Ad?         @relation(fields: [adId], references: [id], onDelete: SetNull)
+  Ad             Ad?         @relation(fields: [adId], references: [id])
+  User           User?       @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([adId])
@@ -316,7 +316,7 @@ model AdminAdLog {
   id         String    @id @default(cuid())
   adminId    String
   adId       String
-  action     String    // APPROVE, REJECT, STATUS_CHANGE
+  action     String
   fromStatus AdStatus?
   toStatus   AdStatus?
   reason     String?
@@ -328,55 +328,12 @@ model AdminAdLog {
   @@index([createdAt])
 }
 
-enum AdStatus {
-  DRAFT      // טיוטה
-  PENDING    // ממתינה לאישור
-  ACTIVE     // פעילה / באוויר
-  APPROVED   // מאושרת (שמור לתאימות לאחור)
-  REJECTED   // נדחתה
-  EXPIRED    // פגה תוקף
-  REMOVED    // הוסרה ביוזמת מפרסם
-}
-
-enum UserRole {
-  USER
-  BROKER
-  ADMIN
-  SERVICE_PROVIDER
-}
-
-enum UserType {
-  USER
-  SERVICE_PROVIDER
-}
-
-enum ServiceProviderType {
-  BROKER
-  LAWYER
-  APPRAISER
-  DESIGNER_ARCHITECT
-  MORTGAGE_ADVISOR
-}
-
-enum EmailType {
-  AD_PUBLISHED_COPY
-  AD_APPROVED
-  AD_REJECTED
-  VERIFICATION
-  PASSWORD_RESET
-}
-
-enum EmailStatus {
-  SUCCESS
-  FAILED
-}
-
 model BrandingConfig {
   id          String   @id @default(cuid())
   logoUrl     String   @default("")
-  position    String   @default("bottom-left") // 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-  opacity     Int      @default(70) // 0..100
-  sizePct     Int      @default(18) // 5..30 percent of image width
+  position    String   @default("bottom-left")
+  opacity     Int      @default(70)
+  sizePct     Int      @default(18)
   updatedById String?
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
@@ -386,23 +343,16 @@ model BrandingConfig {
 }
 
 model UserPreference {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  weeklyDigest   Boolean  @default(false) // opt-in לקובץ השבועי
-  notifyNewMatches Boolean @default(false) // התראות על נכסים חדשים
-  filters        Json?    // { regions:[], categories:[], priceRange:{min,max}, propertyTypes:[], publisherType:[] }
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  weeklyDigest     Boolean  @default(false)
+  notifyNewMatches Boolean  @default(false)
+  filters          Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-}
-
-enum AppointmentStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  RESCHEDULE_REQUESTED
 }
 
 model Appointment {
@@ -416,8 +366,8 @@ model Appointment {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   ad          Ad                @relation(fields: [adId], references: [id], onDelete: Cascade)
-  requester   User              @relation("AppointmentRequester", fields: [requesterId], references: [id], onDelete: Cascade)
   owner       User              @relation("AppointmentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  requester   User              @relation("AppointmentRequester", fields: [requesterId], references: [id], onDelete: Cascade)
 
   @@index([requesterId])
   @@index([ownerId])
@@ -429,9 +379,9 @@ model Appointment {
 model AvailabilitySlot {
   id        String   @id @default(cuid())
   adId      String
-  dayOfWeek Int      // 0=Sunday ... 6=Saturday
-  startTime String   // "09:00"
-  endTime   String   // "12:00"
+  dayOfWeek Int
+  startTime String
+  endTime   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ad        Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
@@ -468,10 +418,10 @@ model AdminAuditLog {
 model UserAudit {
   id        String   @id @default(cuid())
   userId    String
-  action    String   // UPDATE_PROFILE, UPDATE_PREFS, DELETE_AD, DELETE_REQ, etc.
+  action    String
   meta      Json?
-  ip        String?  // IP address of the user
   createdAt DateTime @default(now())
+  ip        String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -484,15 +434,14 @@ model Favorite {
   userId    String
   adId      String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ad        Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, adId])
   @@index([userId])
   @@index([adId])
 }
 
-// Analytics - Page Views
 model PageView {
   id              String   @id @default(cuid())
   path            String
@@ -507,39 +456,37 @@ model PageView {
   @@index([createdAt])
 }
 
-// Mailing List for Content Distribution
 model MailingListSubscriber {
-  id               String   @id @default(cuid())
-  email            String   @unique
-  name             String?
-  isActive         Boolean  @default(true)
-  unsubscribedAt   DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  isActive       Boolean   @default(true)
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([email])
   @@index([isActive])
 }
 
 model ContentDispatchLog {
-  id          String   @id @default(cuid())
-  fileName    String
-  fileUrl     String?
+  id             String   @id @default(cuid())
+  fileName       String
+  fileUrl        String?
   recipientEmail String
-  sentAt      DateTime @default(now())
-  status      String   @default("SENT") // SENT, FAILED, OPENED
-  errorMessage String?
+  sentAt         DateTime @default(now())
+  status         String   @default("SENT")
+  errorMessage   String?
 
   @@index([recipientEmail])
   @@index([sentAt])
   @@index([status])
 }
 
-// Import Logs
 model ImportLog {
   id          String   @id @default(cuid())
   adminId     String
-  importType  String   // CITIES, STREETS, PROPERTIES
+  importType  String
   fileName    String
   totalRows   Int      @default(0)
   successRows Int      @default(0)
@@ -551,10 +498,6 @@ model ImportLog {
   @@index([importType])
   @@index([createdAt])
 }
-
-// ============================================
-// BROKER PROFILE MODELS
-// ============================================
 
 model BrokerOffice {
   id                      String             @id @default(cuid())
@@ -592,14 +535,14 @@ model BrokerTeamMember {
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
+  id          String   @id @default(cuid())
   actorUserId String?
-  actionType String  // UPDATE_PROFILE, UPDATE_OFFICE, ADD_TEAM, DELETE_AD, etc.
-  entityType String? // BROKER_OFFICE, TEAM_MEMBER, AD, USER, etc.
-  entityId   String?
-  metadata   Json?   // Additional details
-  ip         String?
-  createdAt  DateTime @default(now())
+  actionType  String
+  entityType  String?
+  entityId    String?
+  metadata    Json?
+  ip          String?
+  createdAt   DateTime @default(now())
 
   @@index([actorUserId])
   @@index([actionType])
@@ -608,61 +551,55 @@ model AuditLog {
 }
 
 model FeaturedRequest {
-  id         String              @id @default(cuid())
-  userId     String
-  adId       String
-  status     FeaturedRequestStatus @default(PENDING)
-  notes      String?
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @updatedAt
+  id        String                @id @default(cuid())
+  userId    String
+  adId      String
+  status    FeaturedRequestStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
 
   @@index([userId])
   @@index([adId])
   @@index([status])
 }
 
-enum FeaturedRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model DataExportRequest {
-  id         String              @id @default(cuid())
-  userId     String
-  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status     DataRequestStatus   @default(PENDING)
-  exportUrl  String?
-  createdAt  DateTime            @default(now())
+  id          String            @id @default(cuid())
+  userId      String
+  status      DataRequestStatus @default(PENDING)
+  exportUrl   String?
+  createdAt   DateTime          @default(now())
   processedAt DateTime?
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
 model AccountDeletionRequest {
-  id         String              @id @default(cuid())
-  userId     String
-  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status     DataRequestStatus   @default(PENDING)
-  reason     String?
-  createdAt  DateTime            @default(now())
+  id          String            @id @default(cuid())
+  userId      String
+  status      DataRequestStatus @default(PENDING)
+  reason      String?
+  createdAt   DateTime          @default(now())
   processedAt DateTime?
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
 model OfficeAddressChangeRequest {
-  id          String              @id @default(cuid())
+  id          String         @id @default(cuid())
   userId      String
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   newAddress  String
-  status      ApprovalStatus      @default(PENDING)
+  status      ApprovalStatus @default(PENDING)
   adminNotes  String?
-  createdAt   DateTime            @default(now())
+  createdAt   DateTime       @default(now())
   processedAt DateTime?
   processedBy String?
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -671,17 +608,88 @@ model OfficeAddressChangeRequest {
 model HighlightRequest {
   id          String         @id @default(cuid())
   userId      String
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  requestType String         // 'SERVICE_CARD' or 'BUSINESS_PAGE'
+  requestType String
   reason      String?
   status      ApprovalStatus @default(PENDING)
   adminNotes  String?
   createdAt   DateTime       @default(now())
   processedAt DateTime?
   processedBy String?
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
+}
+
+model NewspaperAd {
+  id        String   @id @default(cuid())
+  adId      String
+  filePath  String
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  createdBy String
+  ad        Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  creator   User     @relation("NewspaperAdCreator", fields: [createdBy], references: [id])
+
+  @@index([adId])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+enum AdStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  DRAFT
+  ACTIVE
+  REMOVED
+}
+
+enum UserRole {
+  USER
+  BROKER
+  ADMIN
+  SERVICE_PROVIDER
+}
+
+enum UserType {
+  USER
+  SERVICE_PROVIDER
+}
+
+enum ServiceProviderType {
+  BROKER
+  LAWYER
+  APPRAISER
+  DESIGNER_ARCHITECT
+  MORTGAGE_ADVISOR
+}
+
+enum EmailType {
+  AD_PUBLISHED_COPY
+  AD_APPROVED
+  AD_REJECTED
+  VERIFICATION
+  PASSWORD_RESET
+}
+
+enum EmailStatus {
+  SUCCESS
+  FAILED
+}
+
+enum AppointmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RESCHEDULE_REQUESTED
+}
+
+enum FeaturedRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum DataRequestStatus {

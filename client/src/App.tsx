@@ -150,8 +150,15 @@ const App: React.FC = () => {
                   {/* Admin Routes - wrapped in AdminLayout */}
                   <Route path="/admin" element={<AdminRoute><Navigate to="/admin/dashboard" replace /></AdminRoute>} />
                   <Route path="/admin/dashboard" element={<AdminRoute><AdminLayout><AdminDashboardPage /></AdminLayout></AdminRoute>} />
-                  <Route path="/admin/pending" element={<AdminRoute><AdminLayout><PendingAds /></AdminLayout></AdminRoute>} />
-                  <Route path="/admin/ads" element={<AdminRoute><AdminLayout><AdminAdsPage /></AdminLayout></AdminRoute>} />
+                  
+                  {/* Ads Management Routes */}
+                  <Route path="/admin/ads/pending" element={<AdminRoute><AdminLayout><PendingAds /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/ads/manage" element={<AdminRoute><AdminLayout><AdminAdsPage /></AdminLayout></AdminRoute>} />
+                  
+                  {/* Legacy redirects for backward compatibility */}
+                  <Route path="/admin/pending" element={<Navigate to="/admin/ads/pending" replace />} />
+                  <Route path="/admin/ads" element={<Navigate to="/admin/ads/manage" replace />} />
+                  
                   <Route path="/admin/newspaper" element={<AdminRoute><AdminLayout><NewspaperLayoutPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/users" element={<AdminRoute><AdminLayout><UserManagement /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdmin /></AdminLayout></AdminRoute>} />

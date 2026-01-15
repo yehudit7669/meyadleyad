@@ -24,6 +24,9 @@ router.post('/ads/:id/reject', adminController.rejectAd);
 router.get('/ads', adminController.getAllAds);
 router.patch('/ads/:id/status', adminController.updateAdStatus);
 
+// ייצוא היסטוריה (SuperAdmin בלבד)
+router.post('/ads/export-history', adminController.exportAdsHistory);
+
 // מחיקת מודעות משתמש
 router.delete('/users/:userId/ads', adminController.deleteUserAds);
 

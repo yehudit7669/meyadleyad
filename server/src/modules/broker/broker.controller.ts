@@ -76,7 +76,8 @@ export class BrokerController {
       const { logoUrl } = req.body;
       
       if (!logoUrl) {
-        return res.status(400).json({ message: 'לוגו חייב להיות מוגדר' });
+        res.status(400).json({ message: 'לוגו חייב להיות מוגדר' });
+        return;
       }
 
       const result = await brokerService.uploadOfficeLogo(userId, logoUrl, ip);

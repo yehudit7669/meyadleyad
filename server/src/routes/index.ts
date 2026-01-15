@@ -27,6 +27,7 @@ import importRoutes from '../modules/admin/import.routes';
 import auditLogRoutes from '../modules/admin/audit-log.routes';
 import categoryManagementRoutes from '../modules/admin/category-management.routes';
 import adminDashboardRoutes from '../modules/admin/admin-dashboard.routes';
+import newspaperRoutes from '../modules/newspaper/newspaper.routes';
 
 const router = Router();
 
@@ -58,5 +59,6 @@ router.use('/admin/pdf-export', pdfExportRoutes);
 router.use('/admin/import', importRoutes);
 router.use('/admin/audit-log', auditLogRoutes);
 router.use('/admin/categories', categoryManagementRoutes);
+router.use('/admin/newspaper', newspaperRoutes);
 
 export default router;

@@ -191,6 +191,16 @@ export class AdminService {
       'ACTIVE'
     );
 
+    // Auto-generate newspaper PDF when ad is approved (becomes ACTIVE)
+    try {
+      const { newspaperService } = await import('../newspaper/newspaper.service');
+      await newspaperService.generateNewspaperPDF(adId, adminId);
+      console.log(`✅ Newspaper PDF auto-generated for approved ad ${adId}`);
+    } catch (error) {
+      console.error(`❌ Failed to auto-generate newspaper PDF for ad ${adId}:`, error);
+      // Don't throw - PDF generation failure shouldn't block ad approval
+    }
+
     // שליחת מייל אישור (ללא PDF - המשתמש כבר קיבל PDF בזמן הפרסום)
     try {
       if (ad.User.isEmailVerified) {
@@ -271,7 +281,7 @@ export class AdminService {
     page: number = 1,
     limit: number = 20,
     filters?: {
-      status?: AdStatus;
+      status?: AdStatus | string;
       search?: string;
     }
   ) {
@@ -280,7 +290,13 @@ export class AdminService {
     const where: any = {};
 
     if (filters?.status) {
-      where.status = filters.status;
+      // Handle comma-separated statuses from query params
+      if (typeof filters.status === 'string' && filters.status.includes(',')) {
+        const statuses = filters.status.split(',').map(s => s.trim()) as AdStatus[];
+        where.status = { in: statuses };
+      } else {
+        where.status = filters.status;
+      }
     }
 
     if (filters?.search) {
@@ -366,6 +382,18 @@ export class AdminService {
       oldStatus,
       status
     );
+
+    // Auto-generate newspaper PDF when ad becomes ACTIVE
+    if (status === 'ACTIVE' && oldStatus !== 'ACTIVE') {
+      try {
+        const { newspaperService } = await import('../newspaper/newspaper.service');
+        await newspaperService.generateNewspaperPDF(adId, adminId);
+        console.log(`✅ Newspaper PDF auto-generated for ad ${adId}`);
+      } catch (error) {
+        console.error(`❌ Failed to auto-generate newspaper PDF for ad ${adId}:`, error);
+        // Don't throw - PDF generation failure shouldn't block ad status update
+      }
+    }
 
     return updatedAd;
   }
@@ -511,5 +539,116 @@ export class AdminService {
     });
 
     return { message: 'המשתמש נמחק בהצלחה' };
+  }
+
+  async exportAdsHistory(
+    filters: {
+      dateFrom?: string;
+      dateTo?: string;
+      categoryId?: string;
+      statuses?: AdStatus[];
+    },
+    adminId: string
+  ) {
+    // Build where clause
+    const where: any = {};
+
+    if (filters.dateFrom) {
+      where.createdAt = { gte: new Date(filters.dateFrom) };
+    }
+    if (filters.dateTo) {
+      const toDate = new Date(filters.dateTo);
+      toDate.setHours(23, 59, 59);
+      where.createdAt = { ...where.createdAt, lte: toDate };
+    }
+    if (filters.categoryId) {
+      where.categoryId = filters.categoryId;
+    }
+    if (filters.statuses && filters.statuses.length > 0) {
+      where.status = { in: filters.statuses };
+    }
+
+    // Fetch ads with all related data
+    const ads = await prisma.ad.findMany({
+      where,
+      include: {
+        User: true,
+        Category: true,
+        City: true,
+        Street: true,
+        AdminAdLog: {
+          orderBy: { createdAt: 'desc' },
+          take: 10, // Last 10 status changes
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Log audit event
+    await prisma.adminAuditLog.create({
+      data: {
+        adminId,
+        action: 'EXPORT_AD_HISTORY',
+        targetId: 'BULK',
+        meta: {
+          filters,
+          recordCount: ads.length,
+        },
+      },
+    });
+
+    // Convert to CSV
+    const csvHeaders = [
+      'מספר מודעה',
+      'תאריך יצירה',
+      'כתובת',
+      'עיר',
+      'רחוב',
+      'קטגוריה',
+      'מחיר',
+      'סטטוס',
+      'צפיות',
+      'לחיצות קשר',
+      'שם מפרסם',
+      'אימייל מפרסם',
+      'טלפון מפרסם',
+      'תאריך פרסום',
+      'תאריך פקיעה',
+      'תאריך הסרה',
+      'סיבת דחייה',
+      'תיאור (50 תווים ראשונים)',
+    ].join(',');
+
+    const csvRows = ads.map(ad => {
+      // Truncate description to first 50 chars
+      const shortDesc = ad.description 
+        ? ad.description.substring(0, 50).replace(/"/g, '""') 
+        : '';
+      
+      return [
+        ad.adNumber,
+        new Date(ad.createdAt).toLocaleDateString('he-IL'),
+        `"${(ad.address || '').replace(/"/g, '""')}"`,
+        `"${(ad.City?.nameHe || '').replace(/"/g, '""')}"`,
+        `"${(ad.Street?.name || '').replace(/"/g, '""')}"`,
+        `"${(ad.Category?.nameHe || '').replace(/"/g, '""')}"`,
+        ad.price || '',
+        ad.status,
+        ad.views || 0,
+        ad.contactClicks || 0,
+        `"${(ad.User?.name || '').replace(/"/g, '""')}"`,
+        `"${(ad.User?.email || '').replace(/"/g, '""')}"`,
+        `"${(ad.User?.phone || '').replace(/"/g, '""')}"`,
+        ad.publishedAt ? new Date(ad.publishedAt).toLocaleDateString('he-IL') : '',
+        ad.expiresAt ? new Date(ad.expiresAt).toLocaleDateString('he-IL') : '',
+        ad.removedAt ? new Date(ad.removedAt).toLocaleDateString('he-IL') : '',
+        `"${(ad.rejectedReason || ad.rejectionReason || '').replace(/"/g, '""')}"`,
+        `"${shortDesc}"`,
+      ].join(',');
+    });
+
+    // Add BOM for Hebrew support in Excel
+    const BOM = '\uFEFF';
+    return BOM + [csvHeaders, ...csvRows].join('\n');
   }
 }

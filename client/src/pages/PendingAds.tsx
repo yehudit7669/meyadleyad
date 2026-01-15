@@ -834,6 +834,23 @@ export default function PendingAds() {
                       )}
                     </div>
                     
+                    {/* קישור לתצוגה כפי שתיראה באתר */}
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h4 className="font-bold mb-2 text-gray-900">תצוגה כפי שתיראה באתר</h4>
+                      <p className="text-sm text-gray-700 mb-3">
+                        צפייה במודעה כפי שהיא תיראה למשתמשים באתר (גישה למנהלים בלבד)
+                      </p>
+                      <a
+                        href={`/ads/${previewAd.id}?preview=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                      >
+                        🔍 תצוגה מקדימה באתר
+                        <span className="text-xs opacity-75">(יפתח בחלון חדש)</span>
+                      </a>
+                    </div>
+                    
                     {/* כפתורי פעולה */}
                     <div className="sticky bottom-0 bg-white border-t pt-4 flex gap-3">
                       <button

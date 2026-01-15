@@ -15,14 +15,24 @@ import {
   HardDrive,
   Settings,
   Menu,
-  X
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface MenuItem {
   id: string;
   title: string;
-  path: string;
+  path?: string;
   icon: React.ReactNode;
+  requiredRoles: ('ADMIN' | 'SUPER_ADMIN' | 'MODERATOR')[];
+  children?: SubMenuItem[];
+}
+
+interface SubMenuItem {
+  id: string;
+  title: string;
+  path: string;
   requiredRoles: ('ADMIN' | 'SUPER_ADMIN' | 'MODERATOR')[];
 }
 
@@ -35,18 +45,24 @@ const menuItems: MenuItem[] = [
     requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
   },
   {
-    id: 'pending',
-    title: 'מודעות בהמתנה',
-    path: '/admin/pending',
-    icon: <Clock className="w-5 h-5" />,
-    requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
-  },
-  {
-    id: 'ads',
+    id: 'ads-management',
     title: 'ניהול מודעות',
-    path: '/admin/ads',
     icon: <FileText className="w-5 h-5" />,
-    requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR'],
+    children: [
+      {
+        id: 'ads-pending',
+        title: 'מודעות ממתינות לאישור',
+        path: '/admin/ads/pending',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
+      },
+      {
+        id: 'ads-manage',
+        title: 'ניהול סטטוס מודעות',
+        path: '/admin/ads/manage',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
+      }
+    ]
   },
   {
     id: 'newspaper',
@@ -114,13 +130,13 @@ const menuItems: MenuItem[] = [
 ];
 
 // TODO: כאשר יהיו roles מדויקים (SUPER_ADMIN, MODERATOR), להשתמש בהם
-// כרגע: ADMIN = Admin, ושאר הרשאות עתידיות
+// כרגע: כל ADMIN נחשב כ-SUPER_ADMIN (עד שיתווסף שדה role)
 function getUserRole(user: any): 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null {
   if (!user?.isAdmin) return null;
   
-  // TODO: כאשר יהיה user.role === 'SUPER_ADMIN' להחזיר SUPER_ADMIN
-  // כרגע כל ADMIN נחשב כ-ADMIN רגיל
-  return 'ADMIN';
+  // TODO: כאשר יהיה user.role, להשתמש בו ישירות
+  // כרגע כל ADMIN נחשב כ-SUPER_ADMIN
+  return 'SUPER_ADMIN';
 }
 
 function hasAccess(userRole: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null, requiredRoles: MenuItem['requiredRoles']): boolean {
@@ -136,15 +152,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = useAuth();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(['ads-management']); // ניהול מודעות פתוח כברירת מחדל
 
   const userRole = getUserRole(user);
   const allowedMenuItems = menuItems.filter(item => hasAccess(userRole, item.requiredRoles));
 
-  const isActive = (path: string) => {
+  const isActive = (path?: string) => {
+    if (!path) return false;
     if (path === '/admin/dashboard') {
       return location.pathname === '/admin' || location.pathname === '/admin/dashboard';
     }
     return location.pathname === path;
+  };
+
+  const isChildActive = (children?: SubMenuItem[]) => {
+    if (!children) return false;
+    return children.some(child => location.pathname === child.path);
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   const SidebarContent = () => (
@@ -156,27 +187,87 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       <nav className="flex-1 overflow-y-auto p-4" aria-label="תפריט ניהול">
         <ul className="space-y-1">
-          {allowedMenuItems.map((item) => (
-            <li key={item.id}>
-              <Link
-                to={item.path}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                  ${isActive(item.path)
-                    ? 'bg-[#1F3F3A] text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                  }
-                `}
-                onClick={() => setIsMobileMenuOpen(false)}
-                aria-current={isActive(item.path) ? 'page' : undefined}
-              >
-                <span className={isActive(item.path) ? 'text-white' : 'text-gray-500'}>
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.title}</span>
-              </Link>
-            </li>
-          ))}
+          {allowedMenuItems.map((item) => {
+            const hasChildren = item.children && item.children.length > 0;
+            const isExpanded = expandedCategories.includes(item.id);
+            const isItemActive = hasChildren ? isChildActive(item.children) : isActive(item.path);
+
+            return (
+              <li key={item.id}>
+                {hasChildren ? (
+                  <>
+                    {/* Category with children */}
+                    <button
+                      onClick={() => toggleCategory(item.id)}
+                      className={`
+                        w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-colors
+                        ${isItemActive
+                          ? 'bg-[#1F3F3A]/10 text-[#1F3F3A] font-semibold'
+                          : 'text-gray-700 hover:bg-gray-100'
+                        }
+                      `}
+                      aria-expanded={isExpanded}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={isItemActive ? 'text-[#1F3F3A]' : 'text-gray-500'}>
+                          {item.icon}
+                        </span>
+                        <span className="font-medium">{item.title}</span>
+                      </div>
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {/* Sub-menu */}
+                    {isExpanded && (
+                      <ul className="mt-1 mr-6 space-y-1">
+                        {item.children.map(child => (
+                          <li key={child.id}>
+                            <Link
+                              to={child.path}
+                              className={`
+                                block px-4 py-2 rounded-lg text-sm transition-colors
+                                ${isActive(child.path)
+                                  ? 'bg-[#1F3F3A] text-white font-medium'
+                                  : 'text-gray-600 hover:bg-gray-100'
+                                }
+                              `}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              aria-current={isActive(child.path) ? 'page' : undefined}
+                            >
+                              {child.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  /* Regular menu item */
+                  <Link
+                    to={item.path!}
+                    className={`
+                      flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                      ${isItemActive
+                        ? 'bg-[#1F3F3A] text-white'
+                        : 'text-gray-700 hover:bg-gray-100'
+                      }
+                    `}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    aria-current={isItemActive ? 'page' : undefined}
+                  >
+                    <span className={isItemActive ? 'text-white' : 'text-gray-500'}>
+                      {item.icon}
+                    </span>
+                    <span className="font-medium">{item.title}</span>
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

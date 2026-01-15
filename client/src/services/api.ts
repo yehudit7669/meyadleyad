@@ -431,6 +431,18 @@ export const adminService = {
     return response.data as any;
   },
 
+  exportAdsHistory: async (filters: {
+    dateFrom?: string;
+    dateTo?: string;
+    categoryId?: string;
+    statuses?: string[];
+  }) => {
+    const response = await api.post('/admin/ads/export-history', filters, {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
   getUsers: async () => {
     const response = await api.get('/admin/users', {
       params: {

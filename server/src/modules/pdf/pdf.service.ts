@@ -141,7 +141,7 @@ export class PDFService {
       id: ad.id,
       title: ad.title,
       description: ad.description,
-      price: ad.price,
+      price: ad.price ?? undefined,
       category: ad.Category.nameHe,
       city: ad.City?.nameHe,
       address: fullAddress,
@@ -183,12 +183,19 @@ export class PDFService {
       email: string;
     };
   }): Promise<Buffer> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
+    let browser;
     try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu'
+        ],
+      });
+
       const page = await browser.newPage();
 
       // Generate QR code if we have an ad ID
@@ -229,9 +236,12 @@ export class PDFService {
       const html = this.generateAdHTML(ad, qrCodeDataUrl, logoBase64, mainImageBase64);
 
       await page.setContent(html, { 
-        waitUntil: ['load', 'domcontentloaded'],
-        timeout: 30000
+        waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
+        timeout: 60000
       });
+
+      // Wait a bit for images to render
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const pdf = await page.pdf({
         format: 'A4',
@@ -242,11 +252,17 @@ export class PDFService {
           bottom: '15mm',
           left: '12mm',
         },
+        timeout: 60000,
       });
 
       return Buffer.from(pdf);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      await browser.close();
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 
@@ -258,17 +274,27 @@ export class PDFService {
     city?: string;
     images: string[];
   }>): Promise<Buffer> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
+    let browser;
     try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu'
+        ],
+      });
+
       const page = await browser.newPage();
 
       const html = this.generateNewspaperHTML(ads);
 
-      await page.setContent(html, { waitUntil: 'networkidle0' });
+      await page.setContent(html, { 
+        waitUntil: 'networkidle0',
+        timeout: 60000
+      });
 
       const pdf = await page.pdf({
         format: 'A4',
@@ -279,11 +305,17 @@ export class PDFService {
           bottom: '10mm',
           left: '10mm',
         },
+        timeout: 60000,
       });
 
       return Buffer.from(pdf);
+    } catch (error) {
+      console.error('Error generating newspaper PDF:', error);
+      throw new Error(`Failed to generate newspaper PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      await browser.close();
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 
@@ -739,7 +771,6 @@ export class PDFService {
               <div class="qr-section">
                 <img src="${qrCodeDataUrl}" alt="QR Code" class="qr-code" />
                 <div class="qr-text">סרוק לצפייה במודעה באתר</div>
-                <div class="qr-url">${config.frontendUrl}/ads/${ad.id || ''}</div>
               </div>
             ` : ''}
             

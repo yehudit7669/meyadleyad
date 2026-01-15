@@ -144,6 +144,31 @@ export class AdminController {
     }
   }
 
+  async exportAdsHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const adminId = (req as any).user.id;
+      
+      // Check if user is SUPER_ADMIN
+      // TODO: When role field exists, check user.role === 'SUPER_ADMIN'
+      // For now, allow all admins
+      
+      const filters = {
+        dateFrom: req.body.dateFrom as string,
+        dateTo: req.body.dateTo as string,
+        categoryId: req.body.categoryId as string,
+        statuses: req.body.statuses as AdStatus[],
+      };
+
+      const csvData = await adminService.exportAdsHistory(filters, adminId);
+      
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="ads-history-${new Date().toISOString().split('T')[0]}.csv"`);
+      res.send(csvData);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getStatistics(_req: Request, res: Response, next: NextFunction) {
     try {
       const stats = await adminService.getStatistics();

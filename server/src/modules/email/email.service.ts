@@ -43,7 +43,7 @@ export class EmailService {
   /**
    * Generic email sending function
    */
-  async sendEmail(to: string, subject: string, html: string) {
+  async sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
     if (!this.enabled) {
       console.log(`📧 SMTP disabled - email not sent to ${to}: ${subject}`);
       return;
@@ -55,6 +55,7 @@ export class EmailService {
         to,
         subject,
         html,
+        attachments,
       });
       console.log('✅ Email sent successfully:', info.messageId);
       return info;
