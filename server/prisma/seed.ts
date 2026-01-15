@@ -200,7 +200,22 @@ async function main() {
     },
   });
 
-  console.log('✅ Created categories (5 Real Estate Categories)');
+  const housingUnits = await prisma.category.upsert({
+    where: { slug: 'housing-units' },
+    update: {},
+    create: {
+      id: createId(),
+      name: 'Housing Units',
+      nameHe: 'יחידות דיור',
+      slug: 'housing-units',
+      description: 'יחידות דיור נפרדות להשכרה',
+      icon: '🏘️',
+      order: 6,
+      updatedAt: new Date(),
+    },
+  });
+
+  console.log('✅ Created categories (6 Real Estate Categories)');
 
   // Add category fields for apartments
   const apartmentCategory = await prisma.category.findUnique({

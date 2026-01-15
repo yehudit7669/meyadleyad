@@ -86,7 +86,7 @@ const ResidentialWizard: React.FC = () => {
       categorySlug = 'apartments-for-rent';
     } else if (adType === 'unit') {
       finalAdType = AdType.UNIT;
-      categorySlug = 'apartments-for-rent'; // יחידת דיור משתייכת לקטגוריית דירות להשכרה
+      categorySlug = 'housing-units'; // קטגוריה ייעודית ליחידות דיור
     }
 
     // Find categoryId from categories
