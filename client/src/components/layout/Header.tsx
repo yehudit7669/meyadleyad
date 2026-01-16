@@ -124,7 +124,7 @@ const Header: React.FC = () => {
                       >
                         המודעות שלי
                       </Link>
-                      {user.role === 'ADMIN' && (
+                      {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR') && (
                         <Link 
                           to="/admin" 
                           className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -248,7 +248,7 @@ const Header: React.FC = () => {
                   <Link to="/profile" className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition">
                     הפרופיל שלי
                   </Link>
-                  {user.role === 'ADMIN' && (
+                  {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR') && (
                     <Link to="/admin" className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition">
                       ניהול
                     </Link>

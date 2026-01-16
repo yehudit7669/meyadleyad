@@ -94,21 +94,31 @@ npm run dev
 ```
 האתר יעלה על: http://localhost:3000
 
-## משתמשי דמו (לאחר seed)
+## משתמשי מנהל במערכת
 
-אם תריץ את ה-seed, תקבל 3 משתמשים:
+המערכת כוללת 2 משתמשי מנהל מוכנים לשימוש:
 
-1. **מנהל**
+1. **מנהל על (Super Admin)** - הרשאות מלאות
+   - Email: superadmin@meyadleyad.com
+   - Password: Admin123!@#
+   - תפקיד: SUPER_ADMIN
+   - ⚠️ **שנה סיסמה אחרי כניסה ראשונה!**
+
+2. **מנהל (Admin)** - ניהול וכתיבה (ללא מחיקה)
    - Email: admin@meyadleyad.com
    - Password: admin123456
    - תפקיד: ADMIN
 
-2. **מתווך**
+## משתמשי דמו נוספים (לאחר seed)
+
+אם תריץ את ה-seed, תקבל משתמשים נוספים:
+
+1. **מתווך**
    - Email: broker@example.com
    - Password: broker123456
    - תפקיד: BROKER
 
-3. **משתמש רגיל**
+2. **משתמש רגיל**
    - Email: user@example.com
    - Password: user123456
    - תפקיד: USER

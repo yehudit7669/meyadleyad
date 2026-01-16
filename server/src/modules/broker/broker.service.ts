@@ -1,5 +1,6 @@
 import { brokerRepository } from './broker.repository';
 import { AuditService } from '../profile/audit.service';
+import prisma from '../../config/database';
 import type {
   UpdatePersonalDetailsInput,
   UpdateOfficeDetailsInput,
@@ -104,6 +105,16 @@ export class BrokerService {
 
   // Create availability slot
   async createAvailabilitySlot(userId: string, data: CreateAvailabilitySlotInput, ip?: string) {
+    // Check if user is blocked from meetings
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { meetingsBlocked: true },
+    });
+
+    if (user?.meetingsBlocked) {
+      throw new Error('הפונקציה הזו אינה זמינה עבורך כעת. לפרטים, פנה לתמיכה.');
+    }
+
     const result = await brokerRepository.createAvailabilitySlot(data);
     await AuditService.log(userId, 'UPDATE_SETTINGS', { slotId: result.id, adId: data.adId, dayOfWeek: data.dayOfWeek }, ip);
     return result;

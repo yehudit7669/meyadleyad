@@ -18,7 +18,6 @@ import brokerRoutes from '../modules/broker/broker.routes';
 import serviceProviderRoutes from '../modules/service-provider/service-provider.routes';
 
 // New admin modules
-import userManagementRoutes from '../modules/admin/user-management.routes';
 import analyticsRoutes from '../modules/admin/analytics.routes';
 import appointmentsAdminNewRoutes from '../modules/admin/appointments.routes';
 import contentDistributionRoutes from '../modules/admin/content-distribution.routes';
@@ -28,6 +27,7 @@ import auditLogRoutes from '../modules/admin/audit-log.routes';
 import categoryManagementRoutes from '../modules/admin/category-management.routes';
 import adminDashboardRoutes from '../modules/admin/admin-dashboard.routes';
 import newspaperRoutes from '../modules/newspaper/newspaper.routes';
+import usersAdminRoutes from '../modules/admin/users/users-admin.routes';
 
 const router = Router();
 
@@ -51,7 +51,7 @@ router.use('/service-providers', serviceProviderRoutes); // Service provider rou
 
 // New admin routes
 router.use('/admin/dashboard', adminDashboardRoutes);
-router.use('/admin/users', userManagementRoutes);
+router.use('/admin/users', usersAdminRoutes);
 router.use('/admin/analytics', analyticsRoutes);
 router.use('/admin/appointments-new', appointmentsAdminNewRoutes);
 router.use('/admin/content-distribution', contentDistributionRoutes);

@@ -24,12 +24,27 @@ export class AppointmentsService {
   ) {
     const requestDate = new Date(data.date);
 
-    // בדיקה שהמשתמש לא חסום
-    const policy = await prisma.userAppointmentPolicy.findUnique({
-      where: { userId },
+    // בדיקה שהמשתמש לא חסום - בדיקה משולבת
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        UserAppointmentPolicy: true,
+      },
     });
 
-    if (policy?.isBlocked) {
+    if (!user) {
+      throw new NotFoundError('משתמש לא נמצא');
+    }
+
+    // בדיקה אם המשתמש חסום מתיאום פגישות (שדה חדש)
+    if (user.meetingsBlocked) {
+      throw new ForbiddenError(
+        'הפונקציה הזו אינה זמינה עבורך כעת. לפרטים, פנה לתמיכה.'
+      );
+    }
+
+    // בדיקה אם יש policy ישן שחוסם
+    if (user.UserAppointmentPolicy?.isBlocked) {
       throw new ForbiddenError(
         'הפונקציה הזו אינה זמינה עבורך כעת. לפרטים, פנה לתמיכה.'
       );

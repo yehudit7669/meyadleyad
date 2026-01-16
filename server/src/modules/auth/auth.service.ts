@@ -87,7 +87,7 @@ export class AuthService {
     return { 
       user: {
         ...user,
-        isAdmin: user.role === 'ADMIN',
+        isAdmin: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR',
         isBroker: user.role === 'BROKER',
       }, 
       ...tokens 
@@ -194,7 +194,7 @@ export class AuthService {
     return {
       user: {
         ...user,
-        isAdmin: user.role === 'ADMIN',
+        isAdmin: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR',
         isBroker: user.role === 'BROKER',
         isServiceProvider: true,
       },
@@ -235,7 +235,7 @@ export class AuthService {
         role: user.role,
         userType: user.userType,
         serviceProviderType: user.serviceProviderType,
-        isAdmin: user.role === 'ADMIN',
+        isAdmin: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR',
         isBroker: user.role === 'BROKER',
         phone: user.phone,
         phonePersonal: user.phonePersonal,
@@ -291,7 +291,7 @@ export class AuthService {
           email: user.email,
           name: user.name,
           role: user.role,
-          isAdmin: user.role === 'ADMIN',
+          isAdmin: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR',
           isBroker: user.role === 'BROKER',
           avatar: user.avatar,
         },

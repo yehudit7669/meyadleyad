@@ -257,6 +257,11 @@ model User {
   phoneBusinessOffice        String?
   publishOfficeAddress       Boolean                      @default(false)
   weeklyDigestSubscribed     Boolean                      @default(false)
+  meetingsBlocked            Boolean                      @default(false)
+  meetingsBlockReason        String?
+  meetingsBlockedAt          DateTime?
+  meetingsBlockedByAdminId   String?
+  status                     UserStatus                   @default(ACTIVE)
   AccountDeletionRequest     AccountDeletionRequest[]
   Ad                         Ad[]
   AppointmentOwner           Appointment[]                @relation("AppointmentOwner")
@@ -279,6 +284,7 @@ model User {
   @@index([resetPasswordToken])
   @@index([verificationToken])
   @@index([brokerCityId])
+  @@index([status])
 }
 
 model WhatsAppGroup {
@@ -403,16 +409,20 @@ model UserAppointmentPolicy {
 }
 
 model AdminAuditLog {
-  id        String   @id @default(cuid())
-  adminId   String
-  action    String
-  targetId  String?
-  meta      Json?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetId   String?
+  entityType String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
 
   @@index([adminId])
   @@index([action])
   @@index([createdAt])
+  @@index([targetId])
+  @@index([entityType])
 }
 
 model UserAudit {
@@ -650,7 +660,15 @@ enum UserRole {
   USER
   BROKER
   ADMIN
+  SUPER_ADMIN
+  MODERATOR
   SERVICE_PROVIDER
+}
+
+enum UserStatus {
+  ACTIVE
+  PARTIAL_BLOCK
+  BLOCKED
 }
 
 enum UserType {

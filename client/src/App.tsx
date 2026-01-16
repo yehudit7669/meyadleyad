@@ -24,7 +24,8 @@ import MyBrokerProfile from './pages/MyBrokerProfile';
 import PublicBrokerPage from './pages/PublicBrokerPage';
 import ServiceProviderProfile from './pages/ServiceProviderProfile';
 import ProviderPublicPage from './pages/ProviderPublicPage';
-import UserManagement from './pages/UserManagement';
+import UsersManagementPage from './pages/admin/UsersManagementPage';
+import UserProfilePage from './pages/admin/UserProfilePage';
 import CityPage from './pages/CityPage';
 import CategoryPage from './pages/CategoryPage';
 import VerifyEmail from './pages/VerifyEmail';
@@ -160,7 +161,8 @@ const App: React.FC = () => {
                   <Route path="/admin/ads" element={<Navigate to="/admin/ads/manage" replace />} />
                   
                   <Route path="/admin/newspaper" element={<AdminRoute><AdminLayout><NewspaperLayoutPage /></AdminLayout></AdminRoute>} />
-                  <Route path="/admin/users" element={<AdminRoute><AdminLayout><UserManagement /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/users" element={<AdminRoute><AdminLayout><UsersManagementPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/users/:userId" element={<AdminRoute><AdminLayout><UserProfilePage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdmin /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/content" element={<AdminRoute><AdminLayout><ContentDistributionPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/branding" element={<AdminRoute><AdminLayout><BrandingMediaPage /></AdminLayout></AdminRoute>} />

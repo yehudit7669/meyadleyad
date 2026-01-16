@@ -10,7 +10,7 @@ export interface User {
   email: string;
   name?: string;
   phone?: string;
-  role: 'USER' | 'BROKER' | 'ADMIN' | 'SERVICE_PROVIDER';
+  role: 'USER' | 'BROKER' | 'ADMIN' | 'SUPER_ADMIN' | 'MODERATOR' | 'SERVICE_PROVIDER';
   isAdmin: boolean;
   isBroker: boolean;
   isServiceProvider?: boolean;
