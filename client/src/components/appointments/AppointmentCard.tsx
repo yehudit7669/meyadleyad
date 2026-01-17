@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { appointmentsService } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
+import { authService } from '../../services/auth.service';
 
 interface AppointmentCardProps {
   adId: string;
@@ -10,11 +11,29 @@ interface AppointmentCardProps {
 }
 
 export default function AppointmentCard({ adId, adOwnerId }: AppointmentCardProps) {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [note, setNote] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [refreshing, setRefreshing] = useState(true);
+
+  // רענון פרטי משתמש בטעינת הקומפוננטה
+  useEffect(() => {
+    const refreshUser = async () => {
+      if (user) {
+        try {
+          const updatedUser = await authService.getCurrentUser();
+          console.log('🔄 User refreshed:', { meetingsBlocked: updatedUser.meetingsBlocked });
+          updateUser(updatedUser);
+        } catch (error) {
+          console.error('Failed to refresh user:', error);
+        }
+      }
+      setRefreshing(false);
+    };
+    refreshUser();
+  }, [adId]); // רענון כל פעם שנכנסים לנכס חדש
 
   // טעינת זמינות המודעה
   const { data: slots = [], isLoading: loadingSlots } = useQuery({
@@ -33,6 +52,17 @@ export default function AppointmentCard({ adId, adOwnerId }: AppointmentCardProp
       setTimeout(() => setShowSuccess(false), 5000);
     },
   });
+
+  // טוען בזמן רענון
+  if (refreshing) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200" dir="rtl">
+        <div className="flex justify-center items-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C9A24D]"></div>
+        </div>
+      </div>
+    );
+  }
 
   // אם לא מחובר
   if (!user) {

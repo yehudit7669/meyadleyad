@@ -500,9 +500,34 @@ export const adminService = {
     return response.data;
   },
 
-  getAdminAppointments: async () => {
-    const response = await api.get('/admin/appointments');
-    return (response.data as any).data;
+  getAdminAppointments: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    q?: string;
+    searchBy?: 'userName' | 'phone' | 'propertyAddress';
+    sortBy?: 'createdAt' | 'date' | 'status';
+    sortDir?: 'asc' | 'desc';
+  }) => {
+    const response = await api.get('/admin/appointments', { params });
+    return response.data;
+  },
+
+  getAdminAppointmentById: async (id: string) => {
+    const response = await api.get(`/admin/appointments/${id}`);
+    return response.data;
+  },
+
+  updateAppointmentStatus: async (id: string, data: { status: string; reason?: string }) => {
+    const response = await api.patch(`/admin/appointments/${id}/status`, data);
+    return response.data;
+  },
+
+  cancelAdminAppointment: async (id: string, reason: string) => {
+    const response = await api.post(`/admin/appointments/${id}/cancel`, { reason });
+    return response.data;
   },
 
   // NEW: Mailing Service

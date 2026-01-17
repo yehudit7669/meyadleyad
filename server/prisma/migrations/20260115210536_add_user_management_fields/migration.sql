@@ -34,7 +34,7 @@ ALTER TABLE "HighlightRequest" DROP CONSTRAINT "HighlightRequest_userId_fkey";
 ALTER TABLE "OfficeAddressChangeRequest" DROP CONSTRAINT "OfficeAddressChangeRequest_userId_fkey";
 
 -- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "AdminAuditLog" ADD COLUMN     "entityType" TEXT,

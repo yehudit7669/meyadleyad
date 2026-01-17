@@ -362,24 +362,40 @@ model UserPreference {
 }
 
 model Appointment {
-  id          String            @id @default(cuid())
-  adId        String
-  requesterId String
-  ownerId     String
-  date        DateTime
-  note        String?
-  status      AppointmentStatus @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  ad          Ad                @relation(fields: [adId], references: [id], onDelete: Cascade)
-  owner       User              @relation("AppointmentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  requester   User              @relation("AppointmentRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  id           String                  @id @default(cuid())
+  adId         String
+  requesterId  String
+  ownerId      String
+  date         DateTime
+  note         String?
+  status       AppointmentStatus       @default(PENDING)
+  statusReason String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  ad           Ad                      @relation(fields: [adId], references: [id], onDelete: Cascade)
+  owner        User                    @relation("AppointmentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  requester    User                    @relation("AppointmentRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  history      AppointmentHistory[]
 
   @@index([requesterId])
   @@index([ownerId])
   @@index([adId])
   @@index([date])
   @@index([status])
+}
+
+model AppointmentHistory {
+  id            String            @id @default(cuid())
+  appointmentId String
+  fromStatus    AppointmentStatus?
+  toStatus      AppointmentStatus
+  reason        String?
+  changedById   String?
+  createdAt     DateTime          @default(now())
+  appointment   Appointment       @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@index([appointmentId])
+  @@index([createdAt])
 }
 
 model AvailabilitySlot {
@@ -701,6 +717,8 @@ enum AppointmentStatus {
   PENDING
   APPROVED
   REJECTED
+  CANCELED
+  COMPLETED
   RESCHEDULE_REQUESTED
 }
 

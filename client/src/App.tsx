@@ -48,7 +48,7 @@ import WantedHolidayWizard from './components/wizard/wanted/WantedHolidayWizard'
 import BrandingLogoSettings from './pages/admin/BrandingLogoSettings';
 import MyAppointments from './pages/appointments/MyAppointments';
 import OwnerAppointments from './pages/appointments/OwnerAppointments';
-import AppointmentsAdmin from './pages/admin/AppointmentsAdmin';
+import AppointmentsAdminPage from './pages/admin/AppointmentsAdminPage';
 import AuditLog from './pages/admin/AuditLog';
 import CategoriesManager from './pages/admin/CategoriesManager';
 import ImportCitiesStreets from './pages/admin/ImportCitiesStreets';
@@ -163,7 +163,7 @@ const App: React.FC = () => {
                   <Route path="/admin/newspaper" element={<AdminRoute><AdminLayout><NewspaperLayoutPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/users" element={<AdminRoute><AdminLayout><UsersManagementPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/users/:userId" element={<AdminRoute><AdminLayout><UserProfilePage /></AdminLayout></AdminRoute>} />
-                  <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdmin /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdminPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/content" element={<AdminRoute><AdminLayout><ContentDistributionPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/branding" element={<AdminRoute><AdminLayout><BrandingMediaPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/imports" element={<AdminRoute><AdminLayout><ImportsPage /></AdminLayout></AdminRoute>} />

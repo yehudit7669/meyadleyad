@@ -13,13 +13,12 @@ import parashaRoutes from '../modules/parasha/parasha.routes';
 import brandingRoutes from '../modules/branding/branding.routes';
 import profileRoutes from '../modules/profile/profile.routes';
 import appointmentsRoutes from '../modules/appointments/appointments.routes';
-import appointmentsAdminRoutes from '../modules/appointments/appointments.admin.routes';
 import brokerRoutes from '../modules/broker/broker.routes';
 import serviceProviderRoutes from '../modules/service-provider/service-provider.routes';
 
 // New admin modules
 import analyticsRoutes from '../modules/admin/analytics.routes';
-import appointmentsAdminNewRoutes from '../modules/admin/appointments.routes';
+import appointmentsAdminRoutes from '../modules/admin/appointments.routes';
 import contentDistributionRoutes from '../modules/admin/content-distribution.routes';
 import pdfExportRoutes from '../modules/admin/pdf-export.routes';
 import importRoutes from '../modules/admin/import.routes';
@@ -39,7 +38,6 @@ router.use('/cities', citiesRoutes);
 router.use('/streets', streetsRoutes);
 router.use('/admin', adminRoutes);
 router.use('/admin/branding', brandingRoutes);
-router.use('/admin/appointments', appointmentsAdminRoutes);
 router.use('/pdf', pdfRoutes);
 router.use('/banners', bannersRoutes);
 router.use('/search', searchRoutes);
@@ -53,7 +51,7 @@ router.use('/service-providers', serviceProviderRoutes); // Service provider rou
 router.use('/admin/dashboard', adminDashboardRoutes);
 router.use('/admin/users', usersAdminRoutes);
 router.use('/admin/analytics', analyticsRoutes);
-router.use('/admin/appointments-new', appointmentsAdminNewRoutes);
+router.use('/admin/appointments', appointmentsAdminRoutes);
 router.use('/admin/content-distribution', contentDistributionRoutes);
 router.use('/admin/pdf-export', pdfExportRoutes);
 router.use('/admin/import', importRoutes);

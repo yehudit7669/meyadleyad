@@ -8,87 +8,21 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...');
 
-  // Create admin user
+  // Create admin user (SUPER_ADMIN)
   const adminPassword = await bcrypt.hash('admin123456', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@meyadleyad.com' },
-    update: {},
+    update: { role: 'SUPER_ADMIN' }, // Update to SUPER_ADMIN if exists
     create: {
       email: 'admin@meyadleyad.com',
       password: adminPassword,
-      name: 'מנהל המערכת',
-      role: 'ADMIN',
+      name: 'מנהל על',
+      role: 'SUPER_ADMIN',
       isVerified: true,
+      status: 'ACTIVE',
     },
   });
   console.log('✅ Created admin user');
-
-  // Create sample broker
-  const brokerPassword = await bcrypt.hash('broker123456', 10);
-  const broker = await prisma.user.upsert({
-    where: { email: 'broker@example.com' },
-    update: {},
-    create: {
-      email: 'broker@example.com',
-      password: brokerPassword,
-      name: 'יוסי כהן',
-      phone: '050-1234567',
-      role: 'BROKER',
-      isVerified: true,
-      companyName: 'כהן נדל״ן',
-      licenseNumber: '12345',
-      description: 'משרד תיווך מוביל עם ניסיון של 20 שנה בשוק הנדל״ן',
-      website: 'https://cohen-realestate.example.com',
-    },
-  });
-  console.log('✅ Created broker user');
-
-  // Create sample regular user
-  const userPassword = await bcrypt.hash('user123456', 10);
-  const user = await prisma.user.upsert({
-    where: { email: 'user@example.com' },
-    update: {},
-    create: {
-      email: 'user@example.com',
-      password: userPassword,
-      name: 'דני לוי',
-      phone: '052-9876543',
-      role: 'USER',
-      isVerified: true,
-    },
-  });
-  console.log('✅ Created regular user');
-
-  // Create sample service provider
-  const spPassword = await bcrypt.hash('sp123456', 10);
-  const serviceProvider = await prisma.user.upsert({
-    where: { email: 'lawyer@example.com' },
-    update: {},
-    create: {
-      email: 'lawyer@example.com',
-      password: spPassword,
-      name: 'עו"ד משה ישראלי',
-      role: 'SERVICE_PROVIDER',
-      userType: 'SERVICE_PROVIDER',
-      serviceProviderType: 'LAWYER',
-      isVerified: true,
-      phonePersonal: '050-1112222',
-      phoneBusinessOffice: '03-5556666',
-      businessName: 'משרד עורכי דין ישראלי ושות\'',
-      officeAddress: 'רחוב הרצל 10, בית שמש',
-      aboutBusiness: 'משרד עורכי דין מוביל המתמחה בתחום הנדל"ן, עסקאות קרקע ועסקאות מקרקעין. ניסיון של מעל 15 שנה בייצוג לקוחות בעסקאות מורכבות.',
-      publishOfficeAddress: true,
-      businessHours: {
-        sun: [{ from: '09:00', to: '17:00' }],
-        mon: [{ from: '09:00', to: '17:00' }],
-        tue: [{ from: '09:00', to: '17:00' }],
-        wed: [{ from: '09:00', to: '17:00' }],
-        thu: [{ from: '09:00', to: '17:00' }],
-      },
-      weeklyDigestSubscribed: true,
-    },
-  });
-  console.log('✅ Created service provider user');
 
   // Create cities
   const cities = [
@@ -314,9 +248,7 @@ async function main() {
 
   console.log('✨ Seed completed successfully!');
   console.log('\n📝 Test credentials:');
-  console.log('Admin: admin@meyadleyad.com / admin123456');
-  console.log('Broker: broker@example.com / broker123456');
-  console.log('User: user@example.com / user123456');
+  console.log('Super Admin: admin@meyadleyad.com / admin123456');
 }
 
 main()
