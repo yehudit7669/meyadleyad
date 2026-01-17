@@ -63,6 +63,21 @@ export default function AppointmentCard({ adId, adOwnerId }: AppointmentCardProp
     );
   }
 
+  // אם המשתמש חסום מתיאום פגישות
+  if (user.meetingsBlocked) {
+    return (
+      <div className="bg-yellow-50 rounded-lg shadow-md p-6 border border-yellow-300" dir="rtl">
+        <h3 className="text-xl font-bold text-yellow-800 mb-4 flex items-center gap-2">
+          <span>⚠️</span>
+          תיאום פגישות
+        </h3>
+        <p className="text-yellow-700">
+          הפונקציה הזו אינה זמינה עבורך כעת. לפרטים, פנה לתמיכה.
+        </p>
+      </div>
+    );
+  }
+
   // אם זה המודעה של המשתמש
   if (user.id === adOwnerId) {
     return null; // לא מציגים את הרכיב

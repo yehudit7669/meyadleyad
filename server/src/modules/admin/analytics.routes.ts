@@ -2,13 +2,14 @@ import { Router, Request, Response } from 'express';
 import { analyticsService } from './analytics.service';
 import { validateRequest } from '../../middlewares/validation';
 import { trackPageViewSchema, getAnalyticsQuerySchema } from './analytics.validation';
-import { authenticate, authorize } from '../../middlewares/auth';
+import { authenticate } from '../../middlewares/auth';
+import { requireAdmin } from '../../middleware/rbac.middleware';
 
 const router = Router();
 
 // Apply authentication and admin authorization to all routes
 router.use(authenticate);
-router.use(authorize('ADMIN'));
+router.use(requireAdmin);
 
 // Get overview statistics (admin only)
 router.get('/overview', async (_req: Request, res: Response) => {

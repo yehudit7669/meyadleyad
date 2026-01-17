@@ -19,15 +19,10 @@ export default function ManageAdsStatus() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   
-  // Determine user role - for now, all admins are SUPER_ADMIN
-  // Also check by email as fallback
-  const isAdmin = user?.isAdmin || user?.email === 'admin@meyadleyad.com';
-  
-  // If user.role is ADMIN, upgrade to SUPER_ADMIN
-  let userRole = user?.role || (isAdmin ? 'SUPER_ADMIN' : 'USER');
-  if (userRole === 'ADMIN') {
-    userRole = 'SUPER_ADMIN';
-  }
+  // Get user role - DO NOT modify it
+  const userRole = user?.role || 'USER';
+  const isAdminOrSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
   
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -148,9 +143,9 @@ export default function ManageAdsStatus() {
     }
   });
 
-  // Check permissions
+  // Check permissions - based on table
   const canEdit = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
-  const canExport = userRole === 'SUPER_ADMIN';
+  const canExport = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'; // Both can export ads
   const isModerator = userRole === 'MODERATOR';
 
   // Debug log
@@ -265,7 +260,7 @@ export default function ManageAdsStatus() {
           {canExport && (
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <div className="text-xs text-gray-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
-                🔒 ייצוא מותר ל-Super Admin בלבד • מתועד ב-Audit Log
+                🔒 ייצוא מותר ל-Admin ו-Super Admin • מתועד ב-Audit Log
               </div>
               <button
                 onClick={async () => {

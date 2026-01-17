@@ -1,13 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import * as ExcelJS from 'exceljs';
-import { authenticate, authorize } from '../../middlewares/auth';
+import { authenticate } from '../../middlewares/auth';
+import { requireAdmin } from '../../middleware/rbac.middleware';
 
 const router = Router();
 
 // Apply authentication and admin authorization to all routes
 router.use(authenticate);
-router.use(authorize('ADMIN'));
+router.use(requireAdmin);
 
 // Get audit logs with filters
 router.get('/', async (req: Request, res: Response) => {

@@ -1,10 +1,62 @@
 import { prisma } from '../../../config/database';
 import { UserRole, UserStatus, AdStatus } from '@prisma/client';
-import { GetUsersQuery, UpdateUserDto, MeetingsBlockDto, BulkRemoveAdsDto } from './users-admin.validation';
+import { GetUsersQuery, UpdateUserDto, MeetingsBlockDto, BulkRemoveAdsDto, CreateUserDto } from './users-admin.validation';
 import { AdminAuditService } from '../admin-audit.service';
 import ExcelJS from 'exceljs';
+import bcrypt from 'bcryptjs';
 
 export class UsersAdminService {
+  /**
+   * Create new user (Super Admin only)
+   */
+  async createUser(
+    data: CreateUserDto,
+    adminId: string,
+    ip?: string
+  ) {
+    // Check if user already exists
+    const existing = await prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existing) {
+      throw new Error('משתמש עם כתובת אימייל זו כבר קיים במערכת');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email: data.email,
+        password: hashedPassword,
+        name: data.name || null,
+        phone: data.phone || null,
+        role: data.role,
+        status: UserStatus.ACTIVE,
+        isVerified: true,
+        isEmailVerified: true,
+      },
+    });
+
+    // Audit log
+    await AdminAuditService.log({
+      adminId,
+      action: 'ADMIN_CREATE_USER',
+      targetId: user.id,
+      entityType: 'USER',
+      meta: {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+      ip,
+    });
+
+    return user;
+  }
+
   /**
    * Get users list with search, filters, and pagination
    */
@@ -87,11 +139,14 @@ export class UsersAdminService {
       prisma.user.count({ where }),
     ]);
 
+    // Filter sensitive data for Moderators
+    const isModerator = requestorRole === UserRole.MODERATOR;
+
     return {
       users: users.map(user => ({
-        id: user.id,
+        id: isModerator ? '***' : user.id,
         name: user.name || 'משתמש ללא שם',
-        email: user.email,
+        email: isModerator ? '***@***.***' : user.email,
         role: user.role,
         roleType: this.mapRoleToDisplay(user.role),
         status: user.status,
@@ -112,7 +167,7 @@ export class UsersAdminService {
   /**
    * Get user profile by ID
    */
-  async getUserProfile(userId: string) {
+  async getUserProfile(userId: string, requestorRole?: UserRole) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -144,11 +199,14 @@ export class UsersAdminService {
     // Get recent audit logs for this user
     const auditLogs = await AdminAuditService.getTargetLogs(userId, 10);
 
+    // Filter sensitive data for Moderators
+    const isModerator = requestorRole === UserRole.MODERATOR;
+
     return {
-      id: user.id,
+      id: isModerator ? '***' : user.id,
       name: user.name || 'משתמש ללא שם',
-      email: user.email,
-      phone: user.phone,
+      email: isModerator ? '***@***.***' : user.email,
+      phone: isModerator ? undefined : user.phone,
       role: user.role,
       status: user.status,
       createdAt: user.createdAt,
@@ -159,15 +217,15 @@ export class UsersAdminService {
       notifyNewMatches: user.UserPreference?.notifyNewMatches,
       adsCount: user._count.Ad,
       ads: user.Ad.map(ad => ({
-        id: ad.id,
+        id: isModerator ? '***' : ad.id,
         address: ad.address || ad.title,
         createdAt: ad.createdAt,
         status: ad.status,
         viewsCount: ad.views,
         serialNumber: ad.adNumber,
-        previewLink: `/ad/${ad.id}`,
+        previewLink: isModerator ? '#' : `/ad/${ad.id}`,
       })),
-      auditHistory: auditLogs,
+      auditHistory: isModerator ? [] : auditLogs,
     };
   }
 

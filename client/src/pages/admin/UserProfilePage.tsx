@@ -239,14 +239,18 @@ export default function UserProfilePage() {
               <span className="text-sm text-black font-medium">שם מלא:</span>
               <p className="font-medium text-black">{profile.name}</p>
             </div>
-            <div>
-              <span className="text-sm text-black font-medium">אימייל:</span>
-              <p className="font-medium text-black">{profile.email}</p>
-            </div>
-            <div>
-              <span className="text-sm text-black font-medium">טלפון:</span>
-              <p className="font-medium text-black">{profile.phone || 'לא צוין'}</p>
-            </div>
+            {!isModerator && (
+              <div>
+                <span className="text-sm text-black font-medium">אימייל:</span>
+                <p className="font-medium text-black">{profile.email}</p>
+              </div>
+            )}
+            {!isModerator && (
+              <div>
+                <span className="text-sm text-black font-medium">טלפון:</span>
+                <p className="font-medium text-black">{profile.phone || 'לא צוין'}</p>
+              </div>
+            )}
             <div>
               <span className="text-sm text-black font-medium">סוג משתמש:</span>
               <p className="font-medium text-black">{profile.role}</p>
@@ -381,32 +385,34 @@ export default function UserProfilePage() {
         )}
       </div>
 
-      {/* Audit History */}
-      <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold text-black mb-4">היסטוריית פעולות ניהוליות (10 אחרונים)</h2>
-        
-        {profile.auditHistory && profile.auditHistory.length > 0 ? (
-          <div className="space-y-2">
-            {profile.auditHistory.map((log: any) => (
-              <div key={log.id} className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex justify-between items-start">
-                  <span className="font-medium text-sm text-black">{log.action}</span>
-                  <span className="text-xs text-black">
-                    {new Date(log.createdAt).toLocaleString('he-IL')}
-                  </span>
+      {/* Audit History (Not visible to Moderators) */}
+      {!isModerator && (
+        <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold text-black mb-4">היסטוריית פעולות ניהוליות (10 אחרונים)</h2>
+          
+          {profile.auditHistory && profile.auditHistory.length > 0 ? (
+            <div className="space-y-2">
+              {profile.auditHistory.map((log: any) => (
+                <div key={log.id} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <span className="font-medium text-sm text-black">{log.action}</span>
+                    <span className="text-xs text-black">
+                      {new Date(log.createdAt).toLocaleString('he-IL')}
+                    </span>
+                  </div>
+                  {log.meta && Object.keys(log.meta).length > 0 && (
+                    <pre className="text-xs text-black mt-2 overflow-x-auto">
+                      {JSON.stringify(log.meta, null, 2)}
+                    </pre>
+                  )}
                 </div>
-                {log.meta && Object.keys(log.meta).length > 0 && (
-                  <pre className="text-xs text-black mt-2 overflow-x-auto">
-                    {JSON.stringify(log.meta, null, 2)}
-                  </pre>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-black">אין היסטוריית פעולות</p>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-black">אין היסטוריית פעולות</p>
+          )}
+        </div>
+      )}
 
       {/* Dangerous Actions (Super Admin Only) */}
       {isSuperAdmin && (

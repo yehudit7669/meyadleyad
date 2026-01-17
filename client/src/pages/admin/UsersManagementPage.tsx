@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { usersAdminService, type GetUsersParams } from '../../services/users-admin.service';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function UsersManagementPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [filters, setFilters] = useState<GetUsersParams>({
     page: 1,
@@ -14,10 +15,19 @@ export default function UsersManagementPage() {
     sortDir: 'desc',
   });
   const [isExporting, setIsExporting] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    email: '',
+    name: '',
+    phone: '',
+    role: 'USER',
+    password: '',
+  });
 
   // Check permissions
   const canSearchByEmail = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isModerator = user?.role === 'MODERATOR';
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-users', filters],
@@ -72,6 +82,26 @@ export default function UsersManagementPage() {
     }
   };
 
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: usersAdminService.createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setShowCreateModal(false);
+      setCreateFormData({
+        email: '',
+        name: '',
+        phone: '',
+        role: 'USER',
+        password: '',
+      });
+      alert('המשתמש נוצר בהצלחה!');
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.message || 'שגיאה ביצירת משתמש');
+    },
+  });
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -119,11 +149,22 @@ export default function UsersManagementPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">ניהול משתמשים</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          ניהול משתמשי המערכת, הרשאות וחסימות
-        </p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">ניהול משתמשים</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            ניהול משתמשי המערכת, הרשאות וחסימות
+          </p>
+        </div>
+        {isSuperAdmin && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <span className="text-xl">+</span>
+            צור משתמש חדש
+          </button>
+        )}
       </div>
 
       {/* Search and Filters */}
@@ -227,7 +268,7 @@ export default function UsersManagementPage() {
               </button>
             </div>
 
-            {!isModerator && (
+            {isSuperAdmin && (
               <button
                 type="button"
                 onClick={handleExport}
@@ -274,9 +315,11 @@ export default function UsersManagementPage() {
                 >
                   מודעות {filters.sortBy === 'adsCount' && (filters.sortDir === 'asc' ? '↑' : '↓')}
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  פעולות
-                </th>
+                {!isModerator && (
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    פעולות
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -302,14 +345,16 @@ export default function UsersManagementPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {user.adsCount}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => navigate(`/admin/users/${user.id}`)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      צפה
-                    </button>
-                  </td>
+                  {!isModerator && (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => navigate(`/admin/users/${user.id}`)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        צפה
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -366,6 +411,116 @@ export default function UsersManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">צור משתמש חדש</h2>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              
+              if (!createFormData.email || !createFormData.password) {
+                alert('אימייל וסיסמה הם שדות חובה');
+                return;
+              }
+
+              if (createFormData.password.length < 6) {
+                alert('הסיסמה חייבת להיות לפחות 6 תווים');
+                return;
+              }
+
+              createUserMutation.mutate(createFormData);
+            }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">אימייל *</label>
+                <input
+                  type="email"
+                  value={createFormData.email}
+                  onChange={(e) => setCreateFormData({ ...createFormData, email: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">שם מלא</label>
+                <input
+                  type="text"
+                  value={createFormData.name}
+                  onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">טלפון</label>
+                <input
+                  type="tel"
+                  value={createFormData.phone}
+                  onChange={(e) => setCreateFormData({ ...createFormData, phone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">סיסמה *</label>
+                <input
+                  type="password"
+                  value={createFormData.password}
+                  onChange={(e) => setCreateFormData({ ...createFormData, password: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="לפחות 6 תווים"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">תפקיד *</label>
+                <select
+                  value={createFormData.role}
+                  onChange={(e) => setCreateFormData({ ...createFormData, role: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="USER">משתמש פרטי</option>
+                  <option value="BROKER">מתווך</option>
+                  <option value="SERVICE_PROVIDER">נותן שירות</option>
+                  <option value="MODERATOR">מנהל צופה</option>
+                  <option value="ADMIN">מנהל</option>
+                  <option value="SUPER_ADMIN">מנהל על</option>
+                </select>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  צור משתמש
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setCreateFormData({
+                      email: '',
+                      name: '',
+                      phone: '',
+                      role: 'USER',
+                      password: '',
+                    });
+                  }}
+                  className="flex-1 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  ביטול
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

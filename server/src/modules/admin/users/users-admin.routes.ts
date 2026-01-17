@@ -10,11 +10,14 @@ const controller = new UsersAdminController();
 router.use(authenticate);
 router.use(requireAdmin);
 
+// POST /api/admin/users - Create new user (Super Admin only)
+router.post('/', requireSuperAdmin, controller.createUser.bind(controller));
+
 // GET /api/admin/users - List users (All admin roles)
 router.get('/', controller.getUsers.bind(controller));
 
-// GET /api/admin/users/export - Export users (Admin & Super Admin only) - MUST be before /:id
-router.get('/export', requireAdminOrSuper, controller.exportUsers.bind(controller));
+// POST /api/admin/users/export - Export users (Super Admin only) - MUST be before /:id
+router.post('/export', requireSuperAdmin, controller.exportUsers.bind(controller));
 
 // GET /api/admin/users/:id - Get user profile (All admin roles)
 router.get('/:id', controller.getUserProfile.bind(controller));

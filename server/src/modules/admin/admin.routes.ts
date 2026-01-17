@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { AdminController } from './admin.controller';
-import { authenticate, authorize } from '../../middlewares/auth';
+import { authenticate } from '../../middlewares/auth';
+import { requireAdmin, requireAdminOrSuper } from '../../middleware/rbac.middleware';
 
 const router = Router();
 const adminController = new AdminController();
 
 router.use(authenticate);
-router.use(authorize('ADMIN'));
+router.use(requireAdmin);
 
-// סטטיסטיקות
+// סטטיסטיקות (All admin roles can view)
 router.get('/statistics', adminController.getStatistics);
 
 // ניהול משתמשים הועבר ל-/admin/users (users-admin.routes.ts)
@@ -16,18 +17,18 @@ router.get('/statistics', adminController.getStatistics);
 // router.put('/users/:id', adminController.updateUser); // REMOVED - use /admin/users/:id instead  
 // router.delete('/users/:id', adminController.deleteUser); // REMOVED - use /admin/users/:id instead
 
-// ניהול מודעות ממתינות
+// ניהול מודעות ממתינות (Read-only for Moderators)
 router.get('/ads/pending', adminController.getPendingAds);
 router.get('/ads/:id', adminController.getAdById);
-router.post('/ads/:id/approve', adminController.approveAd);
-router.post('/ads/:id/reject', adminController.rejectAd);
+router.post('/ads/:id/approve', requireAdminOrSuper, adminController.approveAd);
+router.post('/ads/:id/reject', requireAdminOrSuper, adminController.rejectAd);
 
-// ניהול כל המודעות
+// ניהול כל המודעות (Read-only for Moderators)
 router.get('/ads', adminController.getAllAds);
-router.patch('/ads/:id/status', adminController.updateAdStatus);
+router.patch('/ads/:id/status', requireAdminOrSuper, adminController.updateAdStatus);
 
-// ייצוא היסטוריה (SuperAdmin בלבד)
-router.post('/ads/export-history', adminController.exportAdsHistory);
+// ייצוא היסטוריה (Admin & Super Admin only)
+router.post('/ads/export-history', requireAdminOrSuper, adminController.exportAdsHistory);
 
 // מחיקת מודעות משתמש הועבר ל-/admin/users (users-admin.routes.ts)
 // router.delete('/users/:userId/ads', adminController.deleteUserAds); // REMOVED - use /admin/users/:id/ads/bulk-remove instead

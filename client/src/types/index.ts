@@ -46,6 +46,10 @@ export interface User {
   publishOfficeAddress?: boolean;
   businessHours?: BusinessHours;
   weeklyDigestSubscribed?: boolean;
+  // Meetings blocking
+  meetingsBlocked?: boolean;
+  meetingsBlockReason?: string;
+  meetingsBlockedAt?: string;
 }
 
 export interface BusinessHours {

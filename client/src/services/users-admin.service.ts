@@ -65,12 +65,28 @@ export interface UpdateUserData {
   notifyNewMatches?: boolean;
 }
 
+export interface CreateUserData {
+  email: string;
+  password: string;
+  name?: string;
+  phone?: string;
+  role: string;
+}
+
 export const usersAdminService = {
   /**
    * Get users list
    */
   getUsers: async (params: GetUsersParams = {}) => {
     const response = await api.get('/admin/users', { params });
+    return response.data;
+  },
+
+  /**
+   * Create new user (Super Admin only)
+   */
+  createUser: async (data: CreateUserData) => {
+    const response = await api.post('/admin/users', data);
     return response.data;
   },
 
@@ -123,7 +139,7 @@ export const usersAdminService = {
    * Export users (Admin & Super Admin only)
    */
   exportUsers: async (params: GetUsersParams = {}) => {
-    const response = await api.get('/admin/users/export', {
+    const response = await api.post('/admin/users/export', {}, {
       params,
       responseType: 'blob',
     });

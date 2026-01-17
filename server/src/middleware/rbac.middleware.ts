@@ -114,7 +114,9 @@ export function getPermissionsForRole(role: UserRole): string[] {
         'ads:read',
         'ads:write',
         'ads:delete',
+        'ads:export',
         'audit:read',
+        'audit:export',
       ];
     
     case UserRole.ADMIN:
@@ -123,9 +125,9 @@ export function getPermissionsForRole(role: UserRole): string[] {
         'users:write',
         'users:search_email',
         'users:block_meetings',
-        'users:export',
         'ads:read',
         'ads:write',
+        'ads:export',
         'audit:read',
       ];
     

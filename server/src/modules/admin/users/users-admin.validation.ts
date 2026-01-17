@@ -17,6 +17,17 @@ export const getUsersQuerySchema = z.object({
 
 export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;
 
+// Create user schema
+export const createUserSchema = z.object({
+  email: z.string().email('כתובת אימייל לא תקינה'),
+  password: z.string().min(6, 'הסיסמה חייבת להיות לפחות 6 תווים'),
+  name: z.string().min(1).max(100).optional(),
+  phone: z.string().optional(),
+  role: z.nativeEnum(UserRole),
+});
+
+export type CreateUserDto = z.infer<typeof createUserSchema>;
+
 // Update user schema
 export const updateUserSchema = z.object({
   name: z.string().min(1).max(100).optional(),

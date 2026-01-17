@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { appointmentsService } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 interface AvailabilityEditorProps {
   adId: string;
@@ -13,11 +14,17 @@ interface TimeSlot {
 }
 
 export default function AvailabilityEditor({ adId }: AvailabilityEditorProps) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+  // אם המשתמש חסום מתיאום פגישות - לא מציגים את הרכיב
+  if (user?.meetingsBlocked) {
+    return null;
+  }
 
   // שליפת זמינות קיימת
   const { data: existingSlots = [] } = useQuery({
