@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { ValidationError } from '../../utils/errors';
 import path from 'path';
 import fs from 'fs/promises';
+import { AdminAuditService } from '../admin/admin-audit.service';
 
 // Zod schemas
 const brandingUpdateSchema = z.object({
@@ -22,6 +23,16 @@ export class BrandingController {
   async getBranding(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const config = await brandingService.getBrandingConfig();
+      
+      // Audit Log - כניסה למסך
+      await AdminAuditService.log({
+        adminId: req.user!.id,
+        action: 'VIEW_BRANDING_SETTINGS',
+        entityType: 'BrandingConfig',
+        targetId: config.id,
+        ip: req.ip,
+      });
+
       res.json({
         status: 'success',
         data: config,

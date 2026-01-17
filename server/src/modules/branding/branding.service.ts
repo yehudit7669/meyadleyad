@@ -2,7 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import { ValidationError, NotFoundError } from '../../utils/errors';
 import path from 'path';
 import fs from 'fs/promises';
+import sharp from 'sharp';
 import { config } from '../../config';
+import { AdminAuditService } from '../admin/admin-audit.service';
 
 const prisma = new PrismaClient();
 
@@ -70,6 +72,19 @@ export class BrandingService {
       },
     });
 
+    // Audit Log
+    await AdminAuditService.log({
+      adminId: userId,
+      action: 'UPDATE_WATERMARK_SETTINGS',
+      entityType: 'BrandingConfig',
+      targetId: updated.id,
+      meta: {
+        position: updated.position,
+        opacity: updated.opacity,
+        sizePct: updated.sizePct,
+      },
+    });
+
     return updated;
   }
 
@@ -85,6 +100,28 @@ export class BrandingService {
     const maxSize = 1 * 1024 * 1024; // 1MB
     if (file.size > maxSize) {
       throw new ValidationError('גודל הלוגו לא יכול לעלות על 1MB');
+    }
+
+    // בדיקת resolution ו-alpha channel
+    const metadata = await sharp(file.path).metadata();
+    
+    if (!metadata.width || !metadata.height) {
+      throw new ValidationError('לא ניתן לקרוא את מימדי התמונה');
+    }
+
+    if (metadata.width > 1000 || metadata.height > 300) {
+      throw new ValidationError('הלוגו לא יכול לעלות על 1000x300 פיקסלים');
+    }
+
+    if (!metadata.hasAlpha) {
+      throw new ValidationError('הלוגו חייב להיות PNG שקוף (עם ערוץ Alpha)');
+    }
+
+    // בדיקת יחס - warning בלבד, לא חסימה
+    const aspectRatio = metadata.width / metadata.height;
+    const warningData: any = {};
+    if (aspectRatio < 0.25 || aspectRatio > 5) {
+      warningData.aspectRatioWarning = `יחס התמונה (${aspectRatio.toFixed(2)}) חריג. מומלץ יחס בין 1:4 ל-4:1`;
     }
 
     // קבל את הקונפיג הנוכחי
@@ -113,6 +150,20 @@ export class BrandingService {
       },
     });
 
+    // Audit Log
+    await AdminAuditService.log({
+      adminId: userId,
+      action: 'UPLOAD_WATERMARK_LOGO',
+      entityType: 'BrandingConfig',
+      targetId: updated.id,
+      meta: {
+        filename: file.filename,
+        size: file.size,
+        dimensions: `${metadata.width}x${metadata.height}`,
+        ...warningData,
+      },
+    });
+
     return updated;
   }
 
@@ -130,6 +181,19 @@ export class BrandingService {
         sizePct: 18,
         updatedById: userId,
         updatedAt: new Date(),
+      },
+    });
+
+    // Audit Log
+    await AdminAuditService.log({
+      adminId: userId,
+      action: 'RESET_WATERMARK_SETTINGS',
+      entityType: 'BrandingConfig',
+      targetId: updated.id,
+      meta: {
+        position: 'bottom-left',
+        opacity: 70,
+        sizePct: 18,
       },
     });
 

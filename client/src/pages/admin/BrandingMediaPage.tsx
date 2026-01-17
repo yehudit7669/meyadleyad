@@ -1,11 +1,5 @@
-import PlaceholderPage from './PlaceholderPage';
+import BrandingLogoSettings from './BrandingLogoSettings';
 
 export default function BrandingMediaPage() {
-  return (
-    <PlaceholderPage
-      title="ניהול מדיה ומיתוג"
-      description="הגדרות Watermark, לוגו, צבעים וניהול מדיה כללי"
-      icon="🎨"
-    />
-  );
+  return <BrandingLogoSettings />;
 }

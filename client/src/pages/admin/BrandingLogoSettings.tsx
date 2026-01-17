@@ -9,6 +9,10 @@ interface BrandingConfig {
   sizePct: number;
 }
 
+interface ValidationWarnings {
+  aspectRatio?: string;
+}
+
 const POSITION_OPTIONS = [
   { value: 'top-left', label: 'ימין עליון', labelHe: 'ימין עליון' },
   { value: 'top-right', label: 'שמאל עליון', labelHe: 'שמאל עליון' },
@@ -22,9 +26,12 @@ const BrandingLogoSettings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [warnings, setWarnings] = useState<ValidationWarnings>({});
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [sampleImageFile, setSampleImageFile] = useState<File | null>(null);
+  const [settingsChanged, setSettingsChanged] = useState(false);
+  const [previewDone, setPreviewDone] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sampleImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,15 +61,19 @@ const BrandingLogoSettings: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // ולידציה
+    setError('');
+    setWarnings({});
+
+    // ולידציה - פורמט
     if (file.type !== 'image/png') {
-      setError('הלוגו חייב להיות בפורמט PNG');
+      setError('הלוגו חייב להיות בפורמט PNG בלבד');
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       return;
     }
 
+    // ולידציה - גודל קובץ
     if (file.size > 1024 * 1024) {
       setError('גודל הלוגו לא יכול לעלות על 1MB');
       if (fileInputRef.current) {
@@ -71,32 +82,70 @@ const BrandingLogoSettings: React.FC = () => {
       return;
     }
 
-    try {
-      setSaving(true);
-      setError('');
-      setSuccess('');
+    // בדיקת רזולוציה ו-alpha channel (צד לקוח)
+    const img = new Image();
+    const reader = new FileReader();
 
-      const formData = new FormData();
-      formData.append('logo', file);
+    reader.onload = (ev) => {
+      img.src = ev.target?.result as string;
+    };
 
-      const response = await axios.post('/api/admin/branding/logo', formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+    img.onload = async () => {
+      // בדיקת רזולוציה
+      if (img.width > 1000 || img.height > 300) {
+        setError('הלוגו לא יכול לעלות על 1000x300 פיקסלים');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
 
-      setConfig((response.data as { data: BrandingConfig }).data);
-      setSuccess('הלוגו הועלה בהצלחה');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'שגיאה בהעלאת הלוגו');
-    } finally {
-      setSaving(false);
-    }
+      // בדיקת יחס - warning בלבד
+      const aspectRatio = img.width / img.height;
+      if (aspectRatio < 0.25 || aspectRatio > 5) {
+        setWarnings({
+          aspectRatio: `יחס התמונה (${aspectRatio.toFixed(2)}) חריג. מומלץ יחס בין 1:4 ל-4:1`,
+        });
+      }
+
+      // המשך להעלאה
+      try {
+        setSaving(true);
+        setError('');
+        setSuccess('');
+
+        const formData = new FormData();
+        formData.append('logo', file);
+
+        const response = await axios.post('/api/admin/branding/logo', formData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        setConfig((response.data as { data: BrandingConfig }).data);
+        setSuccess('הלוגו הועלה בהצלחה');
+        setSettingsChanged(true);
+        setPreviewDone(false);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'שגיאה בהעלאת הלוגו');
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleUpdate = async () => {
     if (!config) return;
+
+    // בדיקה שבוצע preview
+    if (!previewDone) {
+      setError('חובה להציג תצוגה מקדימה לפני שמירה');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -119,6 +168,8 @@ const BrandingLogoSettings: React.FC = () => {
 
       setConfig((response.data as { data: BrandingConfig }).data);
       setSuccess('ההגדרות נשמרו בהצלחה');
+      setSettingsChanged(false);
+      setPreviewDone(false);
     } catch (err: any) {
       setError(err.response?.data?.message || 'שגיאה בשמירת ההגדרות');
     } finally {
@@ -146,6 +197,8 @@ const BrandingLogoSettings: React.FC = () => {
 
       setConfig((response.data as { data: BrandingConfig }).data);
       setSuccess('ההגדרות אופסו לברירת מחדל');
+      setSettingsChanged(true);
+      setPreviewDone(false);
     } catch (err: any) {
       setError(err.response?.data?.message || 'שגיאה באיפוס ההגדרות');
     } finally {
@@ -188,6 +241,8 @@ const BrandingLogoSettings: React.FC = () => {
           );
 
           setPreviewUrl((response.data as { data: { preview: string } }).data.preview);
+          setPreviewDone(true);
+          setSettingsChanged(false);
         } catch (err: any) {
           setError(err.response?.data?.message || 'שגיאה ביצירת תצוגה מקדימה');
         } finally {
@@ -225,6 +280,28 @@ const BrandingLogoSettings: React.FC = () => {
     setSuccess('');
   };
 
+  // פונקציות עזר לשינוי הגדרות - מסמן שצריך preview מחדש
+  const handlePositionChange = (newPosition: string) => {
+    if (!config) return;
+    setConfig({ ...config, position: newPosition as any });
+    setSettingsChanged(true);
+    setPreviewDone(false);
+  };
+
+  const handleOpacityChange = (newOpacity: number) => {
+    if (!config) return;
+    setConfig({ ...config, opacity: newOpacity });
+    setSettingsChanged(true);
+    setPreviewDone(false);
+  };
+
+  const handleSizeChange = (newSize: number) => {
+    if (!config) return;
+    setConfig({ ...config, sizePct: newSize });
+    setSettingsChanged(true);
+    setPreviewDone(false);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -257,6 +334,12 @@ const BrandingLogoSettings: React.FC = () => {
           </div>
         )}
 
+        {warnings.aspectRatio && (
+          <div className="bg-yellow-50 border border-yellow-200 text-black px-4 py-3 rounded mb-4">
+            ⚠️ {warnings.aspectRatio}
+          </div>
+        )}
+
         <div className="bg-white rounded-lg shadow p-6 space-y-6">
           {/* לוגו נוכחי */}
           <div>
@@ -264,7 +347,7 @@ const BrandingLogoSettings: React.FC = () => {
             {config.logoUrl ? (
               <div className="flex items-center gap-4">
                 <img
-                  src={config.logoUrl}
+                  src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${config.logoUrl}`}
                   alt="לוגו נוכחי"
                   className="w-32 h-32 object-contain border border-gray-200 rounded p-2 bg-gray-50"
                 />
@@ -298,7 +381,7 @@ const BrandingLogoSettings: React.FC = () => {
                 {saving ? 'מעלה...' : 'בחר קובץ PNG'}
               </button>
               <p className="text-sm text-black">
-                • PNG בלבד • עד 1MB • רקע שקוף מומלץ
+                • PNG שקוף בלבד • עד 1MB • עד 1000×300 פיקסלים • יחס מומלץ 1:4 עד 4:1
               </p>
             </div>
           </div>
@@ -321,9 +404,7 @@ const BrandingLogoSettings: React.FC = () => {
                     name="position"
                     value={option.value}
                     checked={config.position === option.value}
-                    onChange={(e) =>
-                      setConfig({ ...config, position: e.target.value as any })
-                    }
+                    onChange={(e) => handlePositionChange(e.target.value)}
                     className="w-4 h-4"
                   />
                   <span className="text-black">{option.labelHe}</span>
@@ -342,9 +423,7 @@ const BrandingLogoSettings: React.FC = () => {
               min="0"
               max="100"
               value={config.opacity}
-              onChange={(e) =>
-                setConfig({ ...config, opacity: parseInt(e.target.value) })
-              }
+              onChange={(e) => handleOpacityChange(parseInt(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
             <p className="text-sm text-black mt-1">מומלץ: 60-80%</p>
@@ -360,9 +439,7 @@ const BrandingLogoSettings: React.FC = () => {
               min="5"
               max="30"
               value={config.sizePct}
-              onChange={(e) =>
-                setConfig({ ...config, sizePct: parseInt(e.target.value) })
-              }
+              onChange={(e) => handleSizeChange(parseInt(e.target.value))}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
             <p className="text-sm text-black mt-1">
@@ -415,6 +492,17 @@ const BrandingLogoSettings: React.FC = () => {
                   alt="תצוגה מקדימה"
                   className="w-full max-w-2xl mx-auto"
                 />
+                {previewDone && (
+                  <p className="text-sm text-green-600 mt-2 text-center">
+                    ✓ תצוגה מקדימה בוצעה בהצלחה - כעת ניתן לשמור
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {settingsChanged && !previewDone && (
+              <div className="bg-orange-50 border border-orange-200 text-black px-4 py-3 rounded mt-3">
+                ⚠️ שינית הגדרות - חובה להציג תצוגה מקדימה לפני שמירה
               </div>
             )}
           </div>
@@ -423,8 +511,9 @@ const BrandingLogoSettings: React.FC = () => {
           <div className="flex gap-3 pt-4 border-t">
             <button
               onClick={handleUpdate}
-              disabled={saving}
-              className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400"
+              disabled={saving || !previewDone}
+              className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              title={!previewDone ? 'חובה להציג תצוגה מקדימה לפני שמירה' : ''}
             >
               {saving ? 'שומר...' : 'שמור והחל'}
             </button>
