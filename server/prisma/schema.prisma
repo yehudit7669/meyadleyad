@@ -367,6 +367,7 @@ model Appointment {
   requesterId  String
   ownerId      String
   date         DateTime
+  proposedDate DateTime?               // תאריך מוצע חלופי
   note         String?
   status       AppointmentStatus       @default(PENDING)
   statusReason String?
@@ -389,6 +390,8 @@ model AppointmentHistory {
   appointmentId String
   fromStatus    AppointmentStatus?
   toStatus      AppointmentStatus
+  fromDate      DateTime?          // תאריך קודם
+  toDate        DateTime?          // תאריך חדש
   reason        String?
   changedById   String?
   createdAt     DateTime          @default(now())

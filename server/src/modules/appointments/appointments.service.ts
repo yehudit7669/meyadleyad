@@ -292,6 +292,26 @@ export class AppointmentsService {
           throw new BadRequestError('נדרש תאריך חדש להצעת מועד חלופי');
         }
         const newDateObj = new Date(data.newDate);
+        
+        // שמירת התאריך המוצע
+        await prisma.appointment.update({
+          where: { id: data.appointmentId },
+          data: { proposedDate: newDateObj },
+        });
+        
+        // רישום הצעת מועד חלופי בהיסטוריה
+        await prisma.appointmentHistory.create({
+          data: {
+            appointmentId: data.appointmentId,
+            fromStatus: appointment.status,
+            toStatus: AppointmentStatus.RESCHEDULE_REQUESTED,
+            fromDate: appointment.date,
+            toDate: newDateObj,
+            reason: data.reason || 'הצעת מועד חלופי על ידי בעל הנכס',
+            changedById: ownerId,
+          },
+        });
+        
         await this.emailService.sendAppointmentRescheduleEmail(
           appointment.requester.email,
           {
@@ -403,10 +423,31 @@ export class AppointmentsService {
       throw new BadRequestError('הפגישה לא במצב של הצעת מועד חלופי');
     }
 
-    // עדכון סטטוס לאושר
+    if (!appointment.proposedDate) {
+      throw new BadRequestError('לא נמצא תאריך מוצע חלופי');
+    }
+
+    // עדכון התאריך לתאריך המוצע ואישור הפגישה
     const updated = await prisma.appointment.update({
       where: { id: appointmentId },
-      data: { status: AppointmentStatus.APPROVED },
+      data: { 
+        date: appointment.proposedDate,
+        status: AppointmentStatus.APPROVED,
+        proposedDate: null // ניקוי התאריך המוצע
+      },
+    });
+
+    // רישום שינוי תאריך בהיסטוריה
+    await prisma.appointmentHistory.create({
+      data: {
+        appointmentId,
+        fromStatus: AppointmentStatus.RESCHEDULE_REQUESTED,
+        toStatus: AppointmentStatus.APPROVED,
+        fromDate: appointment.date,
+        toDate: appointment.proposedDate,
+        reason: 'אישור מועד חלופי על ידי המבקש',
+        changedById: userId,
+      },
     });
 
     // שליחת מייל אישור לבעל הנכס

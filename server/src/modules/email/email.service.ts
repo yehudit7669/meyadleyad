@@ -348,9 +348,7 @@ export class EmailService {
       timeStyle: 'short',
     }).format(data.date);
 
-    const approveUrl = `${config.frontendUrl}/appointments/owner?action=approve&id=${data.appointmentId}`;
-    const rejectUrl = `${config.frontendUrl}/appointments/owner?action=reject&id=${data.appointmentId}`;
-    const manageUrl = `${config.frontendUrl}/appointments/owner`;
+    const profileUrl = `${config.frontendUrl}/profile?tab=appointments`;
 
     const html = `
       <!DOCTYPE html>
@@ -372,22 +370,12 @@ export class EmailService {
               ${data.note ? `<p style="margin: 5px 0;"><strong>הערה:</strong> ${data.note}</p>` : ''}
             </div>
             <p style="font-size: 16px; line-height: 1.6;">
-              תוכל לאשר, לדחות או להציע מועד אחר:
+              תוכל לאשר, לדחות או להציע מועד אחר בלוח התיאומים שלך:
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${approveUrl}" 
-                 style="display: inline-block; padding: 12px 30px; background-color: #10b981; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 5px;">
-                ✓ אשר פגישה
-              </a>
-              <a href="${rejectUrl}" 
-                 style="display: inline-block; padding: 12px 30px; background-color: #ef4444; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 5px;">
-                ✗ דחה
-              </a>
-            </div>
-            <div style="text-align: center; margin: 20px 0;">
-              <a href="${manageUrl}" 
-                 style="display: inline-block; padding: 12px 30px; background-color: #6b7280; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                ניהול כל הבקשות
+              <a href="${profileUrl}" 
+                 style="display: inline-block; padding: 15px 40px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                לוח תיאומים
               </a>
             </div>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -541,7 +529,7 @@ export class EmailService {
       timeStyle: 'short',
     }).format(data.newDate);
 
-    const confirmUrl = `${config.frontendUrl}/appointments/me?action=confirm&id=${data.appointmentId}`;
+    const profileUrl = `${config.frontendUrl}/profile?tab=appointments`;
 
     const html = `
       <!DOCTYPE html>
@@ -560,10 +548,13 @@ export class EmailService {
               <p style="margin: 5px 0;"><strong>המועד המקורי:</strong> ${originalDateStr}</p>
               <p style="margin: 5px 0; color: #10b981;"><strong>המועד החדש:</strong> ${newDateStr}</p>
             </div>
+            <p style="font-size: 16px; line-height: 1.6;">
+              תוכל לאשר או להציע מועד אחר בלוח התיאומים שלך:
+            </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${confirmUrl}" 
+              <a href="${profileUrl}" 
                  style="display: inline-block; padding: 15px 40px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
-                אשר מועד חדש
+                לוח תיאומים
               </a>
             </div>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
