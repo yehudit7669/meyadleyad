@@ -40,13 +40,12 @@ interface PaginationInfo {
 
 const ACTION_TYPES = [
   { value: '', label: 'הכל' },
-  { value: 'approve', label: 'אישור מודעה' },
-  { value: 'reject', label: 'דחיית מודעה' },
-  { value: 'block', label: 'חסימת משתמש' },
-  { value: 'export', label: 'ייצוא נתונים' },
-  { value: 'role_change', label: 'שינוי תפקיד' },
+  { value: 'approve', label: 'אישור' },
+  { value: 'reject', label: 'דחייה' },
+  { value: 'block', label: 'חסימה' },
+  { value: 'export', label: 'ייצוא' },
+  { value: 'role_change', label: 'שינוי הרשאות' },
   { value: 'system_change', label: 'שינוי מערכת' },
-  { value: 'EXPORT_AUDIT_LOG', label: 'ייצוא לוגים' },
 ];
 
 const ENTITY_TYPES = [
@@ -57,6 +56,59 @@ const ENTITY_TYPES = [
   { value: 'file', label: 'קובץ' },
   { value: 'system', label: 'מערכת' },
 ];
+
+// מיפוי פעולות ספציפיות לקטגוריות כלליות
+const mapActionToCategory = (action: string): string => {
+  const actionMap: Record<string, string> = {
+    // אישורים
+    'approve': 'אישור',
+    'approve_ad': 'אישור',
+    'APPROVE_AD': 'אישור',
+    
+    // דחיות
+    'reject': 'דחייה',
+    'reject_ad': 'דחייה',
+    'REJECT_AD': 'דחייה',
+    
+    // חסימות
+    'block': 'חסימה',
+    'block_user': 'חסימה',
+    'unblock': 'חסימה',
+    'BLOCK_USER': 'חסימה',
+    'MEETINGS_BLOCK': 'חסימה',
+    'ADMIN_MEETINGS_BLOCK': 'חסימה',
+    'ADMIN_MEETINGS_UNBLOCK': 'חסימה',
+    
+    // ייצואים
+    'export': 'ייצוא',
+    'EXPORT_AUDIT_LOG': 'ייצוא',
+    'EXPORT_USERS': 'ייצוא',
+    'EXPORT_ADS': 'ייצוא',
+    'export_history': 'ייצוא',
+    
+    // שינויי הרשאות
+    'role_change': 'שינוי הרשאות',
+    'ROLE_CHANGE': 'שינוי הרשאות',
+    'UPDATE_USER_ROLE': 'שינוי הרשאות',
+    'ADMIN_ROLE_CHANGE': 'שינוי הרשאות',
+    
+    // שינויי מערכת
+    'system_change': 'שינוי מערכת',
+    'SYSTEM_CHANGE': 'שינוי מערכת',
+    'VIEW_BRANDING_SETTINGS': 'שינוי מערכת',
+    'UPDATE_BRANDING': 'שינוי מערכת',
+    'ADMIN_BULK_REMOVE_USER_ADS': 'שינוי מערכת',
+    'CREATE_CATEGORY': 'שינוי מערכת',
+    'UPDATE_CATEGORY': 'שינוי מערכת',
+    'DELETE_CATEGORY': 'שינוי מערכת',
+    'IMPORT_CITIES': 'שינוי מערכת',
+    'IMPORT_ADS': 'שינוי מערכת',
+    'UPDATE_WATERMARK_SETTINGS': 'שינוי מערכת',
+    'UPLOAD_WATERMARK_LOGO': 'שינוי מערכת',
+  };
+  
+  return actionMap[action] || action;
+};
 
 const AuditLogPage: React.FC = () => {
   const { user } = useAuth();
@@ -74,7 +126,8 @@ const AuditLogPage: React.FC = () => {
   const [filters, setFilters] = useState({
     action: '',
     entityType: '',
-    adminId: '',
+    adminEmail: '',
+    ip: '',
     startDate: '',
     endDate: '',
     search: '',
@@ -90,6 +143,9 @@ const AuditLogPage: React.FC = () => {
     endDate: '',
     action: '',
     entityType: '',
+    adminEmail: '',
+    ip: '',
+    search: '',
     format: 'csv',
   });
   const [exporting, setExporting] = useState(false);
@@ -112,9 +168,11 @@ const AuditLogPage: React.FC = () => {
 
       if (filters.action) queryParams.append('action', filters.action);
       if (filters.entityType) queryParams.append('entityType', filters.entityType);
-      if (filters.adminId) queryParams.append('adminId', filters.adminId);
+      if (filters.adminEmail) queryParams.append('adminEmail', filters.adminEmail);
+      if (filters.ip) queryParams.append('ip', filters.ip);
       if (filters.startDate) queryParams.append('startDate', filters.startDate);
       if (filters.endDate) queryParams.append('endDate', filters.endDate);
+      if (filters.search) queryParams.append('search', filters.search);
 
       const response = await fetch(`/api/admin/audit-log?${queryParams}`, {
         headers: {
@@ -146,7 +204,8 @@ const AuditLogPage: React.FC = () => {
     setFilters({
       action: '',
       entityType: '',
-      adminId: '',
+      adminEmail: '',
+      ip: '',
       startDate: '',
       endDate: '',
       search: '',
@@ -244,9 +303,30 @@ const AuditLogPage: React.FC = () => {
     });
   };
 
-  const getActionLabel = (action: string) => {
-    const actionType = ACTION_TYPES.find(a => a.value === action);
-    return actionType?.label || action;
+  const normalizeEntityType = (entityType: string | null | undefined): string => {
+    if (!entityType) return '-';
+    
+    const lowerType = entityType.toLowerCase();
+    
+    // מודעות
+    if (lowerType === 'listing' || lowerType === 'ad') return 'מודעה';
+    
+    // משתמשים
+    if (lowerType === 'user') return 'משתמש';
+    
+    // פגישות
+    if (lowerType === 'appointment') return 'פגישה';
+    
+    // קבצים
+    if (lowerType === 'file') return 'קובץ';
+    
+    // מערכת - כולל כל הערכים הרלוונטיים
+    if (lowerType === 'system' || entityType === 'BrandingConfig' || 
+        entityType === 'Category' || entityType === 'City' || entityType === 'Street') {
+      return 'מערכת';
+    }
+    
+    return entityType;
   };
 
   return (
@@ -360,6 +440,53 @@ const AuditLogPage: React.FC = () => {
             </select>
           </div>
         </div>
+
+        {/* Additional Filters Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Admin Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              משתמש מבצע (אימייל)
+            </label>
+            <input
+              type="email"
+              value={filters.adminEmail}
+              onChange={(e) => handleFilterChange('adminEmail', e.target.value)}
+              placeholder="הקלד אימייל..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* IP Address - Admin/SuperAdmin only */}
+          {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                כתובת IP
+              </label>
+              <input
+                type="text"
+                value={filters.ip}
+                onChange={(e) => handleFilterChange('ip', e.target.value)}
+                placeholder="192.168.1.1"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          )}
+
+          {/* Free Text Search */}
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              חיפוש חופשי (פעולה, מזהה ישות, הערות)
+            </label>
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              placeholder="חיפוש טקסטואלי..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Logs Table */}
@@ -393,27 +520,27 @@ const AuditLogPage: React.FC = () => {
                       תאריך ושעה
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      מנהל
+                      משתמש מבצע
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      תפקיד
+                      תפקיד במערכת
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      פעולה
+                      סוג פעולה
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      סוג ישות
+                      ישות מושפעת
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
                       מזהה ישות
                     </th>
                     {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        IP
+                        כתובת IP
                       </th>
                     )}
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      פעולות
+                      מקור הרשאה
                     </th>
                   </tr>
                 </thead>
@@ -443,7 +570,7 @@ const AuditLogPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {getActionLabel(log.action)}
+                        {log.action}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {log.entityType || '-'}
@@ -457,16 +584,9 @@ const AuditLogPage: React.FC = () => {
                         </td>
                       )}
                       <td className="px-4 py-3 text-sm">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            viewLogDetails(log.id);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                        >
-                          <Eye className="w-4 h-4" />
-                          צפייה
-                        </button>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          Role
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -548,7 +668,7 @@ const AuditLogPage: React.FC = () => {
 
                 <div>
                   <label className="text-xs font-medium text-gray-500 uppercase">סוג פעולה</label>
-                  <p className="text-sm text-gray-900 mt-1">{getActionLabel(selectedLog.action)}</p>
+                  <p className="text-sm text-gray-900 mt-1">{selectedLog.action}</p>
                 </div>
 
                 <div>
@@ -574,7 +694,7 @@ const AuditLogPage: React.FC = () => {
                   <label className="text-xs font-medium text-gray-500 uppercase block mb-2">
                     Metadata (JSON)
                   </label>
-                  <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-x-auto border border-gray-200">
+                  <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-x-auto border border-gray-200 text-black">
                     {JSON.stringify(selectedLog.meta, null, 2)}
                   </pre>
                 </div>
@@ -674,6 +794,47 @@ const AuditLogPage: React.FC = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  משתמש מבצע (אופציונלי)
+                </label>
+                <input
+                  type="email"
+                  value={exportFilters.adminEmail}
+                  onChange={(e) => setExportFilters(prev => ({ ...prev, adminEmail: e.target.value }))}
+                  placeholder="אימייל המנהל"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    כתובת IP (אופציונלי)
+                  </label>
+                  <input
+                    type="text"
+                    value={exportFilters.ip}
+                    onChange={(e) => setExportFilters(prev => ({ ...prev, ip: e.target.value }))}
+                    placeholder="192.168.1.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  חיפוש חופשי (אופציונלי)
+                </label>
+                <input
+                  type="text"
+                  value={exportFilters.search}
+                  onChange={(e) => setExportFilters(prev => ({ ...prev, search: e.target.value }))}
+                  placeholder="חיפוש בפעולה, מזהה ישות..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
 
               <div>

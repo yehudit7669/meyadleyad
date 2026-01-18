@@ -13,26 +13,87 @@ router.use(authenticate);
 // Most routes require admin or higher
 router.use(requireAdminOrSuper);
 
+// מיפוי קטגוריות לפעולות ספציפיות
+const categoryToActionsMap: Record<string, string[]> = {
+  'approve': ['approve', 'approve_ad', 'APPROVE_AD'],
+  'reject': ['reject', 'reject_ad', 'REJECT_AD'],
+  'block': [
+    'block', 'block_user', 'unblock', 'BLOCK_USER', 'MEETINGS_BLOCK',
+    'ADMIN_MEETINGS_BLOCK', 'ADMIN_MEETINGS_UNBLOCK'
+  ],
+  'export': ['export', 'EXPORT_AUDIT_LOG', 'EXPORT_USERS', 'EXPORT_ADS', 'export_history'],
+  'role_change': ['role_change', 'ROLE_CHANGE', 'UPDATE_USER_ROLE', 'ADMIN_ROLE_CHANGE'],
+  'system_change': [
+    'system_change', 'SYSTEM_CHANGE', 'VIEW_BRANDING_SETTINGS', 'UPDATE_BRANDING',
+    'ADMIN_BULK_REMOVE_USER_ADS', 'CREATE_CATEGORY', 'UPDATE_CATEGORY', 'DELETE_CATEGORY',
+    'IMPORT_CITIES', 'IMPORT_ADS', 'UPDATE_WATERMARK_SETTINGS', 'UPLOAD_WATERMARK_LOGO'
+  ],
+};
+
+// מיפוי סוגי ישויות - כולל את כל הערכים האפשריים בבסיס הנתונים
+const entityTypeMap: Record<string, string[]> = {
+  'user': ['user', 'User', 'USER'],
+  'listing': ['listing', 'ad', 'Ad', 'AD', 'Listing'],
+  'ad': ['listing', 'ad', 'Ad', 'AD', 'Listing'],
+  'appointment': ['appointment', 'Appointment', 'APPOINTMENT'],
+  'file': ['file', 'File', 'FILE'],
+  'system': ['system', 'System', 'SYSTEM', 'BrandingConfig', 'Category', 'City', 'Street'],
+};
+
 // Get audit logs with filters
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = '1', limit = '50', action, adminId, startDate, endDate } = req.query;
+    const { 
+      page = '1', 
+      limit = '50', 
+      action, 
+      adminEmail, 
+      ip,
+      entityType,
+      startDate, 
+      endDate,
+      search 
+    } = req.query;
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
     const where: any = {};
 
+    // אם מסננים לפי קטגוריית פעולה, המר לרשימת הפעולות הספציפיות
     if (action) {
-      where.action = action;
+      const specificActions = categoryToActionsMap[action as string];
+      if (specificActions) {
+        where.action = { in: specificActions };
+      } else {
+        where.action = action;
+      }
     }
 
-    if (adminId) {
-      where.adminId = adminId;
+    if (entityType) {
+      const specificEntities = entityTypeMap[entityType as string];
+      if (specificEntities) {
+        where.entityType = { in: specificEntities };
+      } else {
+        where.entityType = entityType;
+      }
+    }
+
+    if (ip) {
+      where.ip = { contains: ip as string, mode: 'insensitive' };
     }
 
     if (startDate || endDate) {
       where.createdAt = {};
       if (startDate) where.createdAt.gte = new Date(startDate as string);
       if (endDate) where.createdAt.lte = new Date(endDate as string);
+    }
+
+    // Free text search across multiple fields
+    if (search) {
+      where.OR = [
+        { action: { contains: search as string, mode: 'insensitive' } },
+        { targetId: { contains: search as string, mode: 'insensitive' } },
+        { entityType: { contains: search as string, mode: 'insensitive' } },
+      ];
     }
 
     const [logs, total] = await Promise.all([
@@ -49,15 +110,22 @@ router.get('/', async (req: Request, res: Response) => {
     const adminIds = Array.from(new Set(logs.map((log: any) => log.adminId)));
     const admins = await prisma.user.findMany({
       where: { id: { in: adminIds } },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, role: true },
     });
 
     const adminMap = new Map(admins.map(a => [a.id, a]));
 
-    const logsWithAdminInfo = logs.map((log: any) => ({
+    // Filter by adminEmail if provided
+    let logsWithAdminInfo = logs.map((log: any) => ({
       ...log,
       admin: adminMap.get(log.adminId),
     }));
+
+    if (adminEmail) {
+      logsWithAdminInfo = logsWithAdminInfo.filter((log: any) => 
+        log.admin?.email?.toLowerCase().includes((adminEmail as string).toLowerCase())
+      );
+    }
 
     res.json({
       logs: logsWithAdminInfo,
@@ -222,7 +290,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 // Export audit logs - SuperAdmin only
 router.post('/export', requireSuperAdmin, async (req: Request, res: Response) => {
   try {
-    const { format = 'csv', startDate, endDate, action, adminId, entityType } = req.body;
+    const { format = 'csv', startDate, endDate, action, adminEmail, entityType, search, ip } = req.body;
 
     if (!startDate || !endDate) {
       return res.status(400).json({ error: 'תאריכי התחלה וסיום נדרשים לייצוא' });
@@ -235,9 +303,35 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
       },
     };
 
-    if (action) where.action = action;
-    if (adminId) where.adminId = adminId;
-    if (entityType) where.entityType = entityType;
+    // אם מסננים לפי קטגוריית פעולה, המר לרשימת הפעולות הספציפיות
+    if (action) {
+      const specificActions = categoryToActionsMap[action];
+      if (specificActions) {
+        where.action = { in: specificActions };
+      } else {
+        where.action = action;
+      }
+    }
+
+    if (entityType) {
+      const specificEntities = entityTypeMap[entityType];
+      if (specificEntities) {
+        where.entityType = { in: specificEntities };
+      } else {
+        where.entityType = entityType;
+      }
+    }
+
+    if (ip) where.ip = { contains: ip, mode: 'insensitive' };
+
+    // Free text search
+    if (search) {
+      where.OR = [
+        { action: { contains: search, mode: 'insensitive' } },
+        { targetId: { contains: search, mode: 'insensitive' } },
+        { entityType: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const logs = await prisma.adminAuditLog.findMany({
       where,
@@ -253,6 +347,15 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
     });
 
     const adminMap = new Map(admins.map((a: any) => [a.id, a]));
+
+    // Filter by adminEmail if provided (post-fetch filtering)
+    let filteredLogs = logs;
+    if (adminEmail) {
+      filteredLogs = logs.filter((log: any) => {
+        const admin = adminMap.get(log.adminId);
+        return admin?.email?.toLowerCase().includes(adminEmail.toLowerCase());
+      });
+    }
 
     // Create signed token for download
     const token = sign(
@@ -272,14 +375,14 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
       entityType: 'system',
       meta: {
         format,
-        filters: { startDate, endDate, action, adminId, entityType },
-        recordCount: logs.length,
+        filters: { startDate, endDate, action, adminEmail, entityType, search, ip },
+        recordCount: filteredLogs.length,
       },
       ip: req.ip,
     });
 
     if (format === 'json') {
-      const exportData = logs.map((log: any) => ({
+      const exportData = filteredLogs.map((log: any) => ({
         ...log,
         admin: adminMap.get(log.adminId),
       }));
@@ -287,7 +390,7 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
       res.json({
         token,
         data: exportData,
-        count: logs.length,
+        count: filteredLogs.length,
       });
     } else {
       // CSV export
@@ -313,7 +416,7 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
         fgColor: { argb: 'FFD3D3D3' },
       };
 
-      logs.forEach((log: any) => {
+      filteredLogs.forEach((log: any) => {
         const admin = adminMap.get(log.adminId);
         worksheet.addRow({
           createdAt: new Date(log.createdAt).toLocaleString('he-IL'),
