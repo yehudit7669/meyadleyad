@@ -27,6 +27,7 @@ import categoryManagementRoutes from '../modules/admin/category-management.route
 import adminDashboardRoutes from '../modules/admin/admin-dashboard.routes';
 import newspaperRoutes from '../modules/newspaper/newspaper.routes';
 import usersAdminRoutes from '../modules/admin/users/users-admin.routes';
+import backupRoutes from '../modules/admin/backup/backup.routes';
 
 const router = Router();
 
@@ -58,5 +59,6 @@ router.use('/admin/import', importRoutes);
 router.use('/admin/audit-log', auditLogRoutes);
 router.use('/admin/categories', categoryManagementRoutes);
 router.use('/admin/newspaper', newspaperRoutes);
+router.use('/admin/backups', backupRoutes); // Backups & Recovery
 
 export default router;

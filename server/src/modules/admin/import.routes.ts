@@ -93,6 +93,7 @@ router.post('/cities-streets/preview', upload.single('file'), async (req: Reques
       // Extract data (support both Hebrew and English column names)
       const cityName = row['עיר'] || row['city'] || row['cityName'] || '';
       const streetName = row['רחוב'] || row['street'] || row['streetName'] || '';
+      const neighborhoodName = row['שכונה'] || row['neighborhood'] || row['neighborhoodName'] || '';
       const streetCode = row['קוד רחוב'] || row['code'] || row['streetCode'] || `${Date.now()}-${i}`;
 
       let status = 'תקין';
@@ -136,6 +137,7 @@ router.post('/cities-streets/preview', upload.single('file'), async (req: Reques
         rowNumber: i + 2, // +2 because Excel is 1-indexed and first row is headers
         city: cityName,
         street: streetName,
+        neighborhood: neighborhoodName || '',
         code: streetCode,
         status,
         errors: rowErrors
@@ -208,7 +210,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
       // Process each row
       for (const row of data) {
         try {
-          const { city: cityName, street: streetName, code: streetCode } = row;
+          const { city: cityName, street: streetName, neighborhood: neighborhoodName, code: streetCode } = row;
 
           if (!cityName || !streetName) {
             failedCount++;
@@ -244,6 +246,30 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
             });
           }
 
+          // Handle neighborhood if provided
+          let neighborhood = null;
+          if (neighborhoodName && neighborhoodName.trim()) {
+            // Check if neighborhood exists in this city
+            neighborhood = await tx.neighborhood.findFirst({
+              where: {
+                cityId: city.id,
+                name: neighborhoodName.trim(),
+              },
+            });
+
+            if (!neighborhood) {
+              // Create new neighborhood
+              neighborhood = await tx.neighborhood.create({
+                data: {
+                  id: `neighborhood-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  name: neighborhoodName.trim(),
+                  cityId: city.id,
+                  updatedAt: new Date(),
+                },
+              });
+            }
+          }
+
           // Check if street exists (by code OR by name in the same city)
           let existingStreet = await tx.street.findUnique({
             where: {
@@ -272,6 +298,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
                 name: streetName,
                 code: streetCode,
                 cityId: city.id,
+                neighborhoodId: neighborhood?.id || null,
                 updatedAt: new Date(),
               },
             });
@@ -283,6 +310,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
               data: {
                 name: streetName,
                 code: streetCode,
+                neighborhoodId: neighborhood?.id || null,
                 updatedAt: new Date(),
               },
             });

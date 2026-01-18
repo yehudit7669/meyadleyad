@@ -51,13 +51,15 @@ export class StreetsService {
       take: limit,
     });
     
+    console.log(`[STREETS SERVICE] Found ${streets.length} streets for cityId: ${cityId}, query: "${query}"`);
+    
     return streets.map(street => ({
       id: street.id,
       name: street.name,
       code: street.code,
       cityId: street.cityId,
-      cityName: street.City.nameHe,
-      neighborhoodId: street.neighborhoodId,
+      cityName: street.City?.nameHe || street.City?.name || '',
+      neighborhoodId: street.neighborhoodId || null,
       neighborhoodName: street.Neighborhood?.name || null,
     }));
   }
@@ -104,21 +106,36 @@ export class StreetsService {
    * Get Beit Shemesh city ID (default city)
    */
   async getBeitShemeshCity() {
-    const city = await prisma.city.findFirst({
+    // Find all Beit Shemesh cities and get the one with most streets
+    const cities = await prisma.city.findMany({
       where: { 
         OR: [
-          { name: 'בית שמש' },
-          { nameHe: 'בית שמש' },
-          { name: 'Beit Shemesh' },
+          { name: { contains: 'בית שמש', mode: 'insensitive' } },
+          { nameHe: { contains: 'בית שמש', mode: 'insensitive' } },
+          { name: { contains: 'Beit Shemesh', mode: 'insensitive' } },
         ]
       },
+      include: {
+        _count: {
+          select: {
+            Street: true
+          }
+        }
+      }
     });
     
-    if (!city) {
+    if (!cities || cities.length === 0) {
       throw new NotFoundError('עיר בית שמש לא נמצאה במערכת');
     }
     
-    return city;
+    // Return the city with the most streets
+    const cityWithMostStreets = cities.reduce((prev, current) => 
+      (current._count.Street > prev._count.Street) ? current : prev
+    );
+    
+    console.log(`[BEIT SHEMESH] Found ${cities.length} cities, using ${cityWithMostStreets.id} with ${cityWithMostStreets._count.Street} streets`);
+    
+    return cityWithMostStreets;
   }
 }
 

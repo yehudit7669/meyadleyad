@@ -8,7 +8,7 @@ import { WizardStepProps } from '../../../types/wizard';
 const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) => {
   const [formData, setFormData] = useState<ResidentialStep2Data>(
     data || {
-      cityId: '',
+      cityId: '', // Will be set from beitShemeshCity
       cityName: 'בית שמש',
       streetId: '',
       streetName: '',
@@ -33,24 +33,36 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
 
   // Set Beit Shemesh as default city
   useEffect(() => {
-    if (beitShemeshCity && !formData.cityId) {
-      setFormData((prev) => ({
-        ...prev,
-        cityId: beitShemeshCity.id,
-        cityName: beitShemeshCity.nameHe || 'בית שמש',
-      }));
+    if (beitShemeshCity) {
+      // Always update cityId to the current Beit Shemesh ID (in case it changed from import)
+      if (!formData.cityId || formData.cityId !== beitShemeshCity.id) {
+        console.log('[UPDATING CITY ID] from', formData.cityId, 'to', beitShemeshCity.id);
+        setFormData((prev) => ({
+          ...prev,
+          cityId: beitShemeshCity.id,
+          cityName: beitShemeshCity.nameHe || 'בית שמש',
+          // Reset street selection when city changes
+          streetId: '',
+          streetName: '',
+          neighborhoodId: '',
+          neighborhoodName: '',
+        }));
+        setStreetSearch('');
+      }
     }
   }, [beitShemeshCity]);
 
   // Get all streets
   const { data: allStreets } = useQuery({
     queryKey: ['all-streets', formData.cityId],
-    queryFn: () =>
-      streetsService.getStreets({
+    queryFn: () => {
+      console.log('[FETCHING STREETS] cityId:', formData.cityId);
+      return streetsService.getStreets({
         cityId: formData.cityId!,
         limit: 500,
-      }),
-    enabled: !!formData.cityId,
+      });
+    },
+    enabled: !!formData.cityId && formData.cityId.length > 10, // Ensure it's a UUID, not a name
   });
 
   // Get searched streets
