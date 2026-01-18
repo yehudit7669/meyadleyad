@@ -2,13 +2,16 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import * as ExcelJS from 'exceljs';
 import { authenticate } from '../../middlewares/auth';
-import { requireAdmin } from '../../middleware/rbac.middleware';
+import { requireAdmin, requireSuperAdmin, requireAdminOrSuper } from '../../middleware/rbac.middleware';
+import { AdminAuditService } from './admin-audit.service';
+import { sign } from 'jsonwebtoken';
 
 const router = Router();
 
-// Apply authentication and admin authorization to all routes
+// Apply authentication to all routes
 router.use(authenticate);
-router.use(requireAdmin);
+// Most routes require admin or higher
+router.use(requireAdminOrSuper);
 
 // Get audit logs with filters
 router.get('/', async (req: Request, res: Response) => {
@@ -184,6 +187,160 @@ router.get('/stats', async (_req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error fetching audit stats:', error);
     res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// Get single audit log by ID
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const log = await prisma.adminAuditLog.findUnique({
+      where: { id },
+    });
+
+    if (!log) {
+      return res.status(404).json({ error: 'Audit log not found' });
+    }
+
+    // Get admin info
+    const admin = await prisma.user.findUnique({
+      where: { id: log.adminId },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    res.json({
+      ...log,
+      admin,
+    });
+  } catch (error: any) {
+    console.error('Error fetching audit log:', error);
+    res.status(500).json({ error: 'Failed to fetch audit log' });
+  }
+});
+
+// Export audit logs - SuperAdmin only
+router.post('/export', requireSuperAdmin, async (req: Request, res: Response) => {
+  try {
+    const { format = 'csv', startDate, endDate, action, adminId, entityType } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'תאריכי התחלה וסיום נדרשים לייצוא' });
+    }
+
+    const where: any = {
+      createdAt: {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      },
+    };
+
+    if (action) where.action = action;
+    if (adminId) where.adminId = adminId;
+    if (entityType) where.entityType = entityType;
+
+    const logs = await prisma.adminAuditLog.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 10000, // Limit to prevent huge exports
+    });
+
+    // Get admin names
+    const adminIds = Array.from(new Set(logs.map((log: any) => log.adminId)));
+    const admins = await prisma.user.findMany({
+      where: { id: { in: adminIds } },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    const adminMap = new Map(admins.map((a: any) => [a.id, a]));
+
+    // Create signed token for download
+    const token = sign(
+      {
+        userId: req.user?.id,
+        exportType: 'audit_log',
+        timestamp: Date.now(),
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '15m' } // 15 minutes TTL
+    );
+
+    // Log the export action
+    await AdminAuditService.log({
+      adminId: req.user?.id!,
+      action: 'EXPORT_AUDIT_LOG',
+      entityType: 'system',
+      meta: {
+        format,
+        filters: { startDate, endDate, action, adminId, entityType },
+        recordCount: logs.length,
+      },
+      ip: req.ip,
+    });
+
+    if (format === 'json') {
+      const exportData = logs.map((log: any) => ({
+        ...log,
+        admin: adminMap.get(log.adminId),
+      }));
+
+      res.json({
+        token,
+        data: exportData,
+        count: logs.length,
+      });
+    } else {
+      // CSV export
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Audit Logs');
+
+      worksheet.columns = [
+        { header: 'תאריך ושעה', key: 'createdAt', width: 20 },
+        { header: 'שם מנהל', key: 'adminName', width: 25 },
+        { header: 'אימייל מנהל', key: 'adminEmail', width: 30 },
+        { header: 'תפקיד', key: 'adminRole', width: 15 },
+        { header: 'סוג פעולה', key: 'action', width: 30 },
+        { header: 'סוג ישות', key: 'entityType', width: 20 },
+        { header: 'מזהה ישות', key: 'targetId', width: 30 },
+        { header: 'כתובת IP', key: 'ip', width: 20 },
+        { header: 'פרטים', key: 'meta', width: 50 },
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD3D3D3' },
+      };
+
+      logs.forEach((log: any) => {
+        const admin = adminMap.get(log.adminId);
+        worksheet.addRow({
+          createdAt: new Date(log.createdAt).toLocaleString('he-IL'),
+          adminName: admin?.name || 'לא ידוע',
+          adminEmail: admin?.email || 'לא ידוע',
+          adminRole: admin?.role || 'לא ידוע',
+          action: log.action,
+          entityType: log.entityType || '-',
+          targetId: log.targetId || '-',
+          ip: log.ip || '-',
+          meta: log.meta ? JSON.stringify(log.meta) : '-',
+        });
+      });
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=audit-logs-${Date.now()}.csv`);
+      res.setHeader('X-Export-Token', token);
+
+      // Add UTF-8 BOM for proper Hebrew encoding in Excel
+      res.write('\uFEFF');
+      
+      await workbook.csv.write(res);
+      res.end();
+    }
+  } catch (error: any) {
+    console.error('Error exporting audit logs:', error);
+    res.status(500).json({ error: 'Failed to export logs' });
   }
 });
 

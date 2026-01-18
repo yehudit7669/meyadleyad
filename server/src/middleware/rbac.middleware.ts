@@ -135,7 +135,7 @@ export function getPermissionsForRole(role: UserRole): string[] {
       return [
         'users:read',
         'ads:read',
-        'audit:read',
+        // Moderator אין גישה ל-audit logs
       ];
     
     default:

@@ -130,7 +130,7 @@ const menuItems: MenuItem[] = [
     title: 'לוג פעולות ניהול',
     path: '/admin/audit',
     icon: <FileCheck className="w-5 h-5" />,
-    requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN'] // Moderator אין גישה
   },
   {
     id: 'backups',
