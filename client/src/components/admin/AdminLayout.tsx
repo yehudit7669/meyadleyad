@@ -102,9 +102,28 @@ const menuItems: MenuItem[] = [
   {
     id: 'imports',
     title: 'ייבוא ונתונים חיצוניים',
-    path: '/admin/imports',
     icon: <Download className="w-5 h-5" />,
-    requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+    children: [
+      {
+        id: 'imports-overview',
+        title: 'סקירה כללית',
+        path: '/admin/imports',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+      },
+      {
+        id: 'import-cities',
+        title: 'ייבוא ערים ורחובות',
+        path: '/admin/import-cities',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+      },
+      {
+        id: 'import-ads',
+        title: 'ייבוא נכסים מקובץ',
+        path: '/admin/import-ads',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+      }
+    ]
   },
   {
     id: 'audit',
