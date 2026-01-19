@@ -1,0 +1,159 @@
+/* Newspaper Preview Styles - Matching PDF Output */
+
+.newspaper-page {
+  direction: rtl;
+  font-family: 'Assistant', 'Segoe UI', Arial, sans-serif;
+  padding: 20mm;
+  box-sizing: border-box;
+  background: #ffffff;
+  position: relative;
+}
+
+.newspaper-header {
+  text-align: center;
+  margin-bottom: 25px;
+  border-bottom: 3px double #1F3F3A;
+  padding-bottom: 15px;
+}
+
+.newspaper-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  padding: 12px;
+  font-family: 'Assistant', sans-serif;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.newspaper-title-input {
+  width: 100%;
+  text-align: center;
+  border: 2px dashed #3b82f6;
+  background: #eff6ff;
+  padding: 12px;
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-family: 'Assistant', sans-serif;
+  border-radius: 8px;
+  outline: none;
+}
+
+.newspaper-banner {
+  margin-bottom: 25px;
+}
+
+.newspaper-content {
+  min-height: 600px;
+}
+
+.newspaper-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.newspaper-property-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  background: #ffffff;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: move;
+  position: relative;
+}
+
+.newspaper-property-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.newspaper-property-card.dragging {
+  opacity: 0.3;
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.dragging-overlay {
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.25);
+  transform: rotate(2deg) scale(1.05);
+  border: 3px solid #3b82f6;
+  background: #ffffff;
+  cursor: grabbing;
+}
+
+.property-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  min-height: 2.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.property-address {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.property-address::before {
+  content: '📍';
+  font-size: 0.85rem;
+}
+
+.property-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #2563eb;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  direction: ltr;
+  text-align: right;
+}
+
+.newspaper-footer {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 3px double #e5e7eb;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* A4 Page specific sizes */
+@media print {
+  .newspaper-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    box-shadow: none;
+  }
+}
+
+/* Responsive adjustments for zoom */
+@media screen and (max-width: 1400px) {
+  .newspaper-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .newspaper-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -13,29 +13,28 @@ export class NewspaperService {
 
   /**
    * Get all newspaper PDFs (paginated)
+   * ⚠️ UPDATED: Now returns NewspaperSheet instead of deprecated NewspaperAd
    */
   async getNewspaperAds(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
 
-    const [ads, total] = await Promise.all([
-      prisma.newspaperAd.findMany({
+    // Return NewspaperSheets instead of old NewspaperAd
+    const [sheets, total] = await Promise.all([
+      prisma.newspaperSheet.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
         include: {
-          ad: {
+          category: {
             select: {
               id: true,
-              title: true,
-              address: true,
-              status: true,
-              customFields: true,
-              City: {
-                select: { nameHe: true }
-              },
-              Street: {
-                select: { name: true }
-              }
+              nameHe: true
+            }
+          },
+          city: {
+            select: {
+              id: true,
+              nameHe: true
             }
           },
           creator: {
@@ -43,14 +42,43 @@ export class NewspaperService {
               name: true,
               email: true
             }
+          },
+          _count: {
+            select: {
+              listings: true
+            }
           }
         }
       }),
-      prisma.newspaperAd.count()
+      prisma.newspaperSheet.count()
     ]);
 
+    // Map to old format for backward compatibility
+    const data = sheets.map(sheet => ({
+      id: sheet.id,
+      adId: null, // No longer relevant
+      filePath: sheet.pdfPath || '',
+      version: sheet.version,
+      createdAt: sheet.createdAt,
+      createdBy: sheet.createdBy,
+      // Additional info
+      title: sheet.title,
+      status: sheet.status,
+      listingsCount: sheet._count.listings,
+      ad: {
+        id: sheet.id,
+        title: sheet.title,
+        address: `${sheet.category.nameHe} - ${sheet.city.nameHe}`,
+        status: sheet.status,
+        customFields: {},
+        City: sheet.city,
+        Street: null
+      },
+      creator: sheet.creator
+    }));
+
     return {
-      data: ads,
+      data,
       pagination: {
         total,
         page,
@@ -175,28 +203,26 @@ export class NewspaperService {
 
   /**
    * Regenerate a newspaper PDF (creates new version)
+   * ⚠️ UPDATED: Now uses NewspaperSheet and delegates to newspaper-sheets service
    */
   async regenerateNewspaperPDF(newspaperAdId: string, userId: string) {
-    const existing = await prisma.newspaperAd.findUnique({
-      where: { id: newspaperAdId },
-      include: {
-        ad: true
-      }
+    const sheet = await prisma.newspaperSheet.findUnique({
+      where: { id: newspaperAdId }
     });
 
-    if (!existing) {
-      throw new Error('Newspaper ad not found');
+    if (!sheet) {
+      throw new Error('Newspaper sheet not found');
     }
 
-    // Generate new version
-    const result = await this.generateNewspaperPDF(existing.adId, userId);
+    // Use the new newspaper-sheets service
+    const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service');
+    const result = await newspaperSheetService.generateSheetPDF(newspaperAdId, userId);
 
     // Log regeneration
-    await AuditService.log(userId, 'NEWSPAPER_PDF_REGENERATED', {
-      originalId: newspaperAdId,
-      newId: result.newspaperAd.id,
-      adId: existing.adId,
-      newVersion: result.newspaperAd.version
+    await AuditService.log(userId, 'NEWSPAPER_SHEET_PDF_REGENERATED', {
+      sheetId: newspaperAdId,
+      title: sheet.title,
+      newVersion: result.version
     });
 
     return result;
@@ -204,50 +230,68 @@ export class NewspaperService {
 
   /**
    * Delete a newspaper PDF
+   * ⚠️ UPDATED: Now uses NewspaperSheet instead of deprecated NewspaperAd
    */
   async deleteNewspaperPDF(newspaperAdId: string, userId: string) {
-    const newspaperAd = await prisma.newspaperAd.findUnique({
+    const sheet = await prisma.newspaperSheet.findUnique({
       where: { id: newspaperAdId }
     });
 
-    if (!newspaperAd) {
-      throw new Error('Newspaper ad not found');
+    if (!sheet) {
+      throw new Error('Newspaper sheet not found');
     }
 
-    // Delete file
-    try {
-      const fullPath = path.join(process.cwd(), newspaperAd.filePath);
-      await fs.unlink(fullPath);
-    } catch (error) {
-      console.error('Failed to delete PDF file:', error);
-      // Continue with DB deletion even if file deletion fails
+    // Delete PDF file if exists
+    if (sheet.pdfPath) {
+      try {
+        const fullPath = path.join(process.cwd(), sheet.pdfPath);
+        await fs.unlink(fullPath);
+      } catch (error) {
+        console.error('Failed to delete PDF file:', error);
+        // Continue with DB deletion even if file deletion fails
+      }
     }
 
-    // Delete from database
-    await prisma.newspaperAd.delete({
+    // Delete all versions
+    await prisma.newspaperSheetVersion.deleteMany({
+      where: { sheetId: newspaperAdId }
+    });
+
+    // Delete all listings
+    await prisma.newspaperSheetListing.deleteMany({
+      where: { sheetId: newspaperAdId }
+    });
+
+    // Delete sheet from database
+    await prisma.newspaperSheet.delete({
       where: { id: newspaperAdId }
     });
 
     // Log deletion
-    await AuditService.log(userId, 'NEWSPAPER_PDF_DELETED', {
-      newspaperAdId,
-      adId: newspaperAd.adId
+    await AuditService.log(userId, 'NEWSPAPER_SHEET_DELETED', {
+      sheetId: newspaperAdId,
+      title: sheet.title
     });
   }
 
   /**
    * Get newspaper PDF by ID
+   * ⚠️ UPDATED: Now uses NewspaperSheet instead of deprecated NewspaperAd
    */
   async getNewspaperPDFById(newspaperAdId: string) {
-    return await prisma.newspaperAd.findUnique({
+    return await prisma.newspaperSheet.findUnique({
       where: { id: newspaperAdId },
       include: {
-        ad: {
+        category: {
           select: {
             id: true,
-            title: true,
-            address: true,
-            status: true
+            nameHe: true
+          }
+        },
+        city: {
+          select: {
+            id: true,
+            nameHe: true
           }
         },
         creator: {
@@ -255,22 +299,29 @@ export class NewspaperService {
             name: true,
             email: true
           }
+        },
+        _count: {
+          select: {
+            listings: true
+          }
         }
       }
     });
   }
 
   /**
-   * Get all versions of newspaper PDF for an ad
+   * Get all versions of newspaper PDF for a sheet
+   * ⚠️ UPDATED: Now uses NewspaperSheetVersion instead of old structure
    */
-  async getNewspaperPDFVersions(adId: string) {
-    return await prisma.newspaperAd.findMany({
-      where: { adId },
+  async getNewspaperPDFVersions(sheetId: string) {
+    return await prisma.newspaperSheetVersion.findMany({
+      where: { sheetId },
       orderBy: { version: 'desc' },
       include: {
-        creator: {
+        generator: {
           select: {
-            name: true
+            name: true,
+            email: true
           }
         }
       }

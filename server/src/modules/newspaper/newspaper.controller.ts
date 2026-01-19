@@ -85,14 +85,19 @@ export class NewspaperController {
         return;
       }
 
+      if (!newspaperAd.pdfPath) {
+        res.status(404).json({ error: 'PDF file not generated yet' });
+        return;
+      }
+
       // Log view action
-      await AuditService.log(userId, 'NEWSPAPER_PDF_VIEWED', {
-        newspaperAdId,
-        adId: newspaperAd.adId
+      await AuditService.log(userId, 'NEWSPAPER_SHEET_PDF_VIEWED', {
+        sheetId: newspaperAdId,
+        title: newspaperAd.title
       });
 
       // Serve PDF
-      const filePath = path.join(process.cwd(), newspaperAd.filePath);
+      const filePath = path.join(process.cwd(), newspaperAd.pdfPath);
       
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'inline');
@@ -121,14 +126,19 @@ export class NewspaperController {
         return;
       }
 
+      if (!newspaperAd.pdfPath) {
+        res.status(404).json({ error: 'PDF file not generated yet' });
+        return;
+      }
+
       // Log download action
-      await AuditService.log(userId, 'NEWSPAPER_PDF_DOWNLOADED', {
-        newspaperAdId,
-        adId: newspaperAd.adId
+      await AuditService.log(userId, 'NEWSPAPER_SHEET_PDF_DOWNLOADED', {
+        sheetId: newspaperAdId,
+        title: newspaperAd.title
       });
 
       // Serve PDF
-      const filePath = path.join(process.cwd(), newspaperAd.filePath);
+      const filePath = path.join(process.cwd(), newspaperAd.pdfPath);
       const filename = path.basename(filePath);
       
       res.setHeader('Content-Type', 'application/pdf');

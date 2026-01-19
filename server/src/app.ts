@@ -119,8 +119,10 @@ app.use(performanceMonitor);
 // Apply after body parsers so we can log request bodies
 app.use(requestLogger);
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Static files - serve uploads from server/uploads
+const uploadsPath = path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
+console.log('📁 Serving static files from:', uploadsPath);
 
 // Health check
 app.get('/health', (_req, res) => {

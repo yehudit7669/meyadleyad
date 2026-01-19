@@ -9,8 +9,8 @@
 ALTER TYPE "AppointmentStatus" ADD VALUE 'CANCELED';
 ALTER TYPE "AppointmentStatus" ADD VALUE 'COMPLETED';
 
--- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+-- DropIndex (conditional - only if exists)
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "Appointment" ADD COLUMN     "statusReason" TEXT;

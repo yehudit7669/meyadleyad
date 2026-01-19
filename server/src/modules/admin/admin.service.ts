@@ -191,14 +191,55 @@ export class AdminService {
       'ACTIVE'
     );
 
-    // Auto-generate newspaper PDF when ad is approved (becomes ACTIVE)
+    // ✅ NEW: הוספה אוטומטית לגיליון עיתון (קטגוריה + עיר)
     try {
-      const { newspaperService } = await import('../newspaper/newspaper.service');
-      await newspaperService.generateNewspaperPDF(adId, adminId);
-      console.log(`✅ Newspaper PDF auto-generated for approved ad ${adId}`);
+      // בדיקה שהמודעה היא "לוח מודעות - תצורת עיתון"
+      console.log(`🔍 Checking if ad should be added to newspaper sheet:`, {
+        categoryId: ad.categoryId,
+        categorySlug: ad.Category.slug,
+        categoryNameHe: ad.Category.nameHe,
+        cityId: ad.cityId
+      });
+
+      // 🧪 TEMPORARY: Add ALL ads to newspaper sheets for testing
+      const isNewspaperCategory = true; // ad.Category.slug?.includes('loach') || 
+                                  // ad.Category.slug?.includes('newspaper') ||
+                                  // ad.Category.nameHe?.includes('לוח מודעות') ||
+                                  // ad.Category.nameHe?.includes('עיתון');
+
+      console.log(`✓ Is newspaper category: ${isNewspaperCategory} (TESTING MODE - ALL CATEGORIES)`);
+
+      if (isNewspaperCategory && ad.cityId) {
+        console.log(`📰 Adding ad ${adId} to newspaper sheet...`);
+        
+        const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service');
+        
+        // קבלת או יצירת גיליון פעיל
+        const sheet = await newspaperSheetService.getOrCreateActiveSheet(
+          ad.categoryId,
+          ad.cityId,
+          adminId
+        );
+
+        console.log(`📋 Sheet found/created:`, { sheetId: sheet.id, title: sheet.title });
+
+        // הוספת המודעה לגיליון
+        await newspaperSheetService.addListingToSheet(
+          sheet.id,
+          adId,
+          adminId
+        );
+
+        console.log(`✅ Ad ${adId} added to newspaper sheet ${sheet.id} (${sheet.title})`);
+
+        // ✅ יצירת PDF לגיליון
+        console.log(`📄 Generating PDF for sheet ${sheet.id}...`);
+        const pdfResult = await newspaperSheetService.generateSheetPDF(sheet.id, adminId);
+        console.log(`✅ PDF generated: ${pdfResult.pdfPath} (version ${pdfResult.version})`);
+      }
     } catch (error) {
-      console.error(`❌ Failed to auto-generate newspaper PDF for ad ${adId}:`, error);
-      // Don't throw - PDF generation failure shouldn't block ad approval
+      console.error(`❌ Failed to add ad to newspaper sheet:`, error);
+      // לא לזרוק שגיאה - כשלון בהוספה לגיליון לא צריך לחסום את האישור
     }
 
     // שליחת מייל אישור (ללא PDF - המשתמש כבר קיבל PDF בזמן הפרסום)

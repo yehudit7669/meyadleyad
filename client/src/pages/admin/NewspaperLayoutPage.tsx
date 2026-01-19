@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Newspaper, Eye, Download, RefreshCw, Send, Trash2, FileText, Calendar, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Newspaper, Eye, Download, RefreshCw, Send, Trash2, FileText, Calendar, MapPin, Edit } from 'lucide-react';
 import { api } from '../../services/api';
 
 interface NewspaperAd {
   id: string;
-  adId: string;
+  adId: string | null;
   filePath: string;
   version: number;
   createdAt: string;
   createdBy: string;
+  title?: string;
+  status?: string;
+  listingsCount?: number;
   ad: {
     id: string;
     title: string;
@@ -33,10 +37,13 @@ const AD_STATUSES: Record<string, { label: string; color: string }> = {
   REJECTED: { label: 'נדחתה', color: 'bg-red-100 text-red-800' },
   EXPIRED: { label: 'פגה תוקף', color: 'bg-orange-100 text-orange-800' },
   REMOVED: { label: 'הוסרה', color: 'bg-gray-100 text-gray-800' },
+  PUBLISHED: { label: 'פורסם', color: 'bg-blue-100 text-blue-800' },
+  ARCHIVED: { label: 'בארכיון', color: 'bg-gray-100 text-gray-800' },
 };
 
 export default function NewspaperLayoutPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedAd, setSelectedAd] = useState<NewspaperAd | null>(null);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
@@ -49,6 +56,7 @@ export default function NewspaperLayoutPage() {
       // Add timestamp to prevent caching issues
       const timestamp = new Date().getTime();
       const response = await api.get(`/admin/newspaper?page=${currentPage}&limit=20&_t=${timestamp}`);
+      console.log('📰 Newspaper sheets response:', response.data);
       return response.data;
     },
     // Refetch on window focus to ensure fresh data
@@ -232,10 +240,10 @@ export default function NewspaperLayoutPage() {
           <div className="text-sm text-blue-800">
             <p className="font-semibold mb-1">מידע חשוב:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>קבצי PDF נוצרים אוטומטית כאשר מודעה עוברת לסטטוס "פעילה"</li>
-              <li>כל יצירה מחדש (Regenerate) יוצרת גרסה חדשה מבלי למחוק את הקודמת</li>
-              <li>קבצים אינם ציבוריים ונגישים רק למנהלי מערכת</li>
-              <li>הורדה והפצה דורשים הרשאת EXPORT</li>
+              <li>גיליונות PDF נוצרים אוטומטית לפי קטגוריה + עיר</li>
+              <li>מודעות מאושרות מתווספות אוטומטית לגיליון המתאים</li>
+              <li>כל גיליון יכול להכיל מספר מודעות מאותה קטגוריה ועיר</li>
+              <li>יצירת PDF מחדש יוצרת גרסה חדשה ומשמרת היסטוריה</li>
             </ul>
           </div>
         </div>
@@ -248,9 +256,9 @@ export default function NewspaperLayoutPage() {
           <div className="text-2xl font-bold text-gray-900">{pagination.total}</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-sm text-gray-600 mb-1">מודעות פעילות</div>
+          <div className="text-sm text-gray-600 mb-1">גיליונות פעילים</div>
           <div className="text-2xl font-bold text-green-600">
-            {newspaperAds.filter((ad: NewspaperAd) => ad.ad.status === 'ACTIVE').length}
+            {newspaperAds.filter((sheet: NewspaperAd) => sheet.status === 'ACTIVE').length}
           </div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -277,8 +285,9 @@ export default function NewspaperLayoutPage() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">תאריך יצירה</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">מזהה מודעה</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">כותרת / כתובת</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">מזהה גיליון</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">גיליון (קטגוריה + עיר)</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">מודעות</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">סטטוס</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">גרסה</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">נוצר ע"י</th>
@@ -296,7 +305,7 @@ export default function NewspaperLayoutPage() {
                     </td>
                     <td className="px-4 py-3">
                       <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        {newspaperAd.adId.slice(0, 8)}...
+                        {newspaperAd.id.slice(0, 8)}...
                       </code>
                     </td>
                     <td className="px-4 py-3">
@@ -304,17 +313,22 @@ export default function NewspaperLayoutPage() {
                         <div className="font-medium text-gray-900 truncate">{newspaperAd.ad.title}</div>
                         <div className="flex items-center gap-1 text-sm text-gray-500 truncate mt-1">
                           <MapPin className="w-3 h-3" />
-                          {getFullAddress(newspaperAd.ad)}
+                          {newspaperAd.ad.address}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                        {newspaperAd.listingsCount || 0}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          AD_STATUSES[newspaperAd.ad.status]?.color || 'bg-gray-100 text-gray-800'
+                          AD_STATUSES[newspaperAd.status || newspaperAd.ad.status]?.color || 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {AD_STATUSES[newspaperAd.ad.status]?.label || newspaperAd.ad.status}
+                        {AD_STATUSES[newspaperAd.status || newspaperAd.ad.status]?.label || newspaperAd.status || newspaperAd.ad.status}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -325,6 +339,15 @@ export default function NewspaperLayoutPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        {/* Edit */}
+                        <button
+                          onClick={() => navigate(`/admin/newspaper/${newspaperAd.id}/edit`)}
+                          className="p-2 text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                          title="עריכת גיליון"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+
                         {/* View */}
                         <button
                           onClick={() => handleView(newspaperAd.id)}

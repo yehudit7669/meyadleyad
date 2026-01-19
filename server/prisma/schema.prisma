@@ -48,6 +48,7 @@ model Ad {
   EmailLog              EmailLog[]
   Favorite              Favorite[]
   NewspaperAd           NewspaperAd[]
+  NewspaperSheetListing NewspaperSheetListing[]
 
   @@index([adNumber])
   @@index([categoryId])
@@ -104,6 +105,7 @@ model Category {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime
   Ad             Ad[]
+  NewspaperSheet NewspaperSheet[]
   Category       Category?       @relation("CategoryToCategory", fields: [parentId], references: [id])
   other_Category Category[]      @relation("CategoryToCategory")
   CategoryField  CategoryField[]
@@ -142,7 +144,8 @@ model City {
   Ad           Ad[]
   Neighborhood Neighborhood[]
   Street       Street[]
-  BrokerUsers  User[]         @relation("BrokerCity")
+  BrokerUsers  User[]             @relation("BrokerCity")
+  NewspaperSheet NewspaperSheet[]
 
   @@index([name])
   @@index([slug])
@@ -245,23 +248,23 @@ model User {
   termsAcceptedAt            DateTime?
   userType                   UserType?                    @default(USER)
   weeklyDigestOptIn          Boolean                      @default(true)
-  aboutBusiness              String?
-  aboutBusinessPending       String?
-  aboutBusinessStatus        ApprovalStatus               @default(APPROVED)
-  businessHours              Json?
-  logoStatus                 ApprovalStatus               @default(APPROVED)
-  logoUrlPending             String?
+  phoneBusinessOffice        String?
   officeAddress              String?
   officeAddressPending       String?
-  officeAddressStatus        ApprovalStatus               @default(APPROVED)
-  phoneBusinessOffice        String?
+  logoUrlPending             String?
+  aboutBusiness              String?
+  aboutBusinessPending       String?
   publishOfficeAddress       Boolean                      @default(false)
+  businessHours              Json?
   weeklyDigestSubscribed     Boolean                      @default(false)
-  meetingsBlocked            Boolean                      @default(false)
   meetingsBlockReason        String?
+  meetingsBlocked            Boolean                      @default(false)
   meetingsBlockedAt          DateTime?
   meetingsBlockedByAdminId   String?
   status                     UserStatus                   @default(ACTIVE)
+  officeAddressStatus        ApprovalStatus               @default(APPROVED)
+  logoStatus                 ApprovalStatus               @default(APPROVED)
+  aboutBusinessStatus        ApprovalStatus               @default(APPROVED)
   AccountDeletionRequest     AccountDeletionRequest[]
   Ad                         Ad[]
   AppointmentOwner           Appointment[]                @relation("AppointmentOwner")
@@ -272,6 +275,8 @@ model User {
   Favorite                   Favorite[]
   HighlightRequest           HighlightRequest[]
   NewspaperAdCreated         NewspaperAd[]                @relation("NewspaperAdCreator")
+  NewspaperSheetCreated      NewspaperSheet[]             @relation("NewspaperSheetCreator")
+  NewspaperVersionGenerated  NewspaperSheetVersion[]      @relation("NewspaperVersionGenerator")
   OfficeAddressChangeRequest OfficeAddressChangeRequest[]
   RefreshToken               RefreshToken[]
   BrokerCity                 City?                        @relation("BrokerCity", fields: [brokerCityId], references: [id])
@@ -362,20 +367,20 @@ model UserPreference {
 }
 
 model Appointment {
-  id           String                  @id @default(cuid())
+  id           String               @id @default(cuid())
   adId         String
   requesterId  String
   ownerId      String
   date         DateTime
-  proposedDate DateTime?               // תאריך מוצע חלופי
   note         String?
-  status       AppointmentStatus       @default(PENDING)
+  status       AppointmentStatus    @default(PENDING)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
   statusReason String?
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
-  ad           Ad                      @relation(fields: [adId], references: [id], onDelete: Cascade)
-  owner        User                    @relation("AppointmentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  requester    User                    @relation("AppointmentRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  proposedDate DateTime?
+  ad           Ad                   @relation(fields: [adId], references: [id], onDelete: Cascade)
+  owner        User                 @relation("AppointmentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  requester    User                 @relation("AppointmentRequester", fields: [requesterId], references: [id], onDelete: Cascade)
   history      AppointmentHistory[]
 
   @@index([requesterId])
@@ -386,16 +391,16 @@ model Appointment {
 }
 
 model AppointmentHistory {
-  id            String            @id @default(cuid())
+  id            String             @id @default(cuid())
   appointmentId String
   fromStatus    AppointmentStatus?
   toStatus      AppointmentStatus
-  fromDate      DateTime?          // תאריך קודם
-  toDate        DateTime?          // תאריך חדש
   reason        String?
   changedById   String?
-  createdAt     DateTime          @default(now())
-  appointment   Appointment       @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  createdAt     DateTime           @default(now())
+  fromDate      DateTime?
+  toDate        DateTime?
+  appointment   Appointment        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
 
   @@index([appointmentId])
   @@index([createdAt])
@@ -432,10 +437,10 @@ model AdminAuditLog {
   adminId    String
   action     String
   targetId   String?
-  entityType String?
   meta       Json?
-  ip         String?
   createdAt  DateTime @default(now())
+  entityType String?
+  ip         String?
 
   @@index([adminId])
   @@index([action])
@@ -623,11 +628,11 @@ model OfficeAddressChangeRequest {
   id          String         @id @default(cuid())
   userId      String
   newAddress  String
-  status      ApprovalStatus @default(PENDING)
   adminNotes  String?
   createdAt   DateTime       @default(now())
   processedAt DateTime?
   processedBy String?
+  status      ApprovalStatus @default(PENDING)
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -639,17 +644,87 @@ model HighlightRequest {
   userId      String
   requestType String
   reason      String?
-  status      ApprovalStatus @default(PENDING)
   adminNotes  String?
   createdAt   DateTime       @default(now())
   processedAt DateTime?
   processedBy String?
+  status      ApprovalStatus @default(PENDING)
   user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
+// ===============================================
+// NEWSPAPER SHEET SYSTEM - עיתון קטגוריה+עיר
+// ===============================================
+
+model NewspaperSheet {
+  id            String                   @id @default(cuid())
+  categoryId    String
+  cityId        String
+  title         String                   // כותרת הגיליון - לדוגמה: "דירות למכירה בית שמש"
+  headerImage   String?                  // תמונת כותרת (banner)
+  layoutConfig  Json?                    // הגדרות סידור - positions של כרטיסים
+  version       Int                      @default(1)
+  pdfPath       String?                  // נתיב ל-PDF הנוכחי
+  status        NewspaperSheetStatus     @default(DRAFT)
+  createdBy     String
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  
+  // Relations
+  category      Category                 @relation(fields: [categoryId], references: [id])
+  city          City                     @relation(fields: [cityId], references: [id])
+  creator       User                     @relation("NewspaperSheetCreator", fields: [createdBy], references: [id])
+  listings      NewspaperSheetListing[]
+  versions      NewspaperSheetVersion[]
+
+  @@unique([categoryId, cityId, status])
+  @@index([categoryId])
+  @@index([cityId])
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+model NewspaperSheetListing {
+  id            String          @id @default(cuid())
+  sheetId       String
+  listingId     String
+  positionIndex Int             @default(0) // מיקום בגריד (לצורך drag & drop)
+  addedAt       DateTime        @default(now())
+  
+  // Relations
+  sheet         NewspaperSheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  listing       Ad              @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([sheetId, listingId])
+  @@index([sheetId])
+  @@index([listingId])
+  @@index([positionIndex])
+}
+
+model NewspaperSheetVersion {
+  id          String          @id @default(cuid())
+  sheetId     String
+  version     Int
+  pdfPath     String
+  generatedBy String
+  createdAt   DateTime        @default(now())
+  
+  // Relations
+  sheet       NewspaperSheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  generator   User            @relation("NewspaperVersionGenerator", fields: [generatedBy], references: [id])
+
+  @@unique([sheetId, version])
+  @@index([sheetId])
+  @@index([createdAt])
+}
+
+// ===============================================
+// DEPRECATED - מודל ישן (נשאר לצורך תאימות)
+// ===============================================
 model NewspaperAd {
   id        String   @id @default(cuid())
   adId      String
@@ -679,9 +754,9 @@ enum UserRole {
   USER
   BROKER
   ADMIN
+  SERVICE_PROVIDER
   SUPER_ADMIN
   MODERATOR
-  SERVICE_PROVIDER
 }
 
 enum UserStatus {
@@ -720,9 +795,9 @@ enum AppointmentStatus {
   PENDING
   APPROVED
   REJECTED
+  RESCHEDULE_REQUESTED
   CANCELED
   COMPLETED
-  RESCHEDULE_REQUESTED
 }
 
 enum FeaturedRequestStatus {
@@ -742,4 +817,10 @@ enum ApprovalStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum NewspaperSheetStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
 }

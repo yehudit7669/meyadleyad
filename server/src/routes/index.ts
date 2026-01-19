@@ -26,8 +26,10 @@ import auditLogRoutes from '../modules/admin/audit-log.routes';
 import categoryManagementRoutes from '../modules/admin/category-management.routes';
 import adminDashboardRoutes from '../modules/admin/admin-dashboard.routes';
 import newspaperRoutes from '../modules/newspaper/newspaper.routes';
+import newspaperSheetRoutes from '../modules/newspaper-sheets/newspaper-sheet.routes';
 import usersAdminRoutes from '../modules/admin/users/users-admin.routes';
 import backupRoutes from '../modules/admin/backup/backup.routes';
+import uploadRoutes from '../modules/upload/upload.routes';
 
 const router = Router();
 
@@ -59,6 +61,8 @@ router.use('/admin/import', importRoutes);
 router.use('/admin/audit-log', auditLogRoutes);
 router.use('/admin/categories', categoryManagementRoutes);
 router.use('/admin/newspaper', newspaperRoutes);
+router.use('/admin/newspaper-sheets', newspaperSheetRoutes);
 router.use('/admin/backups', backupRoutes); // Backups & Recovery
+router.use('/upload', uploadRoutes); // File upload
 
 export default router;
