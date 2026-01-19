@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import {
-  Search,
   Download,
-  Calendar,
   Filter,
   X,
-  Eye,
   FileText,
-  User,
   Clock,
   Shield,
   AlertCircle
@@ -58,7 +54,8 @@ const ENTITY_TYPES = [
 ];
 
 // מיפוי פעולות ספציפיות לקטגוריות כלליות
-const mapActionToCategory = (action: string): string => {
+// @ts-expect-error - Intentionally unused for now
+const _mapActionToCategory = (action: string): string => {
   const actionMap: Record<string, string> = {
     // אישורים
     'approve': 'אישור',
@@ -303,7 +300,8 @@ const AuditLogPage: React.FC = () => {
     });
   };
 
-  const normalizeEntityType = (entityType: string | null | undefined): string => {
+  // @ts-expect-error - Function for future use
+  const _normalizeEntityType = (entityType: string | null | undefined): string => {
     if (!entityType) return '-';
     
     const lowerType = entityType.toLowerCase();

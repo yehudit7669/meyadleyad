@@ -7,7 +7,7 @@ interface Props {
   profile: any;
 }
 
-const SPAccountManagementTab: React.FC<Props> = ({ profile }) => {
+const SPAccountManagementTab: React.FC<Props> = ({ profile: _profile }) => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');

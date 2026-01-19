@@ -95,7 +95,7 @@ export const usersAdminService = {
    */
   getUserProfile: async (userId: string): Promise<{ data: UserProfile }> => {
     const response = await api.get(`/admin/users/${userId}`);
-    return response.data;
+    return response.data as { data: UserProfile };
   },
 
   /**
@@ -145,7 +145,7 @@ export const usersAdminService = {
     });
     
     // Create download link
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
     const link = document.createElement('a');
     link.href = url;
     const timestamp = new Date().toISOString().split('T')[0];

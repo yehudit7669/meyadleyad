@@ -44,6 +44,7 @@ const TeamManagementTab: React.FC = () => {
       fullName: member.fullName,
       email: member.email,
       phone: member.phone,
+      password: '',
     });
     setShowAddForm(true);
   };

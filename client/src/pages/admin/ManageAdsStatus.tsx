@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../services/api';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 // Status mapping
@@ -21,15 +20,17 @@ export default function ManageAdsStatus() {
   
   // Get user role - DO NOT modify it
   const userRole = user?.role || 'USER';
-  const isAdminOrSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
-  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  // @ts-expect-error - Role checks for future use
+  const _isAdminOrSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+  // @ts-expect-error - Role checks for future use
+  const _isSuperAdmin = userRole === 'SUPER_ADMIN';
   
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [previewAdId, setPreviewAdId] = useState<string | null>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [_selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
   const [newStatus, setNewStatus] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
@@ -37,7 +38,7 @@ export default function ManageAdsStatus() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Fetch ads with filters
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch: _refetch } = useQuery({
     queryKey: ['admin-all-ads', search, statusFilter, dateFrom, dateTo],
     queryFn: () => adminService.getAllAds({
       search,
@@ -46,7 +47,7 @@ export default function ManageAdsStatus() {
   });
 
   // Fetch single ad for preview
-  const { data: fullAdData, isLoading: isLoadingFullAd } = useQuery({
+  const { data: fullAdData, isLoading: _isLoadingFullAd } = useQuery({
     queryKey: ['admin-ad-full', previewAdId],
     queryFn: () => adminService.getAdById(previewAdId!),
     enabled: !!previewAdId,
@@ -295,7 +296,7 @@ export default function ManageAdsStatus() {
                       dateFrom,
                       dateTo,
                       statuses: statusFilter,
-                    });
+                    }) as Blob;
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;

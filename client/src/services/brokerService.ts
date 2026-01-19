@@ -91,7 +91,7 @@ export const brokerService = {
   // Get complete profile
   getProfile: async (): Promise<BrokerProfile> => {
     const response = await api.get('/broker/profile');
-    return response.data;
+    return response.data as BrokerProfile;
   },
 
   // Update personal details
@@ -125,7 +125,7 @@ export const brokerService = {
   // Team management
   getTeamMembers: async (): Promise<BrokerTeamMember[]> => {
     const response = await api.get('/broker/team');
-    return response.data;
+    return response.data as BrokerTeamMember[];
   },
 
   createTeamMember: async (data: {
@@ -158,13 +158,13 @@ export const brokerService = {
   // Ads
   getBrokerAds: async (): Promise<BrokerAd[]> => {
     const response = await api.get('/broker/ads');
-    return response.data;
+    return response.data as BrokerAd[];
   },
 
   // Appointments
   getAppointments: async (): Promise<BrokerAppointment[]> => {
     const response = await api.get('/broker/appointments');
-    return response.data;
+    return response.data as BrokerAppointment[];
   },
 
   respondToAppointment: async (
@@ -182,7 +182,7 @@ export const brokerService = {
   // Availability
   getAvailabilitySlots: async (adId: string): Promise<AvailabilitySlot[]> => {
     const response = await api.get(`/broker/availability/${adId}`);
-    return response.data;
+    return response.data as AvailabilitySlot[];
   },
 
   createAvailabilitySlot: async (data: {

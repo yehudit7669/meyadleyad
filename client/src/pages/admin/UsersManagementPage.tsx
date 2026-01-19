@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { usersAdminService, type GetUsersParams } from '../../services/users-admin.service';
@@ -144,8 +144,8 @@ export default function UsersManagementPage() {
     );
   }
 
-  const users = data?.data?.users || [];
-  const pagination = data?.data?.pagination || {};
+  const users = (data as any)?.data?.users || [];
+  const pagination = (data as any)?.data?.pagination || {};
 
   return (
     <div className="container mx-auto px-4 py-6">

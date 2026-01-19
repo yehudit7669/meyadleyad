@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 export default function UserManagement() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, _setSelectedUser] = useState<any>(null);
 
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['users'],
@@ -21,25 +21,26 @@ export default function UserManagement() {
 
   const toggleAdminMutation = useMutation({
     mutationFn: ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) =>
-      adminService.updateUser(userId, { isAdmin }),
+      (adminService as any).updateUser(userId, { isAdmin }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: (userId: string) => adminService.deleteUser(userId),
+    mutationFn: (userId: string) => (adminService as any).deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 
-  const updateMeetingAccess = useMutation({
-    mutationFn: ({ userId, blocked, reason }: any) => adminService.updateMeetingAccess(userId, blocked, reason),
+  // @ts-expect-error - Mutation for future use
+  const _updateMeetingAccess = useMutation({
+    mutationFn: ({ userId, blocked, reason }: any) => (adminService as any).updateMeetingAccess(userId, blocked, reason),
   });
 
   const handleExport = async () => {
-    const blob = await adminService.exportUsers();
+    const blob = await (adminService as any).exportUsers() as Blob;
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

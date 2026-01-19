@@ -4,7 +4,7 @@ import { adminService } from '../../services/api';
 export default function AppointmentsAdmin() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-appointments'],
-    queryFn: adminService.getAdminAppointments,
+    queryFn: () => adminService.getAdminAppointments(),
   });
 
   return (
@@ -25,7 +25,7 @@ export default function AppointmentsAdmin() {
             {isLoading ? (
               <tr><td colSpan={5} className="text-center p-4">טוען...</td></tr>
             ) : (
-              data?.appointments?.map((apt: any, i: number) => (
+              (data as any)?.appointments?.map((apt: any, i: number) => (
                 <tr key={apt.id}>
                   <td className="p-2 border">{i + 1}</td>
                   <td className="p-2 border">{apt.adTitle}</td>

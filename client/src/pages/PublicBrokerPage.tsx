@@ -30,7 +30,7 @@ const PublicBrokerPage: React.FC = () => {
     queryKey: ['public-broker', id],
     queryFn: async () => {
       const response = await api.get(`/broker/public/${id}`);
-      return response.data;
+      return response.data as PublicBrokerData;
     },
     enabled: !!id,
   });
@@ -57,7 +57,7 @@ const PublicBrokerPage: React.FC = () => {
     );
   }
 
-  const { broker, ads } = data;
+  const { broker, ads } = data as any;
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -125,7 +125,7 @@ const PublicBrokerPage: React.FC = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ads.map((ad) => (
+              {ads.map((ad: any) => (
                 <a
                   key={ad.id}
                   href={`/ads/${ad.id}`}

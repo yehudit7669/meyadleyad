@@ -68,7 +68,7 @@ export default function ImportAds() {
         }
       );
 
-      setPreviewData(response.data);
+      setPreviewData(response.data as any);
     } catch (err: any) {
       console.error('Preview error:', err);
       setError(err.response?.data?.error || 'שגיאה בטעינת הקובץ');
@@ -103,7 +103,7 @@ export default function ImportAds() {
       );
 
       setSuccess(
-        `ייבוא הושלם בהצלחה! ${response.data.successRows} מודעות נוצרו בסטטוס ${initialStatus === 'PENDING' ? 'ממתין לאישור' : 'טיוטה'}.`
+        `ייבוא הושלם בהצלחה! ${(response.data as any).successRows} מודעות נוצרו בסטטוס ${initialStatus === 'PENDING' ? 'ממתין לאישור' : 'טיוטה'}.`
       );
       setPreviewData(null);
       setFile(null);

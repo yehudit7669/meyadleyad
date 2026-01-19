@@ -62,12 +62,6 @@ export default function BackupsPage() {
         { password: createPassword },
         {
           responseType: 'blob',
-          onDownloadProgress: (progressEvent) => {
-            const progress = progressEvent.total
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
-            setStatus(prev => ({ ...prev, progress, message: 'מוריד קובץ גיבוי מוצפן...' }));
-          }
         }
       );
 
@@ -79,7 +73,7 @@ export default function BackupsPage() {
       const filename = `${siteName}_backup_${dateStr}_${timeStr}.zip`;
 
       // Download file
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', filename);
@@ -135,12 +129,6 @@ export default function BackupsPage() {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
-        onUploadProgress: (progressEvent) => {
-          const progress = progressEvent.total
-            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            : 0;
-          setStatus(prev => ({ ...prev, progress, message: 'מעלה ומפענח גיבוי...' }));
-        }
       });
 
       setSuccess('המערכת שוחזרה בהצלחה! העמוד ייטען מחדש בעוד 3 שניות...');

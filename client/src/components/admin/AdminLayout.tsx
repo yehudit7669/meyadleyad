@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard,
-  Clock,
   FileText,
   Newspaper,
   Users,
@@ -243,7 +242,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {/* Sub-menu */}
                     {isExpanded && (
                       <ul className="mt-1 mr-6 space-y-1">
-                        {item.children.map(child => (
+                        {item.children?.map(child => (
                           <li key={child.id}>
                             <Link
                               to={child.path}

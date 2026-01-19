@@ -59,7 +59,7 @@ export default function ImportCitiesStreets() {
         }
       );
 
-      setPreviewData(response.data);
+      setPreviewData(response.data as any);
     } catch (err: any) {
       console.error('Preview error:', err);
       setError(err.response?.data?.error || 'שגיאה בטעינת הקובץ');
@@ -95,7 +95,7 @@ export default function ImportCitiesStreets() {
       );
 
       setSuccess(
-        `ייבוא הושלם בהצלחה! ${response.data.successRows} שורות נוספו.`
+        `ייבוא הושלם בהצלחה! ${(response.data as any).successRows} שורות נוספו.`
       );
       setPreviewData(null);
       setFile(null);

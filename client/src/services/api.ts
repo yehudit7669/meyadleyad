@@ -549,7 +549,7 @@ export const adminService = {
 
   exportAdA4PDF: async (adId: string) => {
     const response = await api.get(`/admin/pdf-export/ads/${adId}/export-a4`, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(response.data);
+    const url = window.URL.createObjectURL(response.data as Blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `ad-${adId}-a4.pdf`;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Download, FileSpreadsheet, MapPin, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '../../services/api';
@@ -24,7 +24,7 @@ export default function ImportsPage() {
   const fetchHistory = async () => {
     try {
       const response = await api.get('/admin/import/history?limit=20');
-      setHistory(response.data);
+      setHistory(response.data as any);
     } catch (error) {
       console.error('Error fetching import history:', error);
     } finally {

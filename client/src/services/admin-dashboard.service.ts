@@ -47,7 +47,7 @@ export const adminDashboardService = {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     });
-    return response.data.data || response.data;
+    return ((response.data as any).data || response.data) as DashboardSummary;
   },
 
   async getActions(): Promise<ActionItem[]> {
@@ -56,7 +56,7 @@ export const adminDashboardService = {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     });
-    return response.data.data || response.data;
+    return ((response.data as any).data || response.data) as ActionItem[];
   },
 
   async getUsage(): Promise<UsageItem[]> {
@@ -65,7 +65,7 @@ export const adminDashboardService = {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     });
-    return response.data.data || response.data;
+    return ((response.data as any).data || response.data) as UsageItem[];
   },
 
   async getRecentActivity(): Promise<ActivityItem[]> {
@@ -74,7 +74,7 @@ export const adminDashboardService = {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     });
-    return response.data.data || response.data;
+    return ((response.data as any).data || response.data) as ActivityItem[];
   },
 
   async exportUsage(): Promise<void> {
@@ -90,7 +90,7 @@ export const adminDashboardService = {
     );
 
     // Download the file
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', `usage-export-${new Date().toISOString().split('T')[0]}.csv`);

@@ -118,7 +118,7 @@ export default function NewspaperLayoutPage() {
         responseType: 'blob'
       });
       
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([response.data as BlobPart], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       window.open(url, '_blank');
       
@@ -135,7 +135,7 @@ export default function NewspaperLayoutPage() {
         responseType: 'blob'
       });
       
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const blob = new Blob([response.data as BlobPart], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -201,7 +201,8 @@ export default function NewspaperLayoutPage() {
     });
   };
 
-  const getFullAddress = (ad: NewspaperAd['ad']) => {
+  // @ts-expect-error - Function for future use
+  const _getFullAddress = (ad: NewspaperAd['ad']) => {
     const parts = [];
     if (ad.City?.nameHe) parts.push(ad.City.nameHe);
     if (ad.Street?.name) parts.push(ad.Street.name);
@@ -217,8 +218,8 @@ export default function NewspaperLayoutPage() {
     );
   }
 
-  const newspaperAds = data?.data || [];
-  const pagination = data?.pagination || { total: 0, page: 1, totalPages: 1 };
+  const newspaperAds = (data as any)?.data || [];
+  const pagination = (data as any)?.pagination || { total: 0, page: 1, totalPages: 1 };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

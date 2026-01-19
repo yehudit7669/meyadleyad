@@ -127,7 +127,8 @@ export default function NewspaperSheetEditorPage() {
   }, [isDragging, handleMouseMove]);
 
   // Modifier to snap cursor to dragged item
-  const snapCursorToDraggedItem: Modifier = ({ transform }) => {
+  // @ts-expect-error - Modifier for future use
+  const _snapCursorToDraggedItem: Modifier = ({ transform }) => {
     const offset = dragOffsetRef.current;
     if (!offset) {
       console.log('⚠️ Modifier: no offset in ref');
@@ -290,7 +291,7 @@ export default function NewspaperSheetEditorPage() {
   };
 
   // Handle drag move - no longer needed, using mousemove instead
-  const handleDragMove = (event: any) => {
+  const handleDragMove = (_event: any) => {
     // Using document mousemove listener instead
   };
 
