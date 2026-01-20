@@ -84,7 +84,7 @@ const App: React.FC = () => {
   // Debug: וידוא שה-Client ID נטען
   console.log('GOOGLE CLIENT ID EXISTS:', !!googleClientId);
   console.log('GOOGLE CLIENT ID LENGTH:', googleClientId?.length || 0);
-
+  console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
   return (
     <ErrorBoundary>
       <HelmetProvider>
