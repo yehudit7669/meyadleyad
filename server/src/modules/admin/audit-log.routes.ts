@@ -360,7 +360,7 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
     // Create signed token for download
     const token = sign(
       {
-        userId: req.user?.id,
+        userId: (req as any).user?.id,
         exportType: 'audit_log',
         timestamp: Date.now(),
       },
@@ -370,7 +370,7 @@ router.post('/export', requireSuperAdmin, async (req: Request, res: Response) =>
 
     // Log the export action
     await AdminAuditService.log({
-      adminId: req.user?.id!,
+      adminId: (req as any).user?.id!,
       action: 'EXPORT_AUDIT_LOG',
       entityType: 'system',
       meta: {

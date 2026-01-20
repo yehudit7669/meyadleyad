@@ -350,7 +350,7 @@ export class ProfileController {
       const userId = (req as any).user.id;
 
       const appointments = await prisma.appointment.findMany({
-        where: { userId },
+        where: { requesterId: userId },
         include: {
           ad: {
             select: {
@@ -361,17 +361,17 @@ export class ProfileController {
             },
           },
         },
-        orderBy: { startsAt: 'desc' },
+        orderBy: { date: 'desc' },
       });
 
       res.json({
         success: true,
         data: appointments.map(apt => ({
           id: apt.id,
-          startsAt: apt.startsAt,
+          date: apt.date,
           status: apt.status,
-          notes: apt.notes,
-          ad: apt.ad,
+          note: apt.note,
+          ad: (apt as any).ad,
         })),
       });
     } catch (error) {
@@ -394,10 +394,11 @@ export class ProfileController {
 
       const appointment = await prisma.appointment.create({
         data: {
-          userId,
+          requesterId: userId,
+          ownerId: ad.userId,
           adId: input.adId,
-          startsAt: new Date(input.startsAt),
-          notes: input.notes,
+          date: new Date(input.startsAt),
+          note: input.notes,
           status: 'PENDING',
         },
         include: {
@@ -421,7 +422,7 @@ export class ProfileController {
       const { appointmentId } = req.params;
 
       const appointment = await prisma.appointment.findFirst({
-        where: { id: appointmentId, userId },
+        where: { id: appointmentId, requesterId: userId },
       });
 
       if (!appointment) {

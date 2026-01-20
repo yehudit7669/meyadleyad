@@ -32,7 +32,7 @@ export class EmailService {
     if (!this.enabled) return;
     
     try {
-      await this.transporter.verify();
+      await this.transporter!.verify();
       console.log('✅ SMTP connection verified successfully');
     } catch (error) {
       console.error('❌ SMTP connection failed:', error);
@@ -50,7 +50,7 @@ export class EmailService {
     }
     
     try {
-      const info = await this.transporter.sendMail({
+      const info = await this.transporter!.sendMail({
         from: config.smtp.from,
         to,
         subject,
@@ -308,8 +308,8 @@ export class EmailService {
     `;
 
     try {
-      const info = await this.transporter.sendMail({
-        from: config.smtp.from,
+      const info = await this.transporter!.sendMail({
+        from: config.smtp!.from,
         to,
         subject: 'המודעה שלך פורסמה - הנה העותק האישי שלך',
         html,
@@ -447,8 +447,8 @@ export class EmailService {
     }
 
     try {
-      const info = await this.transporter.sendMail({
-        from: config.smtp.from,
+      const info = await this.transporter!.sendMail({
+        from: config.smtp!.from,
         to,
         subject: 'הפגישה אושרה! - מיעדליעד',
         html,

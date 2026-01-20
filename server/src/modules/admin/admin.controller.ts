@@ -108,7 +108,7 @@ export class AdminController {
 
   async updateAdStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { status } = req.body;
+      const { status, reason } = req.body;
       const adminId = (req as any).user.id;
 
       // וולידציה של סטטוס
@@ -117,6 +117,23 @@ export class AdminController {
         res.status(400).json({
           status: 'error',
           message: 'סטטוס לא חוקי',
+        });
+        return;
+      }
+
+      // אם הסטטוס הוא REJECTED, חובה לספק reason
+      if (status === 'REJECTED' && (!reason || reason.trim().length === 0)) {
+        res.status(400).json({
+          status: 'error',
+          message: 'נא להזין סיבת דחייה',
+        });
+        return;
+      }
+
+      if (reason && reason.length > 250) {
+        res.status(400).json({
+          status: 'error',
+          message: 'סיבת הדחייה חייבת להיות עד 250 תווים',
         });
         return;
       }

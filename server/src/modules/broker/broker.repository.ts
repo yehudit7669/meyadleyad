@@ -169,7 +169,6 @@ export class BrokerRepository {
       data: {
         businessName: data.businessName,
         businessAddressPending: data.businessAddressPending,
-        website: data.website,
         publishOfficeAddress: data.publishOfficeAddress,
         aboutBusinessPending: data.aboutBusinessPending,
       },

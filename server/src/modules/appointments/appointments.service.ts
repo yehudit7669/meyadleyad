@@ -452,9 +452,9 @@ export class AppointmentsService {
 
     // שליחת מייל אישור לבעל הנכס
     const icsContent = generateICS({
-      title: `פגישה להצגת ${appointment.ad.title}`,
+      title: `פגישה להצגת ${(appointment as any).ad.title}`,
       description: `פגישה להצגת נכס מאושרת`,
-      location: appointment.ad.city || '',
+      location: (appointment as any).ad.city || '',
       startTime: updated.date,
       endTime: new Date(updated.date.getTime() + 60 * 60 * 1000), // +1 hour
       uid: `appointment-${appointmentId}`,
@@ -463,8 +463,8 @@ export class AppointmentsService {
     await this.emailService.sendAppointmentApprovedEmail(
       appointment.owner.email,
       {
-        adTitle: appointment.ad.title,
-        adAddress: appointment.ad.city || '',
+        adTitle: (appointment as any).ad.title,
+        adAddress: (appointment as any).ad.city || '',
         ownerName: appointment.owner.name || 'בעל הנכס',
         ownerPhone: '',
         date: updated.date,

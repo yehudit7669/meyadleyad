@@ -563,7 +563,8 @@ export class UsersAdminService {
     // Set RTL direction for all cells
     worksheet.views = [{ rightToLeft: true }];
 
-    // Generate buffer
+    // Generate buffer using writeBuffer method
+    // @ts-ignore - writeBuffer exists but types might be outdated
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }

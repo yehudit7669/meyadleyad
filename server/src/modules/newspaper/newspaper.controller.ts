@@ -42,7 +42,7 @@ export class NewspaperController {
 
       res.status(201).json({
         message: 'Newspaper PDF generated successfully',
-        data: result.newspaperAd
+        data: result
       });
     } catch (error) {
       next(error);
@@ -62,7 +62,7 @@ export class NewspaperController {
 
       res.json({
         message: 'Newspaper PDF regenerated successfully',
-        data: result.newspaperAd
+        data: result
       });
     } catch (error) {
       next(error);
@@ -175,7 +175,7 @@ export class NewspaperController {
 
       // Send email to each recipient with PDF attachment
       const emailService = new EmailService();
-      const filePath = path.join(process.cwd(), newspaperAd.filePath);
+      const filePath = path.join(process.cwd(), newspaperAd.pdfPath!);
       const pdfBuffer = await fs.readFile(filePath);
       const filename = path.basename(filePath);
 
@@ -186,13 +186,13 @@ export class NewspaperController {
         try {
           await emailService.sendEmail(
             email,
-            `מודעה בתצורת עיתון - ${newspaperAd.ad.title}`,
+            `מודעה בתצורת עיתון - ${newspaperAd.title}`,
             `
               <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right;">
                 <h2>שלום,</h2>
                 <p>מצורף מודעה בתצורת עיתון מ-מיעדליעד:</p>
-                <p><strong>${newspaperAd.ad.title}</strong></p>
-                <p>${newspaperAd.ad.address || ''}</p>
+                <p><strong>${newspaperAd.title}</strong></p>
+                <p>${(newspaperAd as any).address || ''}</p>
                 <p>הקובץ מצורף כ-PDF.</p>
                 <hr>
                 <p style="color: #666; font-size: 12px;">מערכת מיעדליעד - מודעות מסווגות</p>
@@ -214,7 +214,7 @@ export class NewspaperController {
       // Log distribution action
       await AuditService.log(userId, 'NEWSPAPER_PDF_DISTRIBUTED', {
         newspaperAdId,
-        adId: newspaperAd.adId,
+        adId: (newspaperAd as any).adId,
         recipientCount: emailList.length,
         successCount,
         failedCount: failedEmails.length

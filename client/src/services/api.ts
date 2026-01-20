@@ -426,8 +426,12 @@ export const adminService = {
     return (response.data as any).data || { ads: [], pagination: { page: 1, totalPages: 1, total: 0 } };
   },
 
-  updateAdStatus: async (id: string, status: string) => {
-    const response = await api.patch(`/admin/ads/${id}/status`, { status });
+  updateAdStatus: async (id: string, status: string, reason?: string) => {
+    const body: { status: string; reason?: string } = { status };
+    if (reason) {
+      body.reason = reason;
+    }
+    const response = await api.patch(`/admin/ads/${id}/status`, body);
     return response.data as any;
   },
 
