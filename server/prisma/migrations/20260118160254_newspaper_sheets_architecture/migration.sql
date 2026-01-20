@@ -2,7 +2,7 @@
 CREATE TYPE "NewspaperSheetStatus" AS ENUM ('DRAFT', 'ACTIVE', 'ARCHIVED');
 
 -- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "Appointment" ADD COLUMN     "proposedDate" TIMESTAMP(3);
