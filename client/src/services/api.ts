@@ -17,6 +17,11 @@ if (!API_URL) {
   throw new Error("Missing VITE_API_URL in production");
 }
 
+console.log("MODE:", import.meta.env.MODE);
+console.log("DEV:", import.meta.env.DEV);
+console.log("VITE_API_URL value:", import.meta.env.VITE_API_URL);
+console.log("ALL VITE KEYS:", Object.keys(import.meta.env).filter(k => k.startsWith("VITE_")));
+
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
