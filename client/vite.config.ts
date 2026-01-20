@@ -8,6 +8,9 @@ export default defineConfig(({mode})=>{
   build: {
     outDir: mode === 'staging' ? 'dist-staging' : 'dist',
   },
+  define: {
+    'window.VITE_API_URL': JSON.stringify(env.VITE_API_URL),
+  },
   resolve: {
     alias: {
       '@': '/src',
