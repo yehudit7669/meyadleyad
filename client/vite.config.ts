@@ -1,15 +1,20 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+export default defineConfig(({mode})=>{
+  const env = loadEnv(mode, process.cwd());
+  return {
   plugins: [react()],
+  build: {
+    outDir: mode === 'staging' ? 'dist-staging' : 'dist',
+  },
   resolve: {
     alias: {
       '@': '/src',
     },
   },
   server: {
-    port: 3000,
+    port: parseInt(env.VITE_PORT) || 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -17,4 +22,4 @@ export default defineConfig({
       },
     },
   },
-});
+}});
