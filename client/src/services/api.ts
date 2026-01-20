@@ -1,21 +1,28 @@
 import axios from 'axios';
 
 // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://localhost:5000/api" : "");
 
-if(!API_URL) {
-  console.error("API URL is missing in production environment.");
+// export const api = axios.create({
+//   baseURL: API_URL,
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+// });
+
+const API_URL = import.meta.env.DEV
+  ? "http://localhost:5000/api"
+  : import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL in production");
 }
-console.log("ENV KEYS", Object.keys(import.meta.env).filter(k => k.includes("VITE")));
 
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
-});
+})
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
