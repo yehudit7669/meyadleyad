@@ -8,6 +8,8 @@ const API_URL =
 if(!API_URL) {
   console.error("API URL is missing in production environment.");
 }
+console.log("ENV KEYS", Object.keys(import.meta.env).filter(k => k.includes("VITE")));
+
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
