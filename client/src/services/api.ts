@@ -1,26 +1,14 @@
 import axios from 'axios';
 
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-// export const api = axios.create({
-//   baseURL: API_URL,
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
-// });
-
-const API_URL = import.meta.env.DEV
-  ? "http://localhost:5000/api"
-  : import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
+  console.log("MODE:", import.meta.env.MODE);
+  console.log("DEV:", import.meta.env.DEV);
+  console.log("VITE_API_URL value:", import.meta.env.VITE_API_URL);
+  console.log("ALL VITE KEYS:", Object.keys(import.meta.env).filter(k => k.startsWith("VITE_")));
   throw new Error("Missing VITE_API_URL in production");
 }
-
-console.log("MODE:", import.meta.env.MODE);
-console.log("DEV:", import.meta.env.DEV);
-console.log("VITE_API_URL value:", import.meta.env.VITE_API_URL);
-console.log("ALL VITE KEYS:", Object.keys(import.meta.env).filter(k => k.startsWith("VITE_")));
 
 export const api = axios.create({
   baseURL: API_URL,
