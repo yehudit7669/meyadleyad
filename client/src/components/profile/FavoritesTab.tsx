@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService } from '../../services/api';
 import { Link } from 'react-router-dom';
-import { getBackendOrigin } from '../../config/env';
 
 export default function FavoritesTab() {
   const queryClient = useQueryClient();
@@ -47,7 +46,7 @@ export default function FavoritesTab() {
               <img
                 src={fav.ad.images[0].url.startsWith('http') 
                   ? fav.ad.images[0].url 
-                  : `${getBackendOrigin()}${fav.ad.images[0].url}`
+                  : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${fav.ad.images[0].url}`
                 }
                 alt={fav.ad?.title || 'מודעה'}
                 className="w-full h-48 object-cover"

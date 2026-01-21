@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { profileService } from '../services/api';
 import { useState } from 'react';
-import { getImageUrl } from '../utils/imageUrl';
 
 interface AdCardProps {
   ad: {
@@ -80,7 +79,7 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
       <div className="relative overflow-hidden">
         {ad.images && ad.images[0] ? (
           <img
-            src={getImageUrl(ad.images[0].url)}
+            src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[0].url}`}
             alt={ad.title}
             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
           />

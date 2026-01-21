@@ -59,17 +59,7 @@ export default function ImportCitiesStreets() {
         }
       );
 
-      // Validate response data
-      if (response.data && typeof response.data === 'object') {
-        const data = response.data as PreviewData;
-        // Ensure preview array exists
-        if (!data.preview || !Array.isArray(data.preview)) {
-          data.preview = [];
-        }
-        setPreviewData(data);
-      } else {
-        throw new Error('תשובה לא תקינה מהשרת');
-      }
+      setPreviewData(response.data as any);
     } catch (err: any) {
       console.error('Preview error:', err);
       setError(err.response?.data?.error || 'שגיאה בטעינת הקובץ');
@@ -81,8 +71,8 @@ export default function ImportCitiesStreets() {
   const handleCommit = async () => {
     if (!previewData) return;
 
-    // Filter only valid rows - with guard
-    const validRows = (previewData.preview || []).filter(row => row.status === 'תקין');
+    // Filter only valid rows
+    const validRows = previewData.preview.filter(row => row.status === 'תקין');
 
     if (validRows.length === 0) {
       setError('אין שורות תקינות לייבוא');
@@ -247,7 +237,7 @@ export default function ImportCitiesStreets() {
           </div>
 
           {/* Warnings */}
-          {previewData.warnings && previewData.warnings.length > 0 && (
+          {previewData.warnings.length > 0 && (
             <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4 mb-6">
               <h3 className="font-semibold text-yellow-800 mb-2">אזהרות</h3>
               <ul className="list-disc list-inside text-sm text-yellow-700">
@@ -271,7 +261,7 @@ export default function ImportCitiesStreets() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {(previewData.preview || []).slice(0, 50).map((row) => (
+                {previewData.preview.slice(0, 50).map((row) => (
                   <tr
                     key={row.rowNumber}
                     className={

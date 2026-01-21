@@ -52,32 +52,22 @@ app.use(
 );
 
 // CORS - Production-ready configuration
-// CORS Configuration - Strict origin validation
-// Only allow configured frontend URLs + localhost for development
 const allowedOrigins = [
   config.clientUrl,
-  config.frontendUrl,
-  'https://meyadleyad.vercel.app', // Production Vercel domain (explicit)
   'http://localhost:3000', // Development
   'http://localhost:3001', // Vite dev server (alternative port)
   'http://localhost:5173', // Vite dev server
-].filter(Boolean); // Remove any undefined values
-
-console.log('🔒 CORS Allowed Origins:', allowedOrigins);
+];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, server-to-server, etc.)
+      // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
       
-      // STRICT: Only allow explicitly configured origins
-      // Do NOT use wildcard patterns like .vercel.app to avoid hiding bugs
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.warn('⚠️  CORS BLOCKED - Origin not in allowed list:', origin);
-        console.warn('   Allowed origins:', allowedOrigins);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -131,23 +121,7 @@ app.use(requestLogger);
 
 // Static files - serve uploads from server/uploads
 const uploadsPath = path.join(__dirname, '../uploads');
-app.use('/uploads', express.static(uploadsPath, {
-  maxAge: '1d', // Cache for 1 day
-  setHeaders: (res, filePath) => {
-    // Set proper content type
-    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-      res.setHeader('Content-Type', 'image/jpeg');
-    } else if (filePath.endsWith('.png')) {
-      res.setHeader('Content-Type', 'image/png');
-    } else if (filePath.endsWith('.webp')) {
-      res.setHeader('Content-Type', 'image/webp');
-    }
-    
-    // Allow CORS for images
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  }
-}));
+app.use('/uploads', express.static(uploadsPath));
 console.log('📁 Serving static files from:', uploadsPath);
 
 // Health check

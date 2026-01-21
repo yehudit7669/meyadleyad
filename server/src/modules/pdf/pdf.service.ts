@@ -1,3 +1,4 @@
+import puppeteer from 'puppeteer';
 import prisma from '../../config/database';
 import QRCode from 'qrcode';
 import { config } from '../../config';
@@ -6,8 +7,6 @@ import axios from 'axios';
 import { brandingService } from '../branding/branding.service';
 import path from 'path';
 import fs from 'fs/promises';
-import { launchBrowser, getPDFOptions, getPDFWaitOptions } from '../../utils/puppeteerConfig';
-import { getPublicImageUrl } from '../../utils/imageUrlHelper';
 
 export class PDFService {
   /**
@@ -186,9 +185,17 @@ export class PDFService {
   }): Promise<Buffer> {
     let browser;
     try {
-      console.log('📄 Starting PDF generation for ad:', ad.id || ad.title);
-      
-      browser = await launchBrowser();
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu'
+        ],
+      });
+
       const page = await browser.newPage();
 
       // Generate QR code if we have an ad ID
@@ -213,7 +220,7 @@ export class PDFService {
       let mainImageBase64 = '';
       if (ad.images && ad.images.length > 0) {
         // Try to find primary image or use first one
-        const primaryImage = getPublicImageUrl(ad.images[0]);
+        const primaryImage = ad.images[0]; // In the future, check for isPrimary flag
         console.log(`Converting main image: ${primaryImage}`);
         mainImageBase64 = await this.imageToBase64(primaryImage);
         console.log(`Main image base64 length: ${mainImageBase64.length}`);
@@ -228,19 +235,29 @@ export class PDFService {
 
       const html = this.generateAdHTML(ad, qrCodeDataUrl, logoBase64, mainImageBase64);
 
-      const waitOptions = getPDFWaitOptions();
-      await page.setContent(html, waitOptions);
+      await page.setContent(html, { 
+        waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
+        timeout: 60000
+      });
 
       // Wait a bit for images to render
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const pdfOptions = getPDFOptions();
-      const pdf = await page.pdf(pdfOptions);
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '15mm',
+          right: '12mm',
+          bottom: '15mm',
+          left: '12mm',
+        },
+        timeout: 60000,
+      });
 
-      console.log('✅ PDF generated successfully, size:', (pdf.length / 1024).toFixed(2), 'KB');
       return Buffer.from(pdf);
     } catch (error) {
-      console.error('❌ Error generating PDF:', error);
+      console.error('Error generating PDF:', error);
       throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (browser) {
@@ -259,26 +276,41 @@ export class PDFService {
   }>): Promise<Buffer> {
     let browser;
     try {
-      console.log('📰 Starting newspaper PDF generation for', ads.length, 'ads');
-      
-      browser = await launchBrowser();
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu'
+        ],
+      });
+
       const page = await browser.newPage();
 
       const html = this.generateNewspaperHTML(ads);
 
-      const waitOptions = getPDFWaitOptions();
-      await page.setContent(html, waitOptions);
+      await page.setContent(html, { 
+        waitUntil: 'networkidle0',
+        timeout: 60000
+      });
 
-      // Wait for images
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const pdf = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '10mm',
+          right: '10mm',
+          bottom: '10mm',
+          left: '10mm',
+        },
+        timeout: 60000,
+      });
 
-      const pdfOptions = getPDFOptions();
-      const pdf = await page.pdf(pdfOptions);
-
-      console.log('✅ Newspaper PDF generated successfully, size:', (pdf.length / 1024).toFixed(2), 'KB');
       return Buffer.from(pdf);
     } catch (error) {
-      console.error('❌ Error generating newspaper PDF:', error);
+      console.error('Error generating newspaper PDF:', error);
       throw new Error(`Failed to generate newspaper PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (browser) {

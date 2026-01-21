@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getBackendOrigin } from '../config/env';
 
 interface ImageUploadProps {
   images: { id?: string; url: string; file?: File }[];
@@ -21,7 +20,8 @@ export default function ImageUpload({
     const newPreviews = images.map((img) => {
       // אם זה תמונה קיימת מהשרת (URL מלא)
       if (img.url.startsWith('http') || img.url.startsWith('/uploads')) {
-        return img.url.startsWith('http') ? img.url : `${getBackendOrigin()}${img.url}`;
+        const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+        return img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`;
       }
       // אם זה data URL (תמונה חדשה)
       return img.url;

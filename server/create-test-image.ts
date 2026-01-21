@@ -26,7 +26,7 @@ async function createTestImage() {
     
     // עכשיו תבדוק אם הקובץ נגיש דרך השרת
     console.log(`\n📡 לאחר הפעלת השרת, התמונה תהיה זמינה ב:`);
-    console.log(`   ${config.appUrl}/uploads/${fileName}`);
+    console.log(`   http://localhost:5000/uploads/${fileName}`);
     
     await prisma.$disconnect();
   } catch (error) {

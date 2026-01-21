@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
+import puppeteer from 'puppeteer';
 import { authenticate, authorize } from '../../middlewares/auth';
-import { launchBrowser, getPDFOptions, getPDFWaitOptions } from '../../utils/puppeteerConfig';
-import { getPublicImageUrl } from '../../utils/imageUrlHelper';
 
 const router = Router();
 
@@ -171,7 +170,7 @@ router.get('/ads/:adId/export-a4', async (req: Request, res: Response): Promise<
     <div class="subtitle">פלטפורמת נדל"ן מקצועית</div>
   </div>
 
-  ${ad.AdImage[0]?.url ? `<img src="${getPublicImageUrl(ad.AdImage[0].url)}" class="main-image" alt="${ad.title}" />` : ''}
+  ${ad.AdImage[0]?.url ? `<img src="${ad.AdImage[0].url}" class="main-image" alt="${ad.title}" />` : ''}
 
   <h1>${ad.title}</h1>
   <div class="category">📂 ${ad.Category.nameHe}</div>
@@ -235,22 +234,26 @@ router.get('/ads/:adId/export-a4', async (req: Request, res: Response): Promise<
     `;
 
     // Launch Puppeteer and generate PDF
-    console.log('📄 Starting PDF export for ad:', ad.adNumber);
-    const browser = await launchBrowser();
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
 
     const page = await browser.newPage();
-    const waitOptions = getPDFWaitOptions();
-    await page.setContent(htmlContent, waitOptions);
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-    // Wait for images
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const pdfOptions = getPDFOptions();
-    const pdfBuffer = await page.pdf(pdfOptions);
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '15mm',
+        bottom: '20mm',
+        left: '15mm',
+      },
+    });
 
     await browser.close();
-
-    console.log('✅ PDF exported successfully, size:', (pdfBuffer.length / 1024).toFixed(2), 'KB');
 
     // Send PDF
     res.setHeader('Content-Type', 'application/pdf');

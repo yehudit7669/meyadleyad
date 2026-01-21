@@ -35,7 +35,7 @@ async function createAdminUser() {
       console.log('📋 Login credentials:');
       console.log(`   📧 Email: ${email}`);
       console.log(`   🔑 Password: ${password}`);
-      console.log('\n🚀 You can now login at:', config.clientUrl + '/login\n');
+      console.log('\n🚀 You can now login at: http://localhost:3000/login\n');
       return;
     }
 
@@ -59,7 +59,7 @@ async function createAdminUser() {
     console.log(`   📧 Email: ${email}`);
     console.log(`   🔑 Password: ${password}`);
     console.log('\n⚠️  IMPORTANT: Change this password after first login!\n');
-    console.log('🚀 You can now login at:', config.clientUrl + '/login\n');
+    console.log('🚀 You can now login at: http://localhost:3000/login\n');
 
   } catch (error: any) {
     console.error('❌ Error creating admin user:', error.message);

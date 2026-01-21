@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { config } from './src/config';
 
 const prisma = new PrismaClient();
 
@@ -64,8 +63,8 @@ async function updateAdWithRealImage() {
     }
 
     console.log('\n✅ המודעה מוכנה!');
-    console.log('   התמונה תהיה זמינה ב:', config.appUrl + realImage.url);
-    console.log('\n🎯 עכשיו אפשר לבדוק במסך המנהל ב:', config.clientUrl + '/admin/pending');
+    console.log('   התמונה תהיה זמינה ב: http://localhost:5000' + realImage.url);
+    console.log('\n🎯 עכשיו אפשר לבדוק במסך המנהל ב: http://localhost:3000/admin/pending');
 
   } catch (error) {
     console.error('❌ שגיאה:', error);

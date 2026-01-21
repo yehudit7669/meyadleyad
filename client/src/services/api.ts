@@ -1,15 +1,13 @@
 import axios from 'axios';
-import { getApiBaseUrl, isValidBackendUrl } from '../config/env';
 
-const API_URL = getApiBaseUrl();
+const API_URL = import.meta.env.VITE_API_URL;
 
-// Log configuration in development for debugging
-if (import.meta.env.DEV) {
-  console.log('🔧 API Configuration:', {
-    baseURL: API_URL,
-    mode: import.meta.env.MODE,
-    isProd: import.meta.env.PROD,
-  });
+if (!API_URL) {
+  console.log("MODE:", import.meta.env.MODE);
+  console.log("DEV:", import.meta.env.DEV);
+  console.log("VITE_API_URL value:", import.meta.env.VITE_API_URL);
+  console.log("ALL VITE KEYS:", Object.keys(import.meta.env).filter(k => k.startsWith("VITE_")));
+  throw new Error("Missing VITE_API_URL in production");
 }
 
 export const api = axios.create({
@@ -26,63 +24,6 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // 🔴 DEV ONLY: CRITICAL VALIDATION - Catch misconfigured requests early
-    if (import.meta.env.DEV) {
-      // Determine effective baseURL (from config or instance defaults)
-      const effectiveBaseURL = config.baseURL || api.defaults.baseURL;
-      
-      // Check 1: Relative URL but no baseURL (would send to frontend!)
-      if (config.url && config.url.startsWith('/') && !effectiveBaseURL) {
-        const error = new Error(
-          `🔴 CRITICAL ERROR: Relative URL "${config.url}" detected but baseURL is empty! ` +
-          `This would send the request to the frontend domain instead of backend. ` +
-          `All API requests MUST use the configured api instance with proper baseURL.`
-        );
-        console.error('❌ Invalid API Configuration Detected:', {
-          url: config.url,
-          configBaseURL: config.baseURL,
-          defaultsBaseURL: api.defaults.baseURL,
-          expectedBaseURL: API_URL,
-          error: error.message
-        });
-        throw error;
-      }
-      
-      // Check 2: Validate we're not making requests to Vercel
-      if (config.url) {
-        // Build full URL properly - ensure single slash between baseURL and url
-        let fullUrl: string;
-        if (config.url.startsWith('http://') || config.url.startsWith('https://')) {
-          // Absolute URL - use as is
-          fullUrl = config.url;
-        } else {
-          // Relative URL - combine with baseURL
-          const base = effectiveBaseURL || '';
-          const url = config.url;
-          
-          // Remove trailing slash from base, leading slash from url, then join with single /
-          const normalizedBase = base.replace(/\/+$/, '');
-          const normalizedUrl = url.replace(/^\/+/, '');
-          fullUrl = normalizedBase ? `${normalizedBase}/${normalizedUrl}` : url;
-        }
-        
-        if (!isValidBackendUrl(fullUrl)) {
-          const error = new Error(
-            `🔴 INVALID REQUEST: Attempting to send API request to frontend domain (vercel.app)! ` +
-            `URL: ${fullUrl}`
-          );
-          console.error('❌ Request to frontend domain blocked:', {
-            url: config.url,
-            fullUrl,
-            baseURL: effectiveBaseURL,
-            error: error.message
-          });
-          throw error;
-        }
-      }
-    }
-    
     return config;
   },
   (error: any) => {

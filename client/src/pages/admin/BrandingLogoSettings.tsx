@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { api } from '../../services/api';
-import { getBackendOrigin } from '../../config/env';
+import axios from 'axios';
 
 interface BrandingConfig {
   id: string;
@@ -45,7 +44,11 @@ const BrandingLogoSettings: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get('/admin/branding');
+      const response = await axios.get('/api/admin/branding', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
       setConfig((response.data as { data: BrandingConfig }).data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'שגיאה בטעינת ההגדרות');
@@ -114,8 +117,9 @@ const BrandingLogoSettings: React.FC = () => {
         const formData = new FormData();
         formData.append('logo', file);
 
-        const response = await api.post('/admin/branding/logo', formData, {
+        const response = await axios.post('/api/admin/branding/logo', formData, {
           headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
             'Content-Type': 'multipart/form-data',
           },
         });
@@ -148,12 +152,17 @@ const BrandingLogoSettings: React.FC = () => {
       setError('');
       setSuccess('');
 
-      const response = await api.patch(
-        '/admin/branding',
+      const response = await axios.patch(
+        '/api/admin/branding',
         {
           position: config.position,
           opacity: config.opacity,
           sizePct: config.sizePct,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
         }
       );
 
@@ -176,9 +185,14 @@ const BrandingLogoSettings: React.FC = () => {
       setError('');
       setSuccess('');
 
-      const response = await api.post(
-        '/admin/branding/reset',
-        {}
+      const response = await axios.post(
+        '/api/admin/branding/reset',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
       );
 
       setConfig((response.data as { data: BrandingConfig }).data);
@@ -211,13 +225,18 @@ const BrandingLogoSettings: React.FC = () => {
         try {
           const base64Image = e.target?.result as string;
 
-          const response = await api.post(
-            '/admin/branding/preview',
+          const response = await axios.post(
+            '/api/admin/branding/preview',
             {
               position: config.position,
               opacity: config.opacity,
               sizePct: config.sizePct,
               sampleImageData: base64Image,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+              },
             }
           );
 
@@ -328,7 +347,7 @@ const BrandingLogoSettings: React.FC = () => {
             {config.logoUrl ? (
               <div className="flex items-center gap-4">
                 <img
-                  src={`${getBackendOrigin()}${config.logoUrl}`}
+                  src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${config.logoUrl}`}
                   alt="לוגו נוכחי"
                   className="w-32 h-32 object-contain border border-gray-200 rounded p-2 bg-gray-50"
                 />
