@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { api } from '../../services/api';
 import {
   Download,
   Filter,
@@ -171,19 +172,9 @@ const AuditLogPage: React.FC = () => {
       if (filters.endDate) queryParams.append('endDate', filters.endDate);
       if (filters.search) queryParams.append('search', filters.search);
 
-      const response = await fetch(`/api/admin/audit-log?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch audit logs');
-      }
-
-      const data = await response.json();
-      setLogs(data.logs);
-      setPagination(data.pagination);
+      const response = await api.get<{ logs: AuditLog[]; pagination: PaginationInfo }>(`/admin/audit-log?${queryParams}`);
+      setLogs(response.data.logs);
+      setPagination(response.data.pagination);
     } catch (err: any) {
       console.error('Error fetching audit logs:', err);
       setError(err.message || 'שגיאה בטעינת לוגים');
@@ -218,24 +209,13 @@ const AuditLogPage: React.FC = () => {
     try {
       setExporting(true);
 
-      const response = await fetch('/api/admin/audit-log/export', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(exportFilters),
+      const response = await api.post('/admin/audit-log/export', exportFilters, {
+        responseType: exportFilters.format === 'csv' ? 'blob' : 'json',
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to export');
-      }
 
       if (exportFilters.format === 'csv') {
         // Download CSV
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
         const a = document.createElement('a');
         a.href = url;
         a.download = `audit-logs-${Date.now()}.csv`;
@@ -245,8 +225,7 @@ const AuditLogPage: React.FC = () => {
         document.body.removeChild(a);
       } else {
         // JSON format
-        const data = await response.json();
-        const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify((response.data as any).data, null, 2)], { type: 'application/json' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -272,18 +251,8 @@ const AuditLogPage: React.FC = () => {
 
   const viewLogDetails = async (logId: string) => {
     try {
-      const response = await fetch(`/api/admin/audit-log/${logId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch log details');
-      }
-
-      const log = await response.json();
-      setSelectedLog(log);
+      const response = await api.get<AuditLog>(`/admin/audit-log/${logId}`);
+      setSelectedLog(response.data);
     } catch (err: any) {
       console.error('Error fetching log details:', err);
       alert('שגיאה בטעינת פרטי הלוג');

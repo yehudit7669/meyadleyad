@@ -3,14 +3,15 @@
  * בונה URLs ציבוריים לתמונות וקבצים מהשרת
  */
 
-// CRITICAL: Must fail if VITE_API_URL is not defined
+// CRITICAL: Must fail in production if VITE_API_URL is not defined
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
-if (!VITE_API_URL) {
-  throw new Error('VITE_API_URL environment variable is required but not defined');
+if (!VITE_API_URL && import.meta.env.PROD) {
+  throw new Error('VITE_API_URL environment variable is required in production');
 }
 
-const API_BASE = VITE_API_URL.replace('/api', '');
+// Strip /api suffix only at the end (not in middle of URL)
+const API_BASE = VITE_API_URL ? VITE_API_URL.replace(/\/api\/?$/, '') : '';
 
 /**
  * Convert image path to full public URL

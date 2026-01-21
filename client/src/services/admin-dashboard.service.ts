@@ -1,10 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-if (!API_URL) {
-  throw new Error('VITE_API_URL is required');
-}
+import { api } from './api';
 
 interface DashboardSummary {
   totalAds: number;
@@ -46,49 +40,30 @@ interface ActivityItem {
 
 export const adminDashboardService = {
   async getSummary(): Promise<DashboardSummary> {
-    const response = await axios.get(`${API_URL}/admin/dashboard/summary`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    });
+    const response = await api.get('/admin/dashboard/summary');
     return ((response.data as any).data || response.data) as DashboardSummary;
   },
 
   async getActions(): Promise<ActionItem[]> {
-    const response = await axios.get(`${API_URL}/admin/dashboard/actions`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    });
+    const response = await api.get('/admin/dashboard/actions');
     return ((response.data as any).data || response.data) as ActionItem[];
   },
 
   async getUsage(): Promise<UsageItem[]> {
-    const response = await axios.get(`${API_URL}/admin/dashboard/usage`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    });
+    const response = await api.get('/admin/dashboard/usage');
     return ((response.data as any).data || response.data) as UsageItem[];
   },
 
   async getRecentActivity(): Promise<ActivityItem[]> {
-    const response = await axios.get(`${API_URL}/admin/dashboard/recent-activity`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    });
+    const response = await api.get('/admin/dashboard/recent-activity');
     return ((response.data as any).data || response.data) as ActivityItem[];
   },
 
   async exportUsage(): Promise<void> {
-    const response = await axios.post(
-      `${API_URL}/admin/dashboard/usage/export`,
+    const response = await api.post(
+      '/admin/dashboard/usage/export',
       {},
       {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        },
         responseType: 'blob'
       }
     );
