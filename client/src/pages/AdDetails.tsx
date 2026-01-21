@@ -7,6 +7,7 @@ import { formatCustomFields } from '../utils/fieldLabels';
 import SEO from '../components/SEO';
 import AdMap from '../components/AdMap';
 import AppointmentCard from '../components/appointments/AppointmentCard';
+import { getImageUrl } from '../utils/imageUrl';
 
 export default function AdDetails() {
   const { id } = useParams<{ id: string }>();
@@ -383,7 +384,7 @@ export default function AdDetails() {
                     <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-72 h-72 sm:w-80 sm:h-80 rounded-full border-[6px] border-[#8B5A3C] overflow-hidden bg-white">
                       {ad.images && ad.images.length > 0 ? (
                         <img
-                          src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[currentImageIndex].url}`}
+                          src={getImageUrl(ad.images[currentImageIndex].url)}
                           alt={ad.title}
                           className="w-full h-full object-cover"
                         />
@@ -419,7 +420,7 @@ export default function AdDetails() {
                         }`}
                       >
                         <img
-                          src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${image.url}`}
+                          src={getImageUrl(image.url)}
                           alt={`תמונה ${index + 1}`}
                           className="w-full h-full object-cover"
                         />

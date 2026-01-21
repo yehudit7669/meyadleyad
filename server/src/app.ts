@@ -54,6 +54,7 @@ app.use(
 // CORS - Production-ready configuration
 const allowedOrigins = [
   config.clientUrl,
+  config.frontendUrl,
   'http://localhost:3000', // Development
   'http://localhost:3001', // Vite dev server (alternative port)
   'http://localhost:5173', // Vite dev server
@@ -65,9 +66,14 @@ app.use(
       // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
       
-      if (allowedOrigins.includes(origin)) {
+      // Check if origin is in allowed list OR is a Vercel preview URL
+      const isAllowed = allowedOrigins.includes(origin) || 
+                       (origin && origin.includes('.vercel.app'));
+      
+      if (isAllowed) {
         callback(null, true);
       } else {
+        console.warn('⚠️  CORS blocked origin:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
@@ -121,7 +127,23 @@ app.use(requestLogger);
 
 // Static files - serve uploads from server/uploads
 const uploadsPath = path.join(__dirname, '../uploads');
-app.use('/uploads', express.static(uploadsPath));
+app.use('/uploads', express.static(uploadsPath, {
+  maxAge: '1d', // Cache for 1 day
+  setHeaders: (res, filePath) => {
+    // Set proper content type
+    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (filePath.endsWith('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (filePath.endsWith('.webp')) {
+      res.setHeader('Content-Type', 'image/webp');
+    }
+    
+    // Allow CORS for images
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 console.log('📁 Serving static files from:', uploadsPath);
 
 // Health check

@@ -1,9 +1,10 @@
-import puppeteer from 'puppeteer';
 import { SheetWithListings, LayoutConfig } from './types';
 import { brandingService } from '../branding/branding.service';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
+import { launchBrowser, getPDFOptions, getPDFWaitOptions } from '../../utils/puppeteerConfig';
+import { getPublicImageUrl } from '../../utils/imageUrlHelper';
 
 /**
  * PDF Service for Newspaper Sheets
@@ -15,41 +16,38 @@ export class NewspaperSheetPDFService {
    * רינדור תבנית עיתון מלאה עם כותרת, banner וגריד של כרטיסי נכסים
    */
   async generateSheetPDF(sheet: SheetWithListings): Promise<Buffer> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--font-render-hinting=none'
-      ]
-    });
+    let browser;
+    try {
+      console.log('📄 Starting PDF generation for sheet:', sheet.id);
+      
+      browser = await launchBrowser();
+      const page = await browser.newPage();
+      
+      await page.setViewport({ width: 1200, height: 1600 });
 
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 1600 });
+      // טעינת תבנית HTML
+      const html = await this.generateHTML(sheet);
 
-    // טעינת תבנית HTML
-    const html = await this.generateHTML(sheet);
+      const waitOptions = getPDFWaitOptions();
+      await page.setContent(html, waitOptions);
 
-    await page.setContent(html, {
-      waitUntil: 'networkidle0'
-    });
+      // Wait for images to load
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // יצירת PDF
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '10mm',
-        right: '10mm',
-        bottom: '10mm',
-        left: '10mm'
+      // יצירת PDF
+      const pdfOptions = getPDFOptions();
+      const pdfBuffer = await page.pdf(pdfOptions);
+
+      console.log('✅ PDF generated successfully, size:', (pdfBuffer.length / 1024).toFixed(2), 'KB');
+      return Buffer.from(pdfBuffer);
+    } catch (error) {
+      console.error('❌ Error generating sheet PDF:', error);
+      throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      if (browser) {
+        await browser.close();
       }
-    });
-
-    await browser.close();
-
-    return Buffer.from(pdfBuffer);
+    }
   }
 
   /**
@@ -246,10 +244,12 @@ export class NewspaperSheetPDFService {
         const size = customFields.size || '';
         const floor = customFields.floor || '';
 
-        // תמונה ראשית
-        const mainImage = listing.AdImage && listing.AdImage.length > 0
-          ? listing.AdImage[0].url
-          : '';
+        // תמונה ראשית - המרה לכתובת ציבורית
+        let mainImage = '';
+        if (listing.AdImage && listing.AdImage.length > 0) {
+          mainImage = getPublicImageUrl(listing.AdImage[0].url);
+          console.log('🖼️  Listing image URL:', mainImage);
+        }
 
         // תיאור קצר
         const description = listing.title || '';

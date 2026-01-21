@@ -17,6 +17,7 @@ import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortab
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import './NewspaperSheetEditor.css';
+import { getImageUrl } from '../../utils/imageUrl';
 
 interface Listing {
   id: string;
@@ -537,11 +538,11 @@ export default function NewspaperSheetEditorPage() {
                     onClick={() => document.getElementById('header-image-upload')?.click()}
                   >
                     <img 
-                      src={headerImage.startsWith('http') ? headerImage : `http://localhost:5000${headerImage}`} 
+                      src={getImageUrl(headerImage)} 
                       alt="Header" 
                       onError={(e) => {
                         console.error('Image failed to load:', headerImage);
-                        console.log('Full URL:', headerImage.startsWith('http') ? headerImage : `http://localhost:5000${headerImage}`);
+                        console.log('Full URL:', getImageUrl(headerImage));
                         e.currentTarget.style.display = 'none';
                       }}
                       onLoad={() => console.log('Image loaded successfully')}
