@@ -1,6 +1,7 @@
 import axios from 'axios';
+import env from '../utils/env'
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = env.VITE_API_URL || env.API_URL;
 
 if (!API_URL) {
   console.log("MODE:", import.meta.env.MODE);
