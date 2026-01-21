@@ -52,28 +52,32 @@ app.use(
 );
 
 // CORS - Production-ready configuration
+// CORS Configuration - Strict origin validation
+// Only allow configured frontend URLs + localhost for development
 const allowedOrigins = [
   config.clientUrl,
   config.frontendUrl,
+  'https://meyadleyad.vercel.app', // Production Vercel domain (explicit)
   'http://localhost:3000', // Development
   'http://localhost:3001', // Vite dev server (alternative port)
   'http://localhost:5173', // Vite dev server
-];
+].filter(Boolean); // Remove any undefined values
+
+console.log('🔒 CORS Allowed Origins:', allowedOrigins);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
+      // Allow requests with no origin (mobile apps, Postman, server-to-server, etc.)
       if (!origin) return callback(null, true);
       
-      // Check if origin is in allowed list OR is a Vercel preview URL
-      const isAllowed = allowedOrigins.includes(origin) || 
-                       (origin && origin.includes('.vercel.app'));
-      
-      if (isAllowed) {
+      // STRICT: Only allow explicitly configured origins
+      // Do NOT use wildcard patterns like .vercel.app to avoid hiding bugs
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.warn('⚠️  CORS blocked origin:', origin);
+        console.warn('⚠️  CORS BLOCKED - Origin not in allowed list:', origin);
+        console.warn('   Allowed origins:', allowedOrigins);
         callback(new Error('Not allowed by CORS'));
       }
     },
