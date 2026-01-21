@@ -1,7 +1,7 @@
-console.log("=".repeat(20))
-console.log("loadding env variables")
-console.log(import.meta.env)
-console.log("=".repeat(20))
+// console.log("=".repeat(20))
+// console.log("loadding env variables")
+// console.log(import.meta.env)
+// console.log("=".repeat(20))
 
 export default {
     ...import.meta.env,

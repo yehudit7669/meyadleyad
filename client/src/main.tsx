@@ -5,8 +5,6 @@ import './styles/index.css';
 import Analytics from './utils/analytics';
 import './utils/env';
 
-console.log("🎨 CSS loaded - Tailwind should work now");
-
 // Initialize Analytics
 const GA_TRACKING_ID = import.meta.env.VITE_GA_TRACKING_ID;
 if (GA_TRACKING_ID) {

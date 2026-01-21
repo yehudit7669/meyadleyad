@@ -330,14 +330,14 @@ export const categoriesService = {
   },
 
   getCategoryBySlug: async (slug: string) => {
-    console.log("=".repeat(10) + " CATEGORY SERVICE " + "=".repeat(10));
-    console.log("Fetching category by slug:", slug);
-    console.log("API URL:", API_URL);
-    console.log('api axios base url', api.defaults.baseURL);
-    console.log("Requesting:", `/categories/${slug}`);
-    console.log("axios", api);
-    console.log("env", import.meta.env);
-    console.log("=".repeat(30));
+    // console.log("=".repeat(10) + " CATEGORY SERVICE " + "=".repeat(10));
+    // console.log("Fetching category by slug:", slug);
+    // console.log("API URL:", API_URL);
+    // console.log('api axios base url', api.defaults.baseURL);
+    // console.log("Requesting:", `/categories/${slug}`);
+    // console.log("axios", api);
+    // console.log("env", import.meta.env);
+    // console.log("=".repeat(30));
 
     const response = await api.get(`/categories/${slug}`);
     return (response.data as any).data;
