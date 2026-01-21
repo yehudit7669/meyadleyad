@@ -41,10 +41,21 @@ export function getApiBaseUrl(): string {
  * Ensure URL ends with /api (no trailing slash)
  * @param url - URL to normalize
  * @returns URL ending with /api
+ * @throws Error if URL is empty or invalid
  */
 function ensureApiSuffix(url: string): string {
+  // Validate URL is not empty
+  if (!url || url.trim() === '') {
+    throw new Error('Cannot normalize empty URL for API base');
+  }
+  
   // Remove trailing slashes
   const normalized = url.replace(/\/+$/, '');
+  
+  // Validate it's an absolute URL (must start with http:// or https://)
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    throw new Error(`Invalid API URL: "${normalized}" - Must be an absolute URL starting with http:// or https://`);
+  }
   
   // If already ends with /api, return it
   if (normalized.endsWith('/api')) {

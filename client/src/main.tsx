@@ -7,17 +7,21 @@ import { getApiBaseUrl } from './config/env';
 
 console.log("🎨 CSS loaded - Tailwind should work now");
 
-// Log API configuration for debugging (CRITICAL FOR PRODUCTION VERIFICATION)
+// CRITICAL: Log raw env values to debug Vercel injection
 console.log('🚀 Application Starting...');
-console.log('🔧 API Base URL:', getApiBaseUrl());
+console.log('📊 Raw ENV Values:');
+console.log('   MODE:', import.meta.env.MODE);
+console.log('   PROD:', import.meta.env.PROD);
+console.log('   DEV:', import.meta.env.DEV);
+console.log('   VITE_API_URL (raw):', import.meta.env.VITE_API_URL);
+console.log('');
+console.log('🔧 Computed API Base URL:', getApiBaseUrl());
 
 if (import.meta.env.DEV) {
   console.log('📍 Running in DEVELOPMENT mode');
-  console.log('   All API requests will go to:', getApiBaseUrl());
 } else {
   console.log('🌍 Running in PRODUCTION mode');
-  console.log('   VITE_API_URL:', import.meta.env.VITE_API_URL);
-  console.log('   All requests MUST go to backend, NOT to Vercel');
+  console.log('⚠️  Verify VITE_API_URL is NOT empty above!');
 }
 
 // Initialize Analytics

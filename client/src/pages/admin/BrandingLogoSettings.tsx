@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../../services/api';
+import { getBackendOrigin } from '../../config/env';
 
 interface BrandingConfig {
   id: string;
@@ -327,7 +328,7 @@ const BrandingLogoSettings: React.FC = () => {
             {config.logoUrl ? (
               <div className="flex items-center gap-4">
                 <img
-                  src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${config.logoUrl}`}
+                  src={`${getBackendOrigin()}${config.logoUrl}`}
                   alt="לוגו נוכחי"
                   className="w-32 h-32 object-contain border border-gray-200 rounded p-2 bg-gray-50"
                 />
