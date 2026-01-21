@@ -335,6 +335,7 @@ export const categoriesService = {
     console.log('api axios base url', api.defaults.baseURL);
     console.log("Requesting:", `/categories/${slug}`);
     console.log("axios", api);
+    console.log("env", import.meta.env);
     console.log("=".repeat(30));
 
     const response = await api.get(`/categories/${slug}`);
