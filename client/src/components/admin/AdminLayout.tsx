@@ -117,9 +117,9 @@ const menuItems: MenuItem[] = [
         requiredRoles: ['ADMIN', 'SUPER_ADMIN']
       },
       {
-        id: 'import-ads',
+        id: 'import-properties',
         title: 'ייבוא נכסים מקובץ',
-        path: '/admin/import-ads',
+        path: '/admin/import-properties',
         requiredRoles: ['ADMIN', 'SUPER_ADMIN']
       }
     ]

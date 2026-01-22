@@ -53,6 +53,7 @@ import AuditLog from './pages/admin/AuditLog';
 import CategoriesManager from './pages/admin/CategoriesManager';
 import ImportCitiesStreets from './pages/admin/ImportCitiesStreets';
 import ImportAds from './pages/admin/ImportAds';
+import ImportPropertiesFromFile from './pages/admin/ImportPropertiesFromFile';
 import MailingManager from './pages/admin/MailingManager';
 import ScheduledAds from './pages/admin/ScheduledAds';
 import PendingAds from './pages/PendingAds';
@@ -181,6 +182,7 @@ const App: React.FC = () => {
                   <Route path="/admin/categories" element={<AdminRoute><AdminLayout><CategoriesManager /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/import-cities" element={<AdminRoute><AdminLayout><ImportCitiesStreets /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/import-ads" element={<AdminRoute><AdminLayout><ImportAds /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/import-properties" element={<AdminRoute><AdminLayout><ImportPropertiesFromFile /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/mailing" element={<AdminRoute><AdminLayout><MailingManager /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/analytics" element={<AdminRoute><AdminLayout><Analytics /></AdminLayout></AdminRoute>} />
                   

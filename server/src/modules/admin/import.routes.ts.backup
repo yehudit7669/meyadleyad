@@ -1,0 +1,1315 @@
+import { Router, Request, Response } from 'express';
+import { prisma } from '../../lib/prisma';
+import multer from 'multer';
+import * as XLSX from 'xlsx';
+import * as fs from 'fs/promises';
+import { authenticate, authorize } from '../../middlewares/auth';
+
+const router = Router();
+
+// Apply authentication and admin authorization to all routes
+router.use(authenticate);
+router.use(authorize('ADMIN'));
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'uploads/imports/',
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (_req: any, file: any, cb: any) => {
+    if (file.mimetype === 'text/csv' || 
+        file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.mimetype === 'application/vnd.ms-excel') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV and Excel files are allowed'));
+    }
+  },
+});
+
+// ========================================
+// CITIES & STREETS IMPORT - PREVIEW
+// ========================================
+router.post('/cities-streets/preview', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    // Pre-Validation: File format
+    const ext = fileName.toLowerCase().split('.').pop();
+    if (!['xlsx', 'xls', 'csv'].includes(ext || '')) {
+      await fs.unlink(filePath);
+      res.status(400).json({ 
+        error: 'פורמט קובץ לא תקין. נדרשים קבצי XLSX או CSV בלבד.',
+        validationErrors: ['INVALID_FILE_FORMAT']
+      });
+      return;
+    }
+
+    // Read file
+    const fileBuffer = await fs.readFile(filePath);
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+    // Clean up uploaded file
+    await fs.unlink(filePath);
+
+    // Pre-Validation: Check required columns
+    if (rawData.length === 0) {
+      res.status(400).json({ 
+        error: 'הקובץ ריק',
+        validationErrors: ['EMPTY_FILE']
+      });
+      return;
+    }
+
+    const firstRow: any = rawData[0];
+    const hasRequiredColumns = ('עיר' in firstRow || 'city' in firstRow || 'cityName' in firstRow) &&
+                                ('רחוב' in firstRow || 'street' in firstRow || 'streetName' in firstRow);
+
+    if (!hasRequiredColumns) {
+      res.status(400).json({ 
+        error: 'חסרות עמודות חובה. נדרש: עיר, רחוב (או city, street באנגלית)',
+        validationErrors: ['MISSING_REQUIRED_COLUMNS']
+      });
+      return;
+    }
+
+    // Process rows for preview
+    const previewData: any[] = [];
+    const warnings: string[] = [];
+    const duplicatesInFile = new Set<string>();
+    const cityStreetKeys = new Set<string>();
+
+    for (let i = 0; i < rawData.length; i++) {
+      const row: any = rawData[i];
+      
+      // Extract data (support both Hebrew and English column names)
+      const cityName = row['עיר'] || row['city'] || row['cityName'] || '';
+      const streetName = row['רחוב'] || row['street'] || row['streetName'] || '';
+      const neighborhoodName = row['שכונה'] || row['neighborhood'] || row['neighborhoodName'] || '';
+      const streetCode = row['קוד רחוב'] || row['code'] || row['streetCode'] || `${Date.now()}-${i}`;
+
+      let status = 'תקין';
+      let rowErrors: string[] = [];
+
+      // Empty row check
+      if (!cityName.trim() && !streetName.trim()) {
+        status = 'שורה ריקה';
+        rowErrors.push('שורה ריקה');
+      }
+
+      // Required fields check
+      if (!cityName.trim()) {
+        status = 'שגוי';
+        rowErrors.push('חסר שם עיר');
+      }
+      if (!streetName.trim()) {
+        status = 'שגוי';
+        rowErrors.push('חסר שם רחוב');
+      }
+
+      // Invalid characters check
+      const invalidCharsCity = cityName.match(/[<>{}[\]\\\/]/g);
+      const invalidCharsStreet = streetName.match(/[<>{}[\]\\\/]/g);
+      if (invalidCharsCity || invalidCharsStreet) {
+        status = 'שגוי';
+        rowErrors.push('תווים לא חוקיים');
+      }
+
+      // Duplicate within file
+      const key = `${cityName.trim().toLowerCase()}_${streetName.trim().toLowerCase()}`;
+      if (cityStreetKeys.has(key)) {
+        status = 'כפול';
+        rowErrors.push('כפילות בקובץ');
+        duplicatesInFile.add(key);
+      } else {
+        cityStreetKeys.add(key);
+      }
+
+      previewData.push({
+        rowNumber: i + 2, // +2 because Excel is 1-indexed and first row is headers
+        city: cityName,
+        street: streetName,
+        neighborhood: neighborhoodName || '',
+        code: streetCode,
+        status,
+        errors: rowErrors
+      });
+    }
+
+    // Generate warnings
+    if (duplicatesInFile.size > 0) {
+      warnings.push(`נמצאו ${duplicatesInFile.size} כפילויות בקובץ`);
+    }
+
+    const invalidRows = previewData.filter(r => r.status === 'שגוי' || r.status === 'שורה ריקה').length;
+    if (invalidRows > 0) {
+      warnings.push(`${invalidRows} שורות בעייתיות`);
+    }
+
+    res.json({
+      success: true,
+      fileName,
+      totalRows: rawData.length,
+      validRows: previewData.filter(r => r.status === 'תקין').length,
+      invalidRows,
+      duplicates: duplicatesInFile.size,
+      warnings,
+      preview: previewData,
+    });
+
+  } catch (error: any) {
+    console.error('Error previewing cities/streets:', error);
+    
+    // Clean up file if exists
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (e) {}
+    }
+
+    res.status(500).json({ error: 'שגיאה בקריאת הקובץ' });
+  }
+});
+
+// ========================================
+// CITIES & STREETS IMPORT - COMMIT
+// ========================================
+router.post('/cities-streets/commit', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminId = (req as any).user.id;
+    const { data, options } = req.body;
+
+    if (!data || !Array.isArray(data)) {
+      res.status(400).json({ error: 'נתונים לא תקינים' });
+      return;
+    }
+
+    const { deleteExisting = false, mergeMode = true } = options || {};
+
+    let successCount = 0;
+    let failedCount = 0;
+    const errors: any[] = [];
+
+    // Use transaction with extended timeout for large imports
+    await prisma.$transaction(async (tx) => {
+      // Delete existing data if requested
+      if (deleteExisting) {
+        await tx.street.deleteMany({});
+        await tx.neighborhood.deleteMany({});
+        await tx.city.deleteMany({});
+      }
+
+      // Process each row
+      for (const row of data) {
+        try {
+          const { city: cityName, street: streetName, neighborhood: neighborhoodName, code: streetCode } = row;
+
+          if (!cityName || !streetName) {
+            failedCount++;
+            errors.push({ row, error: 'חסרים נתונים חובה' });
+            continue;
+          }
+
+          // Check if city exists first
+          let city = await tx.city.findUnique({
+            where: { name: cityName },
+          });
+
+          if (!city) {
+            // Create new city only if it doesn't exist
+            const citySlug = `${cityName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            city = await tx.city.create({
+              data: {
+                id: `city-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                name: cityName,
+                nameHe: cityName,
+                slug: citySlug,
+                updatedAt: new Date(),
+              },
+            });
+          } else if (!mergeMode) {
+            // Update existing city if not in merge mode
+            city = await tx.city.update({
+              where: { id: city.id },
+              data: {
+                nameHe: cityName,
+                updatedAt: new Date(),
+              },
+            });
+          }
+
+          // Handle neighborhood if provided
+          let neighborhood = null;
+          if (neighborhoodName && neighborhoodName.trim()) {
+            // Check if neighborhood exists in this city
+            neighborhood = await tx.neighborhood.findFirst({
+              where: {
+                cityId: city.id,
+                name: neighborhoodName.trim(),
+              },
+            });
+
+            if (!neighborhood) {
+              // Create new neighborhood
+              neighborhood = await tx.neighborhood.create({
+                data: {
+                  id: `neighborhood-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  name: neighborhoodName.trim(),
+                  cityId: city.id,
+                  updatedAt: new Date(),
+                },
+              });
+            }
+          }
+
+          // Check if street exists (by code OR by name in the same city)
+          let existingStreet = await tx.street.findUnique({
+            where: {
+              cityId_code: {
+                cityId: city.id,
+                code: streetCode,
+              },
+            },
+          });
+
+          // If not found by code, check by name to prevent duplicates
+          if (!existingStreet) {
+            existingStreet = await tx.street.findFirst({
+              where: {
+                cityId: city.id,
+                name: streetName,
+              },
+            });
+          }
+
+          if (!existingStreet) {
+            // Create new street only if it doesn't exist
+            await tx.street.create({
+              data: {
+                id: `street-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                name: streetName,
+                code: streetCode,
+                cityId: city.id,
+                neighborhoodId: neighborhood?.id || null,
+                updatedAt: new Date(),
+              },
+            });
+            successCount++;
+          } else if (!mergeMode) {
+            // Update existing street if not in merge mode
+            await tx.street.update({
+              where: { id: existingStreet.id },
+              data: {
+                name: streetName,
+                code: streetCode,
+                neighborhoodId: neighborhood?.id || null,
+                updatedAt: new Date(),
+              },
+            });
+            successCount++;
+          } else {
+            // In merge mode, skip existing streets
+            successCount++;
+          }
+        } catch (error: any) {
+          console.error('Error processing row:', row, error);
+          failedCount++;
+          errors.push({ row, error: error.message });
+        }
+      }
+    }, {
+      maxWait: 30000, // 30 seconds max wait
+      timeout: 60000, // 60 seconds timeout
+    });
+
+    // Log import outside transaction to avoid timeout issues
+    try {
+      await prisma.importLog.create({
+        data: {
+          adminId,
+          importType: 'CITIES_STREETS',
+          fileName: `import-${new Date().toISOString()}`,
+          totalRows: data.length,
+          successRows: successCount,
+          failedRows: failedCount,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+      });
+    } catch (logError) {
+      console.error('Error creating import log:', logError);
+      // Don't fail the whole import if logging fails
+    }
+
+    res.json({
+      success: true,
+      totalRows: data.length,
+      successRows: successCount,
+      failedRows: failedCount,
+      errors: errors.slice(0, 10),
+    });
+
+  } catch (error: any) {
+    console.error('Error committing cities/streets:', error);
+    console.error('Full error details:', JSON.stringify(error, null, 2));
+    res.status(500).json({ 
+      error: 'שגיאה בשמירת הנתונים',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ========================================
+// PROPERTIES IMPORT - PREVIEW
+// ========================================
+router.post('/properties/preview', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    // Pre-Validation: Only XLSX allowed for properties
+    const ext = fileName.toLowerCase().split('.').pop();
+    if (ext !== 'xlsx' && ext !== 'xls') {
+      await fs.unlink(filePath);
+      res.status(400).json({ 
+        error: 'ייבוא נכסים דורש קובץ XLSX בלבד',
+        validationErrors: ['INVALID_FILE_FORMAT']
+      });
+      return;
+    }
+
+    // Read file
+    const fileBuffer = await fs.readFile(filePath);
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+    // Clean up uploaded file
+    await fs.unlink(filePath);
+
+    // Pre-Validation: Check if file is empty
+    if (rawData.length === 0) {
+      res.status(400).json({ 
+        error: 'הקובץ ריק',
+        validationErrors: ['EMPTY_FILE']
+      });
+      return;
+    }
+
+    // Pre-Validation: Check required columns
+    const firstRow: any = rawData[0];
+    const requiredColumns = ['title', 'description', 'categorySlug'];
+    const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+
+    if (missingColumns.length > 0) {
+      res.status(400).json({ 
+        error: `חסרות עמודות חובה: ${missingColumns.join(', ')}`,
+        validationErrors: ['MISSING_REQUIRED_COLUMNS'],
+        missingColumns
+      });
+      return;
+    }
+
+    // Process rows for preview
+    const previewData: any[] = [];
+    const warnings: string[] = [];
+    const duplicatesInFile = new Set<string>();
+    const titleKeys = new Set<string>();
+
+    for (let i = 0; i < rawData.length; i++) {
+      const row: any = rawData[i];
+      
+      const title = row.title || '';
+      const description = row.description || '';
+      const price = row.price;
+      const categorySlug = row.categorySlug || '';
+      const cityName = row.cityName || row.city || '';
+      const address = row.address || '';
+
+      let status = 'תקין';
+      let rowErrors: string[] = [];
+
+      // Required fields validation
+      if (!title.trim()) {
+        status = 'שגוי';
+        rowErrors.push('חסר כותרת');
+      }
+      if (!description.trim()) {
+        status = 'שגוי';
+        rowErrors.push('חסר תיאור');
+      }
+      if (!categorySlug.trim()) {
+        status = 'שגוי';
+        rowErrors.push('חסרה קטגוריה');
+      }
+
+      // Type validation
+      if (price && (isNaN(parseFloat(price)) || parseFloat(price) < 0)) {
+        status = 'שגוי';
+        rowErrors.push('מחיר לא תקין');
+      }
+
+      // Duplicate check (by title)
+      const key = title.trim().toLowerCase();
+      if (titleKeys.has(key)) {
+        status = 'כפול';
+        rowErrors.push('כפילות בקובץ');
+        duplicatesInFile.add(key);
+      } else {
+        titleKeys.add(key);
+      }
+
+      previewData.push({
+        rowNumber: i + 2,
+        title,
+        description: description.substring(0, 100) + (description.length > 100 ? '...' : ''),
+        price: price ? parseFloat(price) : null,
+        categorySlug,
+        city: cityName,
+        address,
+        status,
+        errors: rowErrors
+      });
+    }
+
+    // Generate warnings
+    if (duplicatesInFile.size > 0) {
+      warnings.push(`נמצאו ${duplicatesInFile.size} כפילויות בקובץ`);
+    }
+
+    const invalidRows = previewData.filter(r => r.status === 'שגוי').length;
+    if (invalidRows > 0) {
+      warnings.push(`${invalidRows} שורות בעייתיות`);
+    }
+
+    res.json({
+      success: true,
+      fileName,
+      totalRows: rawData.length,
+      validRows: previewData.filter(r => r.status === 'תקין').length,
+      invalidRows,
+      duplicates: duplicatesInFile.size,
+      warnings,
+      preview: previewData,
+    });
+
+  } catch (error: any) {
+    console.error('Error previewing properties:', error);
+    
+    // Clean up file if exists
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (e) {}
+    }
+
+    res.status(500).json({ error: 'שגיאה בקריאת הקובץ' });
+  }
+});
+
+// ========================================
+// PROPERTIES IMPORT - COMMIT
+// ========================================
+router.post('/properties/commit', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminId = (req as any).user.id;
+    const { data, options } = req.body;
+
+    if (!data || !Array.isArray(data)) {
+      res.status(400).json({ error: 'נתונים לא תקינים' });
+      return;
+    }
+
+    const { initialStatus = 'PENDING' } = options || {}; // PENDING or DRAFT
+
+    let successCount = 0;
+    let failedCount = 0;
+    const errors: any[] = [];
+
+    // Use transaction
+    await prisma.$transaction(async (tx) => {
+      for (const row of data) {
+        try {
+          const { title, description, price, categorySlug, city, address, userEmail, rooms, floor, size } = row;
+
+          if (!title || !description || !categorySlug) {
+            failedCount++;
+            errors.push({ row, error: 'חסרים שדות חובה' });
+            continue;
+          }
+
+          // Find category
+          const category = await tx.category.findUnique({
+            where: { slug: categorySlug },
+          });
+
+          if (!category) {
+            failedCount++;
+            errors.push({ row, error: `קטגוריה לא נמצאה: ${categorySlug}` });
+            continue;
+          }
+
+          // Find user (default to first admin if not provided)
+          let user;
+          if (userEmail) {
+            user = await tx.user.findUnique({ where: { email: userEmail } });
+          }
+          if (!user) {
+            user = await tx.user.findFirst({ where: { role: 'ADMIN' } });
+          }
+
+          if (!user) {
+            failedCount++;
+            errors.push({ row, error: 'משתמש לא נמצא' });
+            continue;
+          }
+
+          // Find city
+          let cityRecord = null;
+          if (city) {
+            cityRecord = await tx.city.findFirst({
+              where: { name: { contains: city, mode: 'insensitive' } },
+            });
+          }
+
+          // Create ad (as draft/pending - NO auto-publish)
+          const customFields: any = {};
+          if (rooms) customFields.rooms = rooms;
+          if (floor) customFields.floor = floor;
+          if (size) customFields.size = size;
+
+          await tx.ad.create({
+            data: {
+              id: `ad-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              title,
+              description,
+              price: price ? parseFloat(price) : null,
+              userId: user.id,
+              categoryId: category.id,
+              cityId: cityRecord?.id,
+              address,
+              customFields: Object.keys(customFields).length > 0 ? customFields : null,
+              status: initialStatus as any, // DRAFT or PENDING
+              updatedAt: new Date(),
+            },
+          });
+
+          successCount++;
+        } catch (error: any) {
+          failedCount++;
+          errors.push({ row, error: error.message });
+        }
+      }
+
+      // Log import
+      await tx.importLog.create({
+        data: {
+          adminId,
+          importType: 'PROPERTIES',
+          fileName: `import-${new Date().toISOString()}`,
+          totalRows: data.length,
+          successRows: successCount,
+          failedRows: failedCount,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+      });
+    });
+
+    res.json({
+      success: true,
+      totalRows: data.length,
+      successRows: successCount,
+      failedRows: failedCount,
+      errors: errors.slice(0, 10),
+    });
+
+  } catch (error: any) {
+    console.error('Error committing properties:', error);
+    res.status(500).json({ error: 'שגיאה בשמירת הנתונים' });
+  }
+});
+
+// ========================================
+// PROPERTIES FROM FILE - PREVIEW
+// ========================================
+router.post('/properties-file/preview', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    const categoryId = req.body.categoryId;
+    if (!categoryId) {
+      await fs.unlink(req.file.path);
+      res.status(400).json({ error: 'נדרש מזהה קטגוריה' });
+      return;
+    }
+
+    const filePath = req.file.path;
+    const fileName = req.file.originalname;
+
+    // Validate XLSX only
+    const ext = fileName.toLowerCase().split('.').pop();
+    if (ext !== 'xlsx' && ext !== 'xls') {
+      await fs.unlink(filePath);
+      res.status(400).json({ 
+        error: 'ייבוא נכסים דורש קובץ XLSX בלבד',
+        validationErrors: ['INVALID_FILE_FORMAT']
+      });
+      return;
+    }
+
+    // Find category
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      await fs.unlink(filePath);
+      res.status(400).json({ error: 'קטגוריה לא נמצאה' });
+      return;
+    }
+
+    // Read file
+    const fileBuffer = await fs.readFile(filePath);
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rawData = XLSX.utils.sheet_to_json(worksheet);
+
+    // Clean up uploaded file
+    await fs.unlink(filePath);
+
+    if (rawData.length === 0) {
+      res.status(400).json({ 
+        error: 'הקובץ ריק',
+        validationErrors: ['EMPTY_FILE']
+      });
+      return;
+    }
+
+    // Get schema for category
+    const schema = getSchemaForCategory(category.slug);
+    
+    // Validate headers - check if any of the required fields exist (with aliases)
+    const firstRow: any = rawData[0];
+    const missingFields: string[] = [];
+    
+    for (const field of schema.fields.filter(f => f.required)) {
+      const hasField = field.aliases.some(alias => alias in firstRow);
+      if (!hasField) {
+        missingFields.push(field.hebrewName);
+      }
+    }
+    
+    if (missingFields.length > 0) {
+      res.status(400).json({ 
+        error: `חסרות עמודות חובה: ${missingFields.join(', ')}`,
+        validationErrors: ['MISSING_REQUIRED_COLUMNS'],
+        missingFields
+      });
+      return;
+    }
+
+    // Process rows
+    const previewData: any[] = [];
+    const warnings: string[] = [];
+    const duplicatesInFile = new Set<string>();
+    const uniqueKeys = new Set<string>();
+
+    for (let i = 0; i < rawData.length; i++) {
+      const row: any = rawData[i];
+      const rowData: any = {};
+      let status = 'תקין';
+      const rowErrors: string[] = [];
+
+      // Parse each field
+      for (const field of schema.fields) {
+        // Try to find value using any of the field's aliases
+        let value = null;
+        for (const alias of field.aliases) {
+          if (alias in row) {
+            value = row[alias];
+            break;
+          }
+        }
+        
+        try {
+          rowData[field.name] = field.parser(value);
+        } catch (error: any) {
+          if (field.required && !value) {
+            status = 'שגוי';
+            rowErrors.push(`חסר ${field.hebrewName}`);
+          } else if (value) {
+            status = 'שגוי';
+            rowErrors.push(`${field.hebrewName}: ${error.message}`);
+          }
+        }
+      }
+
+      // Duplicate check
+      const duplicateKey = schema.getDuplicateKey(rowData);
+      if (duplicateKey && uniqueKeys.has(duplicateKey)) {
+        status = 'כפול';
+        rowErrors.push('כפילות בקובץ');
+        duplicatesInFile.add(duplicateKey);
+      } else if (duplicateKey) {
+        uniqueKeys.add(duplicateKey);
+      }
+
+      previewData.push({
+        rowNumber: i + 2,
+        ...rowData,
+        status,
+        errors: rowErrors
+      });
+    }
+
+    // Generate warnings
+    if (duplicatesInFile.size > 0) {
+      warnings.push(`נמצאו ${duplicatesInFile.size} כפילויות בקובץ`);
+    }
+
+    const invalidRows = previewData.filter(r => r.status === 'שגוי').length;
+    if (invalidRows > 0) {
+      warnings.push(`${invalidRows} שורות בעייתיות`);
+    }
+
+    res.json({
+      success: true,
+      fileName,
+      totalRows: rawData.length,
+      validRows: previewData.filter(r => r.status === 'תקין').length,
+      invalidRows,
+      duplicates: duplicatesInFile.size,
+      warnings,
+      preview: previewData,
+    });
+
+  } catch (error: any) {
+    console.error('Error previewing properties from file:', error);
+    
+    if (req.file) {
+      try {
+        await fs.unlink(req.file.path);
+      } catch (e) {}
+    }
+
+    res.status(500).json({ error: 'שגיאה בקריאת הקובץ' });
+  }
+});
+
+// ========================================
+// PROPERTIES FROM FILE - COMMIT
+// ========================================
+router.post('/properties-file/commit', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const adminId = (req as any).user.id;
+    const { categoryId, data, options } = req.body;
+
+    if (!categoryId || !data || !Array.isArray(data)) {
+      res.status(400).json({ error: 'נתונים לא תקינים' });
+      return;
+    }
+
+    const { initialStatus = 'PENDING' } = options || {};
+
+    // Find category
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      res.status(400).json({ error: 'קטגוריה לא נמצאה' });
+      return;
+    }
+
+    let successCount = 0;
+    let failedCount = 0;
+    const errors: any[] = [];
+    const results: any[] = [];
+
+    // Use transaction
+    await prisma.$transaction(async (tx) => {
+      for (const row of data) {
+        try {
+          // Find or create user (default to admin)
+          let user = await tx.user.findFirst({ where: { role: 'ADMIN' } });
+          if (!user) {
+            user = await tx.user.findFirst({});
+          }
+
+          if (!user) {
+            failedCount++;
+            errors.push({ row, error: 'משתמש לא נמצא' });
+            continue;
+          }
+
+          // Find city if provided
+          let cityRecord = null;
+          if (row.city) {
+            cityRecord = await tx.city.findFirst({
+              where: { name: { contains: row.city, mode: 'insensitive' } },
+            });
+          }
+
+          // Build custom fields
+          const customFields = buildCustomFields(row, category.slug);
+
+          // Build title
+          const title = row.title || buildTitle(row, category.slug);
+
+          // Create ad
+          const newAd = await tx.ad.create({
+            data: {
+              id: `ad-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              title,
+              description: row.description || '',
+              price: row.price ? parseFloat(row.price.toString()) : null,
+              userId: user.id,
+              categoryId: category.id,
+              cityId: cityRecord?.id,
+              address: buildAddress(row),
+              customFields,
+              status: initialStatus as any,
+              updatedAt: new Date(),
+            },
+          });
+
+          successCount++;
+          results.push({
+            rowIndex: row.rowNumber,
+            status: 'success',
+            id: newAd.id,
+          });
+        } catch (error: any) {
+          failedCount++;
+          errors.push({ 
+            rowIndex: row.rowNumber, 
+            error: error.message 
+          });
+          results.push({
+            rowIndex: row.rowNumber,
+            status: 'failed',
+            errors: [error.message],
+          });
+        }
+      }
+
+      // Log import
+      await tx.importLog.create({
+        data: {
+          adminId,
+          importType: 'PROPERTIES_FILE',
+          fileName: `import-properties-${new Date().toISOString()}`,
+          totalRows: data.length,
+          successRows: successCount,
+          failedRows: failedCount,
+          errors: errors.length > 0 ? errors : undefined,
+        },
+      });
+    });
+
+    res.json({
+      success: true,
+      totalRows: data.length,
+      successRows: successCount,
+      failedRows: failedCount,
+      results,
+      errors: errors.slice(0, 10),
+    });
+
+  } catch (error: any) {
+    console.error('Error committing properties from file:', error);
+  aliases: string[]; // Support multiple column names
+  required: boolean;
+  parser: (value: any) => any;
+}
+
+interface CategorySchema {
+  name: string;
+  hebrewName: string;
+  required: boolean;
+  parser: (value: any) => any;
+}
+
+interface CategorySchema {
+  requiredHeaders: string[];
+  fields: FieldSchema[];
+  getDuplicateKey: (row:',
+      aliases: ['כותרת (חובה)', 'כותרת', 'סוג מודעה', 'שם מודעה', 'title'],
+      required: true,
+      parser: (v) => {
+        if (!v || !v.trim()) throw new Error('כותרת חובה');
+        return v.trim();
+      }
+    },
+    {
+      name: 'description',
+      hebrewName: 'תיאור',
+      aliases: ['תיאור (חובה)', 'תיאור', 'תיאור הנכס', 'פרטים', 'description'],
+      required: true,
+      parser: (v) => {
+        if (!v || !v.trim()) throw new Error('תיאור חובה');
+        return v.trim();
+      }
+    },
+    {
+      name: 'price',
+      hebrewName: 'מחיר',
+      aliases: ['מחיר', 'מחיר מבוקש', 'price'],
+      required: false,
+      parser: (v) => {
+        if (!v) return null;
+        const num = parseFloat(v.toString().replace(/[^\d.-]/g, ''));
+        if (isNaN(num)) throw new Error('מחיר לא תקין');
+        return num;
+      }
+    },
+    {
+      name: 'city',
+      hebrewName: 'עיר',
+      aliases: ['עיר', 'עיר/יישוב', 'city'],
+      required: false,
+      parser: (v) => v ? v.trim() : null
+    },
+    {
+      name: 'street',
+      hebrewName: 'רחוב',
+      aliases: ['רחוב', 'שם רחוב', 'street'],
+      required: false,
+      parser: (v) => v ? v.trim() : null
+    },
+    {
+      name: 'houseNumber',
+      hebrewName: 'מספר בית',
+      aliases: ['מספר בית', 'מס\' בית', 'house number']
+      name: 'street',
+      hebrewName: 'רחוב',
+      required: false,
+      parser: (v) => v ? v.trim() : null
+    },',
+        aliases: ['תיווך (כן/לא)', 'תיווך', 'דרך תיווך'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'propertyType',
+        hebrewName: 'סוג נכס',
+        aliases: ['סוג נכס', 'סוג הנכס', 'סוג'],
+        required: false,
+        parser: (v) => v ? v.trim() : 'דירה'
+      },
+      {
+        name: 'rooms',
+        hebrewName: 'חדרים',
+        aliases: ['חדרים', 'מספר חדרים', 'מס\' חדרים', 'rooms'],
+        required: false,
+        parser: (v) => {
+          if (!v) return null;
+          const num = parseFloat(v.toString().replace(',', '.'));
+          if (isNaN(num) || num < 0) throw new Error('מספר חדרים לא תקין');
+          return num;
+        }
+      },
+      {
+        name: 'squareMeters',
+        hebrewName: 'מ"ר',
+        aliases: ['מ"ר', 'שטח', 'מטר רבוע', 'מ״ר'],
+        required: false,
+        parser: (v) => {
+          if (!v) return null;
+          const num = parseFloat(v);
+          if (isNaN(num) || num < 0) throw new Error('שטח לא תקין');
+          return num;
+        }
+      },
+      {
+        name: 'condition',
+        hebrewName: 'מצב',
+        aliases: ['מצב', 'מצב הנכס', 'מצב הדירה'],
+        required: false,
+        parser: (v) => v ? v.trim() : null
+      },
+      {
+        name: 'floor',
+        hebrewName: 'קומה',
+        aliases: ['קומה', 'מספר קומה', 'floor'],
+        required: false,
+        parser: (v) => {
+          if (!v) return null;
+          if (v.toString().toLowerCase().includes('קרקע')) return 0;
+          const num = parseInt(v);
+          if (isNaN(num)) return null;
+          return num;
+        }
+      },
+      {
+        name: 'balconies',
+        hebrewName: 'מרפסות',
+        aliases: ['מרפסות', 'מספר מרפסות', 'מס\' מרפסות'],
+        required: false,
+        parser: (v) => {
+          if (!v) return null;
+          const num = parseInt(v);
+          return isNaN(num) ? null : num;
+        }
+      },
+      {
+        name: 'furniture',
+        hebrewName: 'ריהוט',
+        aliases: ['ריהוט (ללא/מרוהט חלקית/מרוהט)', 'ריהוט', 'מרוהט'],
+        required: false,
+        parser: (v) => v ? v.trim() : 'ללא'
+      },
+      {
+        name: 'entryDate',
+        hebrewName: 'תאריך כניסה',
+        aliases: ['תאריך כניסה', 'כניסה', 'מועד כניסה'],
+        required: false,
+        parser: parseDate
+      },
+      {
+        name: 'arnona',
+        hebrewName: 'ארנונה',
+        aliases: ['ארנונה (חודשית)', 'ארנונה', 'ארנונה חודשית'],
+        required: false,
+        parser: parseOptionalNumber
+      },
+      {
+        name: 'vaad',
+        hebrewName: 'ועד בית',
+        aliases: ['ועד בית (חודשית)', 'ועד בית', 'ועד'],
+        required: false,
+        parser: parseOptionalNumber
+      },
+      {
+        name: 'parking',
+        hebrewName: 'חניה',
+        aliases: ['חניה (כן/לא)', 'חניה', 'חנייה'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'storage',
+        hebrewName: 'מחסן',
+        aliases: ['מחסן (כן/לא)', 'מחסן'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'shelter',
+        hebrewName: 'ממ״ד',
+        aliases: ['ממ״ד (כן/לא)', 'ממ״ד', 'ממד'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'elevator',
+        hebrewName: 'מעלית',
+        aliases: ['מעלית (כן/לא)', 'מעלית'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'accessible',
+        hebrewName: 'גישה לנכים',
+        aliases: ['גישה לנכים (כן/לא)', 'גישה לנכים', 'נגיש'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'airConditioning',
+        hebrewName: 'מיזוג',
+        aliases: ['מיזוג (כן/לא)', 'מיזוג', 'מיזוג אוויר'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'bars',
+        hebrewName: 'סורגים',
+        aliases: ['סורגים (כן/לא)', 'סורגים'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'security',
+        hebrewName: 'שמירה',
+        aliases: ['שמירה (כן/לא)', 'שמירה'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'pantry',
+        hebrewName: 'מזווה',
+        aliases: ['מזווה (כן/לא)', 'מזווה'],
+        required: false,
+        parser: normalizeBoolean
+      },
+      {
+        name: 'solarWaterHeater',
+        hebrewName: 'דוד שמש',
+        aliases: ['דוד שמש (כן/לא)', 'דוד שמש'],
+        required: false,
+        parser: normalizeBoolean
+      },
+    ];
+
+    return {
+      fields: [...baseFields, ...realEstateFields],
+      getDuplicateKey: (row) => {
+        if (row.title && row.city && row.street) {
+          return `${row.title}-${row.city}-${row.street}-${row.houseNumber || ''}`.toLowerCase();
+        }
+        return row.title?.toLowerCase() || null;
+      }
+    };
+  }
+
+  // Default schema for other categories
+  return {
+      requiredHeaders: ['כותרת (חובה)', 'תיאור (חובה)'],
+      fields: [...baseFields, ...realEstateFields],
+      getDuplicateKey: (row) => {
+        if (row.title && row.city && row.street) {
+          return `${row.title}-${row.city}-${row.street}-${row.houseNumber || ''}`.toLowerCase();
+        }
+        return row.title?.toLowerCase() || null;
+      }
+    };
+  }
+
+  // Default schema for other categories
+  return {
+    requiredHeaders: ['כותרת (חובה)', 'תיאור (חובה)'],
+    fields: baseFields,
+    getDuplicateKey: (row) => row.title?.toLowerCase() || null
+  };
+}
+
+// Helper parsers
+function normalizeBoolean(value: any): boolean | null {
+  if (!value) return null;
+  const str = value.toString().trim().toLowerCase();
+  if (str === 'כן' || str === 'yes' || str === 'true' || str === '1') return true;
+  if (str === 'לא' || str === 'no' || str === 'false' || str === '0') return false;
+  return null;
+}
+
+function parseDate(value: any): string | null {
+  if (!value) return null;
+  
+  // Try DD/MM/YYYY format
+  if (typeof value === 'string' && value.includes('/')) {
+    const parts = value.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+  }
+  
+  // Try ISO format
+  try {
+    const date = new Date(value);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  } catch (e) {}
+  
+  return null;
+}
+
+function parseOptionalNumber(value: any): number | null {
+  if (!value) return null;
+  const num = parseFloat(value.toString().replace(/[^\d.-]/g, ''));
+  return isNaN(num) ? null : num;
+}
+
+function buildCustomFields(row: any, categorySlug: string): any {
+  const customFields: any = {};
+  
+  if (categorySlug.includes('apartment') || categorySlug.includes('sale') || categorySlug.includes('rent')) {
+    if (row.hasBroker !== null) customFields.hasBroker = row.hasBroker;
+    if (row.propertyType) customFields.propertyType = row.propertyType;
+    if (row.rooms) customFields.rooms = row.rooms;
+    if (row.squareMeters) customFields.squareMeters = row.squareMeters;
+    if (row.condition) customFields.condition = row.condition;
+    if (row.floor !== null) customFields.floor = row.floor;
+    if (row.balconies) customFields.balconies = row.balconies;
+    if (row.furniture) customFields.furniture = row.furniture;
+    if (row.entryDate) customFields.entryDate = row.entryDate;
+    if (row.arnona) customFields.arnona = row.arnona;
+    if (row.vaad) customFields.vaad = row.vaad;
+    
+    const features: any = {};
+    if (row.parking !== null) features.parking = row.parking;
+    if (row.storage !== null) features.storage = row.storage;
+    if (row.shelter !== null) features.shelter = row.shelter;
+    if (row.elevator !== null) features.elevator = row.elevator;
+    if (row.accessible !== null) features.accessible = row.accessible;
+    if (row.airConditioning !== null) features.airConditioning = row.airConditioning;
+    if (row.bars !== null) features.bars = row.bars;
+    if (row.security !== null) features.security = row.security;
+    if (row.pantry !== null) features.pantry = row.pantry;
+    if (row.solarWaterHeater !== null) features.solarWaterHeater = row.solarWaterHeater;
+    
+    if (Object.keys(features).length > 0) {
+      customFields.features = features;
+    }
+  }
+  
+  return Object.keys(customFields).length > 0 ? customFields : null;
+}
+
+function buildTitle(row: any, categorySlug: string): string {
+  if (categorySlug.includes('apartment') || categorySlug.includes('sale') || categorySlug.includes('rent')) {
+    const parts = [];
+    if (row.propertyType) parts.push(row.propertyType);
+    if (row.rooms) parts.push(`${row.rooms} חדרים`);
+    if (row.city) parts.push(`ב${row.city}`);
+    if (row.street) parts.push(row.street);
+    return parts.join(' ') || 'נכס';
+  }
+  return 'מודעה';
+}
+
+function buildAddress(row: any): string | null {
+  const parts = [];
+  if (row.street) parts.push(row.street);
+  if (row.houseNumber) parts.push(row.houseNumber);
+  if (row.city) parts.push(row.city);
+  return parts.length > 0 ? parts.join(' ') : null;
+}
+
+// Get import history
+router.get('/history', async (req: Request, res: Response) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+    
+    const imports = await prisma.importLog.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(imports);
+  } catch (error: any) {
+    console.error('Error fetching import history:', error);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
+export default router;
