@@ -5,6 +5,7 @@ import { authenticate } from '../../middlewares/auth';
 import { requireAdmin, requireSuperAdmin, requireAdminOrSuper } from '../../middleware/rbac.middleware';
 import { AdminAuditService } from './admin-audit.service';
 import { sign } from 'jsonwebtoken';
+import { checkPermission } from '../../middleware/check-permission.middleware';
 
 const router = Router();
 
@@ -143,7 +144,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Export audit logs to CSV
-router.get('/export/csv', async (req: Request, res: Response) => {
+router.get('/export/csv', checkPermission('download_audit_log'), async (req: Request, res: Response) => {
   try {
     const { action, adminId, startDate, endDate } = req.query;
 
@@ -288,7 +289,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Export audit logs - SuperAdmin only
-router.post('/export', requireSuperAdmin, async (req: Request, res: Response) => {
+router.post('/export', checkPermission('download_audit_log'), async (req: Request, res: Response) => {
   try {
     const { format = 'csv', startDate, endDate, action, adminEmail, entityType, search, ip } = req.body;
 

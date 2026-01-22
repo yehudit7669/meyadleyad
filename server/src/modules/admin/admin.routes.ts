@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { AdminController } from './admin.controller';
 import { authenticate } from '../../middlewares/auth';
 import { requireAdmin, requireAdminOrSuper } from '../../middleware/rbac.middleware';
+import { checkPermission } from '../../middleware/check-permission.middleware';
 
 const router = Router();
 const adminController = new AdminController();
@@ -10,7 +11,7 @@ router.use(authenticate);
 router.use(requireAdmin);
 
 // סטטיסטיקות (All admin roles can view)
-router.get('/statistics', adminController.getStatistics);
+router.get('/statistics', checkPermission('export_stats'), adminController.getStatistics);
 
 // ניהול משתמשים הועבר ל-/admin/users (users-admin.routes.ts)
 // router.get('/users', adminController.getUsers); // REMOVED - use /admin/users instead
@@ -28,7 +29,7 @@ router.get('/ads', adminController.getAllAds);
 router.patch('/ads/:id/status', requireAdminOrSuper, adminController.updateAdStatus);
 
 // ייצוא היסטוריה (Admin & Super Admin only)
-router.post('/ads/export-history', requireAdminOrSuper, adminController.exportAdsHistory);
+router.post('/ads/export-history', checkPermission('export_ads'), adminController.exportAdsHistory);
 
 // מחיקת מודעות משתמש הועבר ל-/admin/users (users-admin.routes.ts)
 // router.delete('/users/:userId/ads', adminController.deleteUserAds); // REMOVED - use /admin/users/:id/ads/bulk-remove instead

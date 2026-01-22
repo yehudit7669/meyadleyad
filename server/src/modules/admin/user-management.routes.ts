@@ -3,15 +3,15 @@ import { userManagementService } from './user-management.service';
 import { validateRequest } from '../../middlewares/validation';
 import { updateMeetingAccessSchema, getUsersQuerySchema } from './user-management.validation';
 import { authenticate, authorize } from '../../middlewares/auth';
+import { checkPermission } from '../../middleware/check-permission.middleware';
 
 const router = Router();
 
-// Apply authentication and admin authorization to all routes
+// Apply authentication to all routes
 router.use(authenticate);
-router.use(authorize('ADMIN'));
 
 // Get all users with filters
-router.get('/', validateRequest({ query: getUsersQuerySchema }), async (req: Request, res: Response) => {
+router.get('/', authorize('ADMIN'), validateRequest({ query: getUsersQuerySchema }), async (req: Request, res: Response) => {
   try {
     const result = await userManagementService.getUsers(req.query as any);
     res.json(result);
@@ -22,7 +22,7 @@ router.get('/', validateRequest({ query: getUsersQuerySchema }), async (req: Req
 });
 
 // Get user details
-router.get('/:userId', async (req: Request, res: Response): Promise<void> => {
+router.get('/:userId', authorize('ADMIN'), async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await userManagementService.getUserDetails(req.params.userId);
     res.json(user);
@@ -37,7 +37,7 @@ router.get('/:userId', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Update meeting access
-router.patch('/:userId/meeting-access', validateRequest({ body: updateMeetingAccessSchema }), async (req: Request, res: Response) => {
+router.patch('/:userId/meeting-access', authorize('ADMIN'), validateRequest({ body: updateMeetingAccessSchema }), async (req: Request, res: Response) => {
   try {
     const adminId = (req as any).user.id;
     const result = await userManagementService.updateMeetingAccess(
@@ -53,7 +53,7 @@ router.patch('/:userId/meeting-access', validateRequest({ body: updateMeetingAcc
 });
 
 // Get meeting access
-router.get('/:userId/meeting-access', async (req: Request, res: Response) => {
+router.get('/:userId/meeting-access', authorize('ADMIN'), async (req: Request, res: Response) => {
   try {
     const result = await userManagementService.getMeetingAccess(req.params.userId);
     res.json(result);
@@ -63,8 +63,32 @@ router.get('/:userId/meeting-access', async (req: Request, res: Response) => {
   }
 });
 
-// Export users to Excel
-router.get('/export/excel', async (req: Request, res: Response) => {
+// Export users to Excel (POST endpoint for client compatibility)
+router.post('/export', checkPermission('export_users'), async (req: Request, res: Response) => {
+  try {
+    const params = req.query;
+    const workbook = await userManagementService.exportUsersToExcel({
+      role: params.role as string,
+      search: params.search as string,
+      roleType: params.roleType as string,
+      status: params.status as string,
+      dateFrom: params.dateFrom as string,
+      dateTo: params.dateTo as string,
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=users-export.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error: any) {
+    console.error('Error exporting users:', error);
+    res.status(500).json({ error: 'Failed to export users' });
+  }
+});
+
+// Export users to Excel (GET endpoint - legacy)
+router.get('/export/excel', checkPermission('export_users'), async (req: Request, res: Response) => {
   try {
     const { role, search } = req.query;
     const workbook = await userManagementService.exportUsersToExcel({

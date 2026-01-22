@@ -3,11 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { usersAdminService, type GetUsersParams } from '../../services/users-admin.service';
 import { useAuth } from '../../hooks/useAuth';
+import { useEmailPermissions } from '../../hooks/useEmailPermissions';
 
 export default function UsersManagementPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { hasPermission } = useEmailPermissions();
   const [filters, setFilters] = useState<GetUsersParams>({
     page: 1,
     limit: 20,
@@ -28,6 +30,7 @@ export default function UsersManagementPage() {
   const canSearchByEmail = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isModerator = user?.role === 'MODERATOR';
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const canExportUsers = hasPermission('export_users');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['admin-users', filters],
@@ -268,7 +271,7 @@ export default function UsersManagementPage() {
               </button>
             </div>
 
-            {isSuperAdmin && (
+            {canExportUsers && (
               <button
                 type="button"
                 onClick={handleExport}

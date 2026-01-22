@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { UsersAdminController } from './users-admin.controller';
 import { requireAdmin, requireSuperAdmin, requireAdminOrSuper } from '../../../middleware/rbac.middleware';
 import { authenticate } from '../../../middlewares/auth';
+import { checkPermission } from '../../../middleware/check-permission.middleware';
 
 const router = Router();
 const controller = new UsersAdminController();
@@ -17,7 +18,7 @@ router.post('/', requireSuperAdmin, controller.createUser.bind(controller));
 router.get('/', controller.getUsers.bind(controller));
 
 // POST /api/admin/users/export - Export users (Super Admin only) - MUST be before /:id
-router.post('/export', requireSuperAdmin, controller.exportUsers.bind(controller));
+router.post('/export', checkPermission('export_users'), controller.exportUsers.bind(controller));
 
 // GET /api/admin/users/:id - Get user profile (All admin roles)
 router.get('/:id', controller.getUserProfile.bind(controller));

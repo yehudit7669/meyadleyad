@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { adminDashboardService } from '../../services/admin-dashboard.service';
 import { useAuth } from '../../hooks/useAuth';
+import { useEmailPermissions } from '../../hooks/useEmailPermissions';
 import {
   Users,
   FileText,
@@ -56,6 +57,7 @@ interface ActivityItem {
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
+  const { hasPermission } = useEmailPermissions();
 
   // Live Stats - refetch כל 30 שניות
   const { data: summary, isLoading: summaryLoading } = useQuery<DashboardSummary>({
@@ -89,7 +91,7 @@ export default function AdminDashboardPage() {
   });
 
   const isAdmin = user?.isAdmin;
-  const canExport = isAdmin; // TODO: בעתיד לבדוק role מדויק
+  const canExport = hasPermission('export_stats');
 
   const handleExportUsage = async () => {
     try {
