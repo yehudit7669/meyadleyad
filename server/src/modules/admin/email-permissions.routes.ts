@@ -55,7 +55,7 @@ router.get('/email/:email', async (req: Request, res: Response) => {
 router.post('/', async (req: Request, res: Response) => {
   try {
     console.log('📨 POST /api/admin/email-permissions - Request body:', req.body);
-    console.log('👤 User:', req.user);
+    console.log('👤 User:', (req as any).user);
     
     const { email, permissionType, scope, expiry, adminNote } = req.body;
     
@@ -92,14 +92,14 @@ router.post('/', async (req: Request, res: Response) => {
       scope: scope || 'one-time',
       expiry,
       adminNote,
-      createdBy: req.user?.email || req.user?.id?.toString() || 'unknown'
+      createdBy: (req as any).user?.email || (req as any).user?.id?.toString() || 'unknown'
     });
     
     console.log('✅ Permission created:', permission);
 
     // Log to audit
     await AdminAuditService.log({
-      adminId: req.user?.id?.toString() || 'unknown',
+      adminId: (req as any).user?.id?.toString() || 'unknown',
       action: 'CREATE_EMAIL_PERMISSION',
       targetId: permission.id?.toString(),
       entityType: 'email_permissions',
@@ -130,7 +130,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     // Log to audit
     await AdminAuditService.log({
-      adminId: req.user?.id?.toString() || 'unknown',
+      adminId: (req as any).user?.id?.toString() || 'unknown',
       action: 'UPDATE_EMAIL_PERMISSION',
       targetId: id,
       entityType: 'email_permissions',
@@ -154,7 +154,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
     // Log to audit
     await AdminAuditService.log({
-      adminId: req.user?.id?.toString() || 'unknown',
+      adminId: (req as any).user?.id?.toString() || 'unknown',
       action: 'DELETE_EMAIL_PERMISSION',
       targetId: id,
       entityType: 'email_permissions',

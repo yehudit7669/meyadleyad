@@ -164,7 +164,14 @@ export class UserManagementService {
   }
 
   // Export users to Excel
-  async exportUsersToExcel(filters?: { role?: string; search?: string }) {
+  async exportUsersToExcel(filters?: { 
+    role?: string; 
+    search?: string;
+    roleType?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
     const where: any = {};
 
     if (filters?.role) {
