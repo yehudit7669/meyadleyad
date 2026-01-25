@@ -17,8 +17,15 @@ router.get('/my-permissions', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    const permissions = await emailPermissionsService.getPermissionsByEmail(user.email);
-    res.json(permissions);
+    // Return empty array if table doesn't exist yet
+    try {
+      const permissions = await emailPermissionsService.getPermissionsByEmail(user.email);
+      res.json(permissions);
+    } catch (dbError) {
+      // If table doesn't exist, return empty array
+      console.log('Email permissions table not yet created, returning empty array');
+      res.json([]);
+    }
   } catch (error) {
     console.error('Error fetching user permissions:', error);
     res.status(500).json({ error: 'Failed to fetch permissions' });

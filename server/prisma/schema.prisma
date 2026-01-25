@@ -491,27 +491,72 @@ model PageView {
 }
 
 model MailingListSubscriber {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String?
-  isActive       Boolean   @default(true)
-  unsubscribedAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                        String    @id @default(cuid())
+  email                     String    @unique
+  name                      String?
+  status                    MailingListStatus @default(ACTIVE)
+  unsubscribedAt            DateTime?
+  blockedAt                 DateTime?
+  blockedBy                 String?
+  unsubscribeToken          String?   @unique
+  emailUpdatesEnabled       Boolean   @default(true)
+  emailUpdatesCategories    Json?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   @@index([email])
-  @@index([isActive])
+  @@index([status])
+}
+
+model ContentItem {
+  id                  String              @id @default(cuid())
+  title               String
+  type                ContentItemType
+  url                 String
+  thumbnailUrl        String?
+  status              ContentItemStatus   @default(NOT_DISTRIBUTED)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  createdBy           String
+  lastDistributedAt   DateTime?
+  distributionCount   Int                 @default(0)
+  ContentDistribution ContentDistribution[]
+
+  @@index([type])
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+model ContentDistribution {
+  id              String   @id @default(cuid())
+  contentItemId   String
+  mode            DistributionMode
+  recipientsCount Int      @default(0)
+  successCount    Int      @default(0)
+  failedCount     Int      @default(0)
+  distributedAt   DateTime @default(now())
+  distributedBy   String
+  contentItem     ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  ContentDispatchLog ContentDispatchLog[]
+
+  @@index([contentItemId])
+  @@index([distributedAt])
+  @@index([distributedBy])
 }
 
 model ContentDispatchLog {
-  id             String   @id @default(cuid())
-  fileName       String
-  fileUrl        String?
-  recipientEmail String
-  sentAt         DateTime @default(now())
-  status         String   @default("SENT")
-  errorMessage   String?
+  id                    String               @id @default(cuid())
+  contentDistributionId String?
+  fileName              String
+  fileUrl               String?
+  recipientEmail        String
+  sentAt                DateTime             @default(now())
+  status                DispatchStatus       @default(SENT)
+  errorMessage          String?
+  contentDistribution   ContentDistribution? @relation(fields: [contentDistributionId], references: [id], onDelete: SetNull)
 
+  @@index([contentDistributionId])
   @@index([recipientEmail])
   @@index([sentAt])
   @@index([status])
@@ -823,4 +868,33 @@ enum NewspaperSheetStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+enum MailingListStatus {
+  ACTIVE
+  OPT_OUT
+  BLOCKED
+}
+
+enum ContentItemType {
+  PDF
+  LINK
+}
+
+enum ContentItemStatus {
+  ACTIVE
+  NOT_DISTRIBUTED
+  ARCHIVED
+}
+
+enum DistributionMode {
+  INITIAL
+  REDISTRIBUTE
+  PUSH
+}
+
+enum DispatchStatus {
+  SENT
+  FAILED
+  PENDING
 }

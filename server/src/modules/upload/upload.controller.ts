@@ -56,4 +56,30 @@ export class UploadController {
       next(error);
     }
   }
+
+  /**
+   * POST /api/upload/file
+   * העלאת קובץ כללי (PDF, תמונה)
+   */
+  static async uploadFile(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.file) {
+        res.status(400).json({ error: 'לא הועלה קובץ' });
+        return;
+      }
+
+      // החזרת URL של הקובץ
+      const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      
+      res.json({
+        url: fileUrl,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

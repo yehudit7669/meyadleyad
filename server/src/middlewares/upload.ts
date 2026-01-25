@@ -48,3 +48,22 @@ export const uploadFloorPlan = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
   },
 });
+
+// PDF filter for content distribution
+const fileFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new ValidationError('סוג קובץ לא תקין. מותר: PDF, JPG, JPEG, PNG'));
+  }
+};
+
+// File upload (PDF or image, up to 20MB)
+export const uploadFile = multer({
+  storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 20 * 1024 * 1024, // 20MB
+  },
+});

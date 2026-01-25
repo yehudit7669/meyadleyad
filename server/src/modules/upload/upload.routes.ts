@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { UploadController } from './upload.controller';
 import { authenticate } from '../../middlewares/auth';
-import { upload } from '../../middlewares/upload';
+import { upload, uploadFile } from '../../middlewares/upload';
 
 const router = Router();
 
@@ -15,5 +15,8 @@ router.post('/image', authenticate, upload.single('image'), UploadController.upl
 
 // העלאת מספר תמונות
 router.post('/images', authenticate, upload.array('images', 15), UploadController.uploadImages);
+
+// העלאת קובץ כללי (PDF או תמונה)
+router.post('/file', authenticate, uploadFile.single('file'), UploadController.uploadFile);
 
 export default router;
