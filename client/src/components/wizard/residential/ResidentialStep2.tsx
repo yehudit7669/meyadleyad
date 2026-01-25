@@ -302,8 +302,13 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
           </label>
           <input
             type="number"
-            value={formData.houseNumber ?? ''}
+            value={formData.houseNumber === 0 ? '' : formData.houseNumber}
             onChange={(e) => handleChange('houseNumber', e.target.value ? parseInt(e.target.value, 10) : 0)}
+            onFocus={() => {
+              if (formData.houseNumber === 0) {
+                handleChange('houseNumber', '');
+              }
+            }}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
               errors.houseNumber ? 'border-red-500' : 'border-gray-300'
             }`}

@@ -144,8 +144,13 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
             </label>
             <input
               type="number"
-              value={formData.squareMeters ?? ''}
+              value={formData.squareMeters === 0 ? '' : formData.squareMeters}
               onChange={(e) => handleChange('squareMeters', e.target.value ? parseInt(e.target.value, 10) : 0)}
+              onFocus={() => {
+                if (formData.squareMeters === 0) {
+                  handleChange('squareMeters', '');
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.squareMeters ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -247,6 +252,8 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
             type="date"
             value={formData.entryDate}
             onChange={(e) => handleChange('entryDate', e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            max="2030-12-31"
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
               errors.entryDate ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -266,8 +273,13 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
             </label>
             <input
               type="number"
-              value={formData.price ?? ''}
+              value={formData.price === 0 ? '' : formData.price}
               onChange={(e) => handleChange('price', e.target.value ? parseInt(e.target.value, 10) : 0)}
+              onFocus={() => {
+                if (formData.price === 0) {
+                  handleChange('price', '');
+                }
+              }}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.price ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -284,8 +296,13 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
               </label>
               <input
                 type="number"
-                value={formData.arnona ?? ''}
+                value={formData.arnona === 0 ? '' : formData.arnona}
                 onChange={(e) => handleChange('arnona', e.target.value ? parseInt(e.target.value, 10) : 0)}
+                onFocus={() => {
+                  if (formData.arnona === 0) {
+                    handleChange('arnona', '');
+                  }
+                }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 placeholder="לדוגמה: 500"
                 min="0"
@@ -298,8 +315,13 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
               </label>
               <input
                 type="number"
-                value={formData.vaad ?? ''}
+                value={formData.vaad === 0 ? '' : formData.vaad}
                 onChange={(e) => handleChange('vaad', e.target.value ? parseInt(e.target.value, 10) : 0)}
+                onFocus={() => {
+                  if (formData.vaad === 0) {
+                    handleChange('vaad', '');
+                  }
+                }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 placeholder="לדוגמה: 300"
                 min="0"

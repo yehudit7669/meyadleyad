@@ -361,7 +361,12 @@ export const residentialStep3Schema = z.object({
   floor: z.number(),
   balconies: z.number().min(0).max(3),
   furniture: z.nativeEnum(FurnitureStatus),
-  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה'),
+  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה').refine((date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+  }, 'תאריך הכניסה חייב להיות היום או בעתיד'),
   price: z.number().min(1, 'יש להזין מחיר'),
   arnona: z.number().min(0),
   vaad: z.number().min(0),
@@ -689,7 +694,12 @@ export const wantedForSaleStep3Schema = z.object({
   priceRequested: z.number().min(1, 'יש להזין מחיר מבוקש'),
   arnona: z.number().min(0),
   vaad: z.number().min(0),
-  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה רצוי'),
+  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה רצוי').refine((date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+  }, 'תאריך הכניסה חייב להיות היום או בעתיד'),
 });
 
 export const wantedForSaleStep4Schema = z.object({
@@ -728,7 +738,12 @@ export const wantedForRentStep3Schema = z.object({
   priceRequested: z.number().min(1, 'יש להזין מחיר מבוקש'),
   arnona: z.number().min(0),
   vaad: z.number().min(0),
-  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה רצוי'),
+  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה רצוי').refine((date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+  }, 'תאריך הכניסה חייב להיות היום או בעתיד'),
 });
 
 export const wantedForRentStep4Schema = z.object({

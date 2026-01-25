@@ -145,8 +145,13 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           </label>
           <input
             type="number"
-            value={formData.squareMeters || ''}
+            value={formData.squareMeters === 0 ? '' : formData.squareMeters}
             onChange={(e) => handleChange('squareMeters', parseInt(e.target.value) || 0)}
+            onFocus={() => {
+              if (formData.squareMeters === 0) {
+                handleChange('squareMeters', '');
+              }
+            }}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.squareMeters ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -266,8 +271,13 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           </label>
           <input
             type="number"
-            value={formData.priceRequested || ''}
+            value={formData.priceRequested === 0 ? '' : formData.priceRequested}
             onChange={(e) => handleChange('priceRequested', parseInt(e.target.value) || 0)}
+            onFocus={() => {
+              if (formData.priceRequested === 0) {
+                handleChange('priceRequested', '');
+              }
+            }}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.priceRequested ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -280,8 +290,13 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">ארנונה</label>
           <input
             type="number"
-            value={formData.arnona || ''}
+            value={formData.arnona === 0 ? '' : formData.arnona}
             onChange={(e) => handleChange('arnona', parseInt(e.target.value) || 0)}
+            onFocus={() => {
+              if (formData.arnona === 0) {
+                handleChange('arnona', '');
+              }
+            }}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
             placeholder="₪"
           />
@@ -291,8 +306,13 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">ועד בית</label>
           <input
             type="number"
-            value={formData.vaad || ''}
+            value={formData.vaad === 0 ? '' : formData.vaad}
             onChange={(e) => handleChange('vaad', parseInt(e.target.value) || 0)}
+            onFocus={() => {
+              if (formData.vaad === 0) {
+                handleChange('vaad', '');
+              }
+            }}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
             placeholder="₪"
           />
@@ -308,6 +328,8 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           type="date"
           value={formData.entryDate}
           onChange={(e) => handleChange('entryDate', e.target.value)}
+          min={new Date().toISOString().split('T')[0]}
+          max="2030-12-31"
           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
             errors.entryDate ? 'border-red-500' : 'border-gray-300'
           }`}

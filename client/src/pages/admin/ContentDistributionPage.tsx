@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { FileText, Mail, BarChart3 } from 'lucide-react';
-import ContentTab from '../../components/admin/content-distribution/ContentTab';
-import MailingTab from '../../components/admin/content-distribution/MailingTab';
-import StatsTab from '../../components/admin/content-distribution/StatsTab';
+import ContentTab from '../../components/admin/content-distribution/ContentTab.tsx';
+import MailingTab from '../../components/admin/content-distribution/MailingTab.tsx';
+import StatsTab from '../../components/admin/content-distribution/StatsTab.tsx';
 
 type TabType = 'content' | 'mailing' | 'stats';
 
