@@ -252,7 +252,7 @@ function AddContentModal({ onClose, onSuccess }: { onClose: () => void; onSucces
     const formData = new FormData();
     formData.append('file', selectedFile);
 
-    const response = await api.post('/upload/file', formData, {
+    const response = await api.post<{ url: string }>('/upload/file', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

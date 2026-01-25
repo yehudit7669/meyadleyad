@@ -103,17 +103,17 @@ class ContentDistributionService {
   // ========== Content Items ==========
   
   async getContentItems(): Promise<ContentItem[]> {
-    const response = await api.get('/admin/content-distribution/content-items');
+    const response = await api.get<ContentItem[]>('/admin/content-distribution/content-items');
     return response.data;
   }
 
   async createContentItem(data: CreateContentItemDto): Promise<ContentItem> {
-    const response = await api.post('/admin/content-distribution/content-items', data);
+    const response = await api.post<ContentItem>('/admin/content-distribution/content-items', data);
     return response.data;
   }
 
   async updateContentItem(id: string, data: UpdateContentItemDto): Promise<ContentItem> {
-    const response = await api.patch(`/admin/content-distribution/content-items/${id}`, data);
+    const response = await api.patch<ContentItem>(`/admin/content-distribution/content-items/${id}`, data);
     return response.data;
   }
 
@@ -127,7 +127,12 @@ class ContentDistributionService {
     successCount: number;
     failedCount: number;
   }> {
-    const response = await api.post(
+    const response = await api.post<{
+      distributionId: string;
+      totalRecipients: number;
+      successCount: number;
+      failedCount: number;
+    }>(
       `/admin/content-distribution/content-items/${data.contentItemId}/distribute`,
       data
     );
@@ -138,17 +143,17 @@ class ContentDistributionService {
 
   async getSubscribers(status?: 'ACTIVE' | 'OPT_OUT' | 'BLOCKED'): Promise<MailingSubscriber[]> {
     const params = status ? { status } : {};
-    const response = await api.get('/admin/content-distribution/mailing-list', { params });
+    const response = await api.get<MailingSubscriber[]>('/admin/content-distribution/mailing-list', { params });
     return response.data;
   }
 
   async addSubscriber(data: AddSubscriberDto): Promise<MailingSubscriber> {
-    const response = await api.post('/admin/content-distribution/mailing-list', data);
+    const response = await api.post<MailingSubscriber>('/admin/content-distribution/mailing-list', data);
     return response.data;
   }
 
   async updateSubscriber(id: string, data: UpdateSubscriberDto): Promise<MailingSubscriber> {
-    const response = await api.patch(`/admin/content-distribution/mailing-list/${id}`, data);
+    const response = await api.patch<MailingSubscriber>(`/admin/content-distribution/mailing-list/${id}`, data);
     return response.data;
   }
 
@@ -159,19 +164,19 @@ class ContentDistributionService {
   // ========== Statistics ==========
 
   async getStats(): Promise<DistributionStats> {
-    const response = await api.get('/admin/content-distribution/stats');
+    const response = await api.get<DistributionStats>('/admin/content-distribution/stats');
     return response.data;
   }
 
   async exportStats(): Promise<Blob> {
-    const response = await api.get('/admin/content-distribution/stats/export', {
+    const response = await api.get<Blob>('/admin/content-distribution/stats/export', {
       responseType: 'blob',
     });
     return response.data;
   }
 
   async getDistributionHistory(limit: number = 50): Promise<DistributionHistory[]> {
-    const response = await api.get('/admin/content-distribution/history', {
+    const response = await api.get<DistributionHistory[]>('/admin/content-distribution/history', {
       params: { limit },
     });
     return response.data;

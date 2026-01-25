@@ -32,7 +32,7 @@ export function useEmailPermissions() {
 
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`${API_URL}/admin/email-permissions/my-permissions`, {
+        const response = await axios.get<EmailPermission[]>(`${API_URL}/admin/email-permissions/my-permissions`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
