@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
 import ServiceProviderWizard from './ServiceProviderWizard';
 import { ServiceProviderRegistrationData } from '../types';
+import { Eye, EyeOff } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup';
 type SignupType = 'regular' | 'service-provider' | null;
@@ -22,6 +23,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const [registrationType, setRegistrationType] = useState<SignupType>(null);
   const { login, register, registerServiceProvider } = useAuth();
   const navigate = useNavigate();
+  
+  // Password visibility states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -363,18 +369,28 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                 <label htmlFor="login-password" className="block text-sm font-medium mb-2">
                   סיסמה
                 </label>
-                <input
-                  id="login-password"
-                  type="password"
-                  name="password"
-                  value={loginData.password}
-                  onChange={handleLoginChange}
-                  aria-describedby={error ? 'auth-error' : undefined}
-                  aria-invalid={!!error}
-                  className="input"
-                  required
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showLoginPassword ? "text" : "password"}
+                    name="password"
+                    value={loginData.password}
+                    onChange={handleLoginChange}
+                    aria-describedby={error ? 'auth-error' : undefined}
+                    aria-invalid={!!error}
+                    className="input pr-10"
+                    required
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label={showLoginPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+                  >
+                    {showLoginPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between">
@@ -434,38 +450,58 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                 <label htmlFor="signup-password" className="block text-sm font-medium mb-2">
                   סיסמה *
                 </label>
-                <input
-                  id="signup-password"
-                  type="password"
-                  name="password"
-                  value={signupData.password}
-                  onChange={handleSignupChange}
-                  aria-describedby={error ? 'auth-error' : undefined}
-                  aria-invalid={!!error}
-                  className="input"
-                  required
-                  placeholder="לפחות 6 תווים"
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    id="signup-password"
+                    type={showSignupPassword ? "text" : "password"}
+                    name="password"
+                    value={signupData.password}
+                    onChange={handleSignupChange}
+                    aria-describedby={error ? 'auth-error' : undefined}
+                    aria-invalid={!!error}
+                    className="input pr-10"
+                    required
+                    placeholder="לפחות 6 תווים"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label={showSignupPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+                  >
+                    {showSignupPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label htmlFor="signup-confirm-password" className="block text-sm font-medium mb-2">
                   אימות סיסמה *
                 </label>
-                <input
-                  id="signup-confirm-password"
-                  type="password"
-                  name="confirmPassword"
-                  value={signupData.confirmPassword}
-                  onChange={handleSignupChange}
-                  aria-describedby={error ? 'auth-error' : undefined}
-                  aria-invalid={!!error}
-                  className="input"
-                  required
-                  placeholder="הזן סיסמה שוב"
-                  minLength={6}
-                />
+                <div className="relative">
+                  <input
+                    id="signup-confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={signupData.confirmPassword}
+                    onChange={handleSignupChange}
+                    aria-describedby={error ? 'auth-error' : undefined}
+                    aria-invalid={!!error}
+                    className="input pr-10"
+                    required
+                    placeholder="הזן סיסמה שוב"
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label={showConfirmPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ServiceProviderType } from '../types';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface WizardData {
   // שלב 1
@@ -340,12 +341,16 @@ const Step1ServiceType: React.FC<{
 const Step2PersonalDetails: React.FC<{
   data: WizardData;
   onChange: (field: keyof WizardData, value: string) => void;
-}> = ({ data, onChange }) => (
-  <div>
-    <h2 className="text-2xl font-bold mb-2">פרטים אישיים</h2>
-    <p className="text-gray-600 mb-6">מלא את הפרטים האישיים שלך</p>
+}> = ({ data, onChange }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-2">פרטים אישיים</h2>
+      <p className="text-gray-600 mb-6">מלא את הפרטים האישיים שלך</p>
 
-    <div className="space-y-4">
+      <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="firstName" className="block text-sm font-medium mb-1">
@@ -413,16 +418,26 @@ const Step2PersonalDetails: React.FC<{
         <label htmlFor="password" className="block text-sm font-medium mb-1">
           סיסמה <span className="text-red-500">*</span>
         </label>
-        <input
-          id="password"
-          type="password"
-          value={data.password}
-          onChange={(e) => onChange('password', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          minLength={6}
-          required
-          aria-required="true"
-        />
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={data.password}
+            onChange={(e) => onChange('password', e.target.value)}
+            className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            minLength={6}
+            required
+            aria-required="true"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
         <p className="text-xs text-gray-500 mt-1">לפחות 6 תווים</p>
       </div>
 
@@ -430,19 +445,30 @@ const Step2PersonalDetails: React.FC<{
         <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
           אימות סיסמה <span className="text-red-500">*</span>
         </label>
-        <input
-          id="confirmPassword"
-          type="password"
-          value={data.confirmPassword}
-          onChange={(e) => onChange('confirmPassword', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          required
-          aria-required="true"
-        />
+        <div className="relative">
+          <input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            value={data.confirmPassword}
+            onChange={(e) => onChange('confirmPassword', e.target.value)}
+            className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            required
+            aria-required="true"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            aria-label={showConfirmPassword ? "הסתר סיסמה" : "הצג סיסמה"}
+          >
+            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // Step 3: פרטי עסק
 const Step3BusinessDetails: React.FC<{
