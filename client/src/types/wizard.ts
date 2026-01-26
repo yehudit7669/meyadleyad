@@ -387,14 +387,14 @@ export const residentialStep3Schema = z.object({
 
 export const residentialStep4Schema = z.object({
   description: z.string()
-    .min(80, 'התיאור חייב להכיל לפחות 80 תווים')
-    .max(1200, 'התיאור חייב להיות עד 1200 תווים'),
+    .max(1200, 'התיאור חייב להיות עד 1200 תווים')
+    .optional(),
   images: z.array(z.object({
     url: z.string(),
     file: z.any().optional(),
     isPrimary: z.boolean(),
     order: z.number(),
-  })).min(3, 'נדרשות לפחות 3 תמונות').max(15, 'מקסימום 15 תמונות'),
+  })).max(15, 'מקסימום 15 תמונות').optional(),
   floorPlan: z.any().optional(),
 });
 

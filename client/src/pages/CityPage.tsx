@@ -113,9 +113,11 @@ export default function CityPage() {
                     className="w-full h-48 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-400 text-4xl">📷</span>
-                  </div>
+                  <img
+                    src="/default-ad-image.svg"
+                    alt="אין תמונה זמינה"
+                    className="w-full h-48 object-cover"
+                  />
                 )}
                 <div className="p-4">
                   <h3 className="font-bold text-lg mb-2 line-clamp-1">{ad.title}</h3>

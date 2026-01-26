@@ -73,7 +73,7 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
-        תיאור הנכס <span className="text-red-500">*</span>
+        תיאור הנכס (אופציונלי)
       </label>
       
       <textarea
@@ -84,7 +84,7 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent resize-none ${
           displayError
             ? 'border-red-500 focus:ring-red-500'
-            : isMinLengthMet
+            : charCount > 0
             ? 'border-green-500'
             : 'border-gray-300'
         }`}
@@ -94,12 +94,7 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
       {/* Character counter and validation messages */}
       <div className="flex items-center justify-between text-sm">
         <div className="flex flex-col gap-1">
-          {!isMinLengthMet && !displayError && (
-            <span className="text-amber-600">
-              נדרשים לפחות {minLength} תווים (נוכחי: {charCount})
-            </span>
-          )}
-          {isMinLengthMet && !displayError && (
+          {charCount > 0 && !displayError && (
             <span className="text-green-600">✓ אורך תקין</span>
           )}
           {displayError && (

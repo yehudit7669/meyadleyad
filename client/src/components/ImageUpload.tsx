@@ -135,7 +135,7 @@ export default function ImageUpload({
           <div className="text-blue-800">
             <div className="font-medium mb-1">טיפים להעלאת תמונות:</div>
             <ul className="space-y-1 text-blue-700">
-              <li>• <strong>חובה לפחות 3 תמונות</strong></li>
+              <li>• <strong>תמונות אופציונליות</strong></li>
               <li>• העלה עד {maxImages} תמונות</li>
               <li>• גודל מקסימלי לתמונה: 10MB</li>
               <li>• השתמש בתמונות באיכות גבוהה</li>
@@ -148,18 +148,11 @@ export default function ImageUpload({
 
       {/* מונה תמונות */}
       <div className={`text-center text-sm font-medium ${
-        previews.length < 3 
-          ? 'text-red-600' 
-          : previews.length >= maxImages 
-            ? 'text-green-600' 
-            : 'text-blue-600'
+        previews.length >= maxImages 
+          ? 'text-green-600' 
+          : 'text-blue-600'
       }`}>
         {previews.length} מתוך {maxImages} תמונות
-        {previews.length < 3 && (
-          <span className="block text-xs mt-1">
-            נדרשות לפחות {3 - previews.length} תמונות נוספות
-          </span>
-        )}
       </div>
     </div>
   );

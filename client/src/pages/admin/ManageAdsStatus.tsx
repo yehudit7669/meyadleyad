@@ -383,8 +383,8 @@ export default function ManageAdsStatus() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredAds.map((ad: any) => (
                     <tr key={ad.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 text-sm font-mono">#{ad.adNumber}</td>
-                      <td className="px-4 py-4 text-sm whitespace-nowrap">
+                      <td className="px-4 py-4 text-sm font-mono text-black">#{ad.adNumber}</td>
+                      <td className="px-4 py-4 text-sm whitespace-nowrap text-black">
                         {new Date(ad.createdAt).toLocaleDateString('he-IL')}
                       </td>
                       <td className="px-4 py-4 text-sm">

@@ -67,32 +67,32 @@ const ResidentialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Validate description (80-1200 chars)
-    if (formData.description.length < 80) {
-      newErrors.description = 'התיאור חייב להכיל לפחות 80 תווים';
-    } else if (formData.description.length > 1200) {
-      newErrors.description = 'התיאור חייב להיות עד 1200 תווים';
+    // Validate description only if provided
+    if (formData.description && formData.description.length > 0) {
+      if (formData.description.length > 1200) {
+        newErrors.description = 'התיאור חייב להיות עד 1200 תווים';
+      }
+
+      // Validate description content
+      const urlPattern = /(https?:\/\/|www\.)/i;
+      if (urlPattern.test(formData.description)) {
+        newErrors.description = 'אסור להכניס קישורים (http, https, www)';
+      }
+
+      const phonePattern = /(\d[\s.-]?){9,10}|05\d[-\s]?\d{7}/;
+      if (phonePattern.test(formData.description)) {
+        newErrors.description = 'אסור להכניס מספרי טלפון';
+      }
+
+      const promoWords = /מבצע|הזדמנות|הצעה מיוחדת|במחיר מיוחד|לזמן מוגבל/i;
+      if (promoWords.test(formData.description)) {
+        newErrors.description = 'אסור להכניס טקסט פרסומי';
+      }
     }
 
-    // Validate description content
-    const urlPattern = /(https?:\/\/|www\.)/i;
-    if (urlPattern.test(formData.description)) {
-      newErrors.description = 'אסור להכניס קישורים (http, https, www)';
-    }
-
-    const phonePattern = /(\d[\s.-]?){9,10}|05\d[-\s]?\d{7}/;
-    if (phonePattern.test(formData.description)) {
-      newErrors.description = 'אסור להכניס מספרי טלפון';
-    }
-
-    const promoWords = /מבצע|הזדמנות|הצעה מיוחדת|במחיר מיוחד|לזמן מוגבל/i;
-    if (promoWords.test(formData.description)) {
-      newErrors.description = 'אסור להכניס טקסט פרסומי';
-    }
-
-    // Validate images (minimum 3)
-    if (formData.images.length < 3) {
-      newErrors.images = 'נדרשות לפחות 3 תמונות';
+    // Images are optional - no minimum required
+    if (formData.images.length > 15) {
+      newErrors.images = 'מקסימום 15 תמונות';
     }
 
     setErrors(newErrors);
@@ -129,7 +129,7 @@ const ResidentialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
           <PropertyImagesUpload
             images={formData.images}
             onChange={handleImagesChange}
-            minImages={3}
+            minImages={0}
             maxImages={15}
             maxFileSize={5}
           />
@@ -158,8 +158,7 @@ const ResidentialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
         <button
           type="button"
           onClick={handleNext}
-          className="px-8 py-3 bg-[#C9A24D] text-[#1F3F3A] rounded-lg font-bold hover:bg-[#B08C3C] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={formData.description.length < 80 || formData.images.length < 3}
+          className="px-8 py-3 bg-[#C9A24D] text-[#1F3F3A] rounded-lg font-bold hover:bg-[#B08C3C] transition-all shadow-lg hover:shadow-xl"
         >
           הבא →
         </button>

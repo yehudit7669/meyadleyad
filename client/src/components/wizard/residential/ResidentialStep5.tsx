@@ -8,7 +8,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
     data || {
       contactName: '',
       contactPhone: '',
-      agreeToTerms: false,
+      agreeToTerms: true, // Always true since we removed the checkbox
     }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -118,44 +118,6 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
           </div>
         </div>
 
-        {/* Terms Agreement */}
-        <div className="p-6 bg-gray-50 rounded-xl">
-          <label className="flex items-start gap-3 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={formData.agreeToTerms}
-              onChange={(e) => handleChange('agreeToTerms', e.target.checked)}
-              className="mt-1 w-5 h-5 text-[#C9A24D] border-gray-300 rounded focus:ring-[#C9A24D] cursor-pointer"
-            />
-            <div className="flex-1">
-              <span className="text-sm text-gray-900">
-                אני מאשר/ת את{' '}
-                <a
-                  href="/terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#C9A24D] hover:underline font-medium"
-                >
-                  תנאי השימוש
-                </a>{' '}
-                ו
-                <a
-                  href="/privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#C9A24D] hover:underline font-medium"
-                >
-                  מדיניות הפרטיות
-                </a>{' '}
-                של האתר <span className="text-red-500">*</span>
-              </span>
-            </div>
-          </label>
-          {errors.agreeToTerms && (
-            <p className="mt-2 text-sm text-red-500 mr-8">{errors.agreeToTerms}</p>
-          )}
-        </div>
-
       </div>
 
       {/* Navigation */}
@@ -170,12 +132,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
         <button
           type="button"
           onClick={handleNext}
-          disabled={!formData.agreeToTerms}
-          className={`px-8 py-3 rounded-lg font-bold transition-all ${
-            formData.agreeToTerms
-              ? 'bg-[#C9A24D] text-[#1F3F3A] hover:bg-[#B08C3C] shadow-lg hover:shadow-xl'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
+          className="px-8 py-3 bg-[#C9A24D] text-[#1F3F3A] hover:bg-[#B08C3C] shadow-lg hover:shadow-xl rounded-lg font-bold transition-all"
         >
           המשך לתצוגה מקדימה →
         </button>

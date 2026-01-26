@@ -18,7 +18,7 @@ interface PropertyImagesUploadProps {
 const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
   images,
   onChange,
-  minImages = 3,
+  minImages = 0,
   maxImages = 15,
   maxFileSize = 5, // 5MB default
 }) => {
@@ -185,7 +185,7 @@ const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
           גרור תמונות לכאן או לחץ לבחירה
         </p>
         <p className="text-sm text-gray-500">
-          JPG, JPEG, PNG עד {maxFileSize}MB | {minImages}-{maxImages} תמונות
+          JPG, JPEG, PNG עד {maxFileSize}MB | עד {maxImages} תמונות (אופציונלי)
         </p>
       </div>
 
@@ -199,15 +199,10 @@ const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
       {/* Validation Status */}
       <div className="flex items-center gap-2 text-sm">
         {images.length === 0 && (
-          <span className="text-amber-600">⚠ נדרשות לפחות {minImages} תמונות</span>
+          <span className="text-blue-600">ℹ️ תמונות אופציונליות - מומלץ להעלות כמה שיותר</span>
         )}
-        {images.length > 0 && !isMinimumMet && (
-          <span className="text-amber-600">
-            עוד {minImages - images.length} תמונות נדרשות ({images.length}/{minImages})
-          </span>
-        )}
-        {isMinimumMet && (
-          <span className="text-green-600">✓ מספר תמונות תקין ({images.length}/{maxImages})</span>
+        {images.length > 0 && (
+          <span className="text-green-600">✓ {images.length} תמונות הועלו ({images.length}/{maxImages})</span>
         )}
       </div>
 

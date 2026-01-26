@@ -35,7 +35,7 @@ const residentialDescriptionSchema = z.string()
 export const createAdSchema = z.object({
   body: z.object({
     title: z.string().min(5, 'כותרת חייבת להכיל לפחות 5 תווים').max(200, 'כותרת חייבת להיות עד 200 תווים'),
-    description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים'),
+    description: z.string().optional().or(z.literal('')),
     price: z.number().positive('מחיר חייב להיות חיובי').optional(),
     categoryId: z.string().min(1, 'קטגוריה לא תקינה'),
     adType: z.string().optional(), // Optional for regular ads for backwards compatibility
@@ -51,8 +51,8 @@ export const createAdSchema = z.object({
     sendCopyToEmail: z.boolean().optional().default(true),
   }),
 }).superRefine((data, ctx) => {
-  // Apply strict description validation for FOR_SALE and FOR_RENT ads
-  if (data.body.adType === 'FOR_SALE' || data.body.adType === 'FOR_RENT') {
+  // Apply strict description validation for FOR_SALE and FOR_RENT ads only if description is provided
+  if ((data.body.adType === 'FOR_SALE' || data.body.adType === 'FOR_RENT') && data.body.description) {
     const result = residentialDescriptionSchema.safeParse(data.body.description);
     if (!result.success) {
       ctx.addIssue({
@@ -68,7 +68,7 @@ export const createAdSchema = z.object({
 export const createWantedAdSchema = z.object({
   body: z.object({
     title: z.string().min(5, 'כותרת חייבת להכיל לפחות 5 תווים').max(200, 'כותרת חייבת להיות עד 200 תווים'),
-    description: z.string().min(10, 'תיאור חייב להכיל לפחות 10 תווים'),
+    description: z.string().optional().or(z.literal('')),
     price: z.number().nonnegative('מחיר חייב להיות חיובי או 0').optional(),
     categoryId: z.string().min(1, 'קטגוריה לא תקינה'),
     adType: z.enum(['WANTED_FOR_SALE', 'WANTED_FOR_RENT', 'WANTED_HOLIDAY', 'WANTED_COMMERCIAL']),

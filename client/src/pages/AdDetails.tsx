@@ -388,9 +388,11 @@ export default function AdDetails() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-400 text-xl">אין תמונה</span>
-                        </div>
+                        <img
+                          src="/default-ad-image.svg"
+                          alt="אין תמונה זמינה"
+                          className="w-full h-full object-cover"
+                        />
                       )}
                     </div>
                     {/* Pin Pointer */}

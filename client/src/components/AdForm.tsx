@@ -139,10 +139,7 @@ export default function AdForm({
       alert('נא למלא את כל השדות החובה');
       return;
     }
-    if (step === 2 && !formData.description) {
-      alert('נא למלא תיאור');
-      return;
-    }
+    // התיאור אופציונלי - אין צורך בוולידציה
     setStep(step + 1);
   };
 
@@ -399,10 +396,9 @@ export default function AdForm({
           <h2 className="text-2xl font-bold mb-6">תיאור המודעה</h2>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">תיאור *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">תיאור (אופציונלי)</label>
             <textarea
               name="description"
-              required
               value={formData.description}
               onChange={handleChange}
               rows={10}

@@ -84,9 +84,11 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-            <span className="text-gray-400 text-5xl">📷</span>
-          </div>
+          <img
+            src="/default-ad-image.svg"
+            alt="אין תמונה זמינה"
+            className="w-full h-48 object-cover"
+          />
         )}
         {featured && (
           <div className="absolute top-2 right-2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
