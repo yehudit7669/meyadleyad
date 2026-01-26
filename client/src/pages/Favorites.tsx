@@ -9,7 +9,10 @@ export default function Favorites() {
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['favorites'],
     queryFn: () => profileService.getFavorites(),
+    staleTime: 0, // תמיד לרענן
   }) as { data: any[] | undefined; isLoading: boolean };
+
+  console.log('Favorites data:', favorites); // לוג לבדיקה
 
   return (
     <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
@@ -34,9 +37,11 @@ export default function Favorites() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favorites.map((favorite: any) => (
-              <AdCard key={favorite.id} ad={favorite.ad} />
-            ))}
+            {favorites.map((favorite: any) => {
+              // התאמה למבנה הנתונים שחוזר מהשרת
+              const adData = favorite.ad || favorite;
+              return <AdCard key={favorite.id} ad={adData} />;
+            })}
           </div>
         )}
 

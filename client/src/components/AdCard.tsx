@@ -34,25 +34,51 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
     queryFn: () => profileService.getFavorites(100),
     enabled: !!localStorage.getItem('accessToken'),
     retry: false,
+    staleTime: 0, // תמיד לוודא שהנתונים עדכניים
+    initialData: [], // התחלה עם מערך ריק
   });
 
   const isFavorite = favorites?.some((fav: any) => fav.adId === ad.id) || isFavoriteOptimistic;
 
   const toggleFavoriteMutation = useMutation({
-    mutationFn: async () => {
-      if (isFavorite) {
-        await profileService.removeFavorite(ad.id);
-      } else {
+    mutationFn: async (shouldAdd: boolean) => {
+      if (shouldAdd) {
         await profileService.addFavorite(ad.id);
+      } else {
+        await profileService.removeFavorite(ad.id);
       }
     },
-    onMutate: () => {
-      setIsFavoriteOptimistic(!isFavorite);
+    onMutate: async (shouldAdd: boolean) => {
+      // ביטול queries קודמות
+      await queryClient.cancelQueries({ queryKey: ['favorites'] });
+      
+      // שמירת הערך הקודם
+      const previousFavorites = queryClient.getQueryData(['favorites']);
+      
+      // עדכון אופטימיסטי
+      setIsFavoriteOptimistic(shouldAdd);
+      queryClient.setQueryData(['favorites'], (oldData: any) => {
+        if (!oldData) return oldData;
+        if (shouldAdd) {
+          // הוספה למועדפים
+          return [...oldData, { adId: ad.id, id: ad.id, createdAt: new Date().toISOString() }];
+        } else {
+          // הסרה מהמועדפים
+          return oldData.filter((fav: any) => fav.adId !== ad.id);
+        }
+      });
+      
+      return { previousFavorites };
     },
     onSuccess: () => {
+      // רענון המועדפים
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
-    onError: () => {
+    onError: (err, shouldAdd, context) => {
+      // החזרה למצב הקודם במקרה של שגיאה
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(['favorites'], context.previousFavorites);
+      }
       setIsFavoriteOptimistic(isFavorite);
     },
   });
@@ -66,7 +92,13 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
       return;
     }
     
-    toggleFavoriteMutation.mutate();
+    // מניעת לחיצה כפולה
+    if (toggleFavoriteMutation.isPending) {
+      return;
+    }
+    
+    // שליחת הפעולה עם הפרמטר הנכון
+    toggleFavoriteMutation.mutate(!isFavorite);
   };
   return (
     <Link
@@ -98,11 +130,12 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
         {/* כפתור לב */}
         <button
           onClick={handleFavoriteClick}
+          disabled={toggleFavoriteMutation.isPending}
           className={`absolute top-2 left-2 w-10 h-10 rounded-full border-2 flex items-center justify-center shadow-md transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
             isFavorite 
               ? 'bg-red-500 border-red-600 text-white hover:bg-red-600 focus:ring-red-500' 
               : 'bg-white border-gray-300 text-gray-400 hover:bg-gray-50 focus:ring-gray-400'
-          }`}
+          } ${toggleFavoriteMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           aria-label={isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'}
           title={isFavorite ? 'הסר מהמועדפים' : 'הוסף למועדפים'}
         >
