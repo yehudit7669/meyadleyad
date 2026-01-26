@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import CategoryWithCities from './CategoryWithCities';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -46,38 +47,22 @@ const Header: React.FC = () => {
 
           {/* Center - Navigation Categories */}
           <nav className="hidden md:flex items-center space-x-8 space-x-reverse" aria-label="ניווט ראשי">
-            <Link 
-              to="/category/apartments-for-sale" 
-              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium relative group py-2"
-              aria-label="דירות למכירה"
-            >
-              דירות למכירה
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A24D] transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
-            </Link>
-            <Link 
-              to="/category/apartments-for-rent" 
-              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium relative group py-2"
-              aria-label="דירות להשכרה"
-            >
-              דירות להשכרה
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A24D] transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
-            </Link>
-            <Link 
-              to="/category/commercial-real-estate" 
-              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium relative group py-2"
-              aria-label="נדל״ן מסחרי"
-            >
-              נדל״ן מסחרי
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A24D] transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
-            </Link>
-            <Link 
-              to="/category/second-hand-board" 
-              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium relative group py-2"
-              aria-label="לוח יד שניה"
-            >
-              לוח יד שניה
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A24D] transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
-            </Link>
+            <CategoryWithCities 
+              categorySlug="apartments-for-sale"
+              categoryName="דירות למכירה"
+            />
+            <CategoryWithCities 
+              categorySlug="apartments-for-rent"
+              categoryName="דירות להשכרה"
+            />
+            <CategoryWithCities 
+              categorySlug="commercial-real-estate"
+              categoryName='נדל״ן מסחרי'
+            />
+            <CategoryWithCities 
+              categorySlug="second-hand-board"
+              categoryName="לוח יד שניה"
+            />
           </nav>
 
           {/* Right Side (RTL) - Actions */}
@@ -204,34 +189,26 @@ const Header: React.FC = () => {
               {/* Categories */}
               <div className="border-b border-[#C9A24D]/30 pb-4">
                 <p className="text-xs text-[#C9A24D] mb-3 font-semibold px-2">קטגוריות</p>
-                <Link 
-                  to="/category/apartments-for-sale" 
-                  className="block text-[#E6D3A3] hover:text-[#C9A24D] py-2 px-2 transition"
-                  aria-label="דירות למכירה"
-                >
-                  🏠 דירות למכירה
-                </Link>
-                <Link 
-                  to="/category/apartments-for-rent" 
-                  className="block text-[#E6D3A3] hover:text-[#C9A24D] py-2 px-2 transition"
-                  aria-label="דירות להשכרה"
-                >
-                  🔑 דירות להשכרה
-                </Link>
-                <Link 
-                  to="/category/commercial-real-estate" 
-                  className="block text-[#E6D3A3] hover:text-[#C9A24D] py-2 px-2 transition"
-                  aria-label="נדל״ן מסחרי"
-                >
-                  🏢 נדל״ן מסחרי
-                </Link>
-                <Link 
-                  to="/category/second-hand-board" 
-                  className="block text-[#E6D3A3] hover:text-[#C9A24D] py-2 px-2 transition"
-                  aria-label="לוח יד שניה"
-                >
-                  🛍️ לוח יד שניה
-                </Link>
+                <CategoryWithCities 
+                  categorySlug="apartments-for-sale"
+                  categoryName="🏠 דירות למכירה"
+                  isMobile={true}
+                />
+                <CategoryWithCities 
+                  categorySlug="apartments-for-rent"
+                  categoryName="🔑 דירות להשכרה"
+                  isMobile={true}
+                />
+                <CategoryWithCities 
+                  categorySlug="commercial-real-estate"
+                  categoryName='🏢 נדל״ן מסחרי'
+                  isMobile={true}
+                />
+                <CategoryWithCities 
+                  categorySlug="second-hand-board"
+                  categoryName="🛍️ לוח יד שניה"
+                  isMobile={true}
+                />
               </div>
               
               {user ? (

@@ -197,6 +197,8 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
     let successCount = 0;
     let failedCount = 0;
     const errors: any[] = [];
+    const createdCityIds: string[] = [];
+    const createdStreetIds: string[] = [];
 
     // Use transaction with extended timeout for large imports
     await prisma.$transaction(async (tx) => {
@@ -218,9 +220,14 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
             continue;
           }
 
-          // Check if city exists first
-          let city = await tx.city.findUnique({
-            where: { name: cityName },
+          // Check if city exists - search by both name and nameHe
+          let city = await tx.city.findFirst({
+            where: {
+              OR: [
+                { name: cityName },
+                { nameHe: cityName },
+              ],
+            },
           });
 
           if (!city) {
@@ -235,15 +242,20 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
                 updatedAt: new Date(),
               },
             });
-          } else if (!mergeMode) {
-            // Update existing city if not in merge mode
-            city = await tx.city.update({
-              where: { id: city.id },
-              data: {
-                nameHe: cityName,
-                updatedAt: new Date(),
-              },
-            });
+            createdCityIds.push(city.id);
+            console.log(`✅ Created new city: ${cityName} (${city.id})`);
+          } else {
+            console.log(`ℹ️ City already exists: ${cityName} (${city.id})`);
+            if (!mergeMode) {
+              // Update existing city if not in merge mode
+              city = await tx.city.update({
+                where: { id: city.id },
+                data: {
+                  nameHe: cityName,
+                  updatedAt: new Date(),
+                },
+              });
+            }
           }
 
           // Handle neighborhood if provided
@@ -292,7 +304,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
 
           if (!existingStreet) {
             // Create new street only if it doesn't exist
-            await tx.street.create({
+            const newStreet = await tx.street.create({
               data: {
                 id: `street-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 name: streetName,
@@ -302,6 +314,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
                 updatedAt: new Date(),
               },
             });
+            createdStreetIds.push(newStreet.id);
             successCount++;
           } else if (!mergeMode) {
             // Update existing street if not in merge mode
@@ -341,6 +354,10 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
           successRows: successCount,
           failedRows: failedCount,
           errors: errors.length > 0 ? errors : undefined,
+          metadata: {
+            cityIds: createdCityIds,
+            streetIds: createdStreetIds,
+          },
         },
       });
     } catch (logError) {
@@ -538,6 +555,7 @@ router.post('/properties/commit', async (req: Request, res: Response): Promise<v
     let successCount = 0;
     let failedCount = 0;
     const errors: any[] = [];
+    const createdAdIds: string[] = [];
 
     // Use transaction
     await prisma.$transaction(async (tx) => {
@@ -591,7 +609,7 @@ router.post('/properties/commit', async (req: Request, res: Response): Promise<v
           if (floor) customFields.floor = floor;
           if (size) customFields.size = size;
 
-          await tx.ad.create({
+          const newAd = await tx.ad.create({
             data: {
               id: `ad-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               title,
@@ -607,6 +625,7 @@ router.post('/properties/commit', async (req: Request, res: Response): Promise<v
             },
           });
 
+          createdAdIds.push(newAd.id);
           successCount++;
         } catch (error: any) {
           failedCount++;
@@ -624,6 +643,7 @@ router.post('/properties/commit', async (req: Request, res: Response): Promise<v
           successRows: successCount,
           failedRows: failedCount,
           errors: errors.length > 0 ? errors : undefined,
+          importedItemIds: createdAdIds,
         },
       });
     });
@@ -846,6 +866,7 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
     let failedCount = 0;
     const errors: any[] = [];
     const results: any[] = [];
+    const createdAdIds: string[] = [];
 
     // Use transaction
     await prisma.$transaction(async (tx) => {
@@ -903,6 +924,7 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
             },
           });
 
+          createdAdIds.push(newAd.id);
           successCount++;
           results.push({
             rowIndex: row.rowNumber,
@@ -933,6 +955,7 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
           successRows: successCount,
           failedRows: failedCount,
           errors: errors.length > 0 ? errors : undefined,
+          importedItemIds: createdAdIds,
         },
       });
     });

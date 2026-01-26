@@ -150,11 +150,27 @@ const menuItems: MenuItem[] = [
 // TODO: כאשר יהיו roles מדויקים (SUPER_ADMIN, MODERATOR), להשתמש בהם
 // כרגע: כל ADMIN נחשב כ-SUPER_ADMIN (עד שיתווסף שדה role)
 function getUserRole(user: any): 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null {
-  if (!user?.isAdmin) return null;
+  if (!user) {
+    console.log('⚠️ getUserRole: No user');
+    return null;
+  }
   
-  // TODO: כאשר יהיה user.role, להשתמש בו ישירות
-  // כרגע כל ADMIN נחשב כ-SUPER_ADMIN
-  return 'SUPER_ADMIN';
+  // Check if user has role field (from backend)
+  if (user.role) {
+    console.log('✅ getUserRole: Using user.role =', user.role);
+    if (['SUPER_ADMIN', 'ADMIN', 'MODERATOR'].includes(user.role)) {
+      return user.role as 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR';
+    }
+  }
+  
+  // Fallback to isAdmin check
+  if (user.isAdmin) {
+    console.log('✅ getUserRole: User is admin (fallback)');
+    return 'SUPER_ADMIN';
+  }
+  
+  console.log('⚠️ getUserRole: User has no admin access', { user });
+  return null;
 }
 
 function hasAccess(userRole: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null, requiredRoles: MenuItem['requiredRoles']): boolean {
@@ -174,6 +190,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const userRole = getUserRole(user);
   const allowedMenuItems = menuItems.filter(item => hasAccess(userRole, item.requiredRoles));
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('👤 AdminLayout render:', {
+      user: user ? { id: user.id, role: user.role, isAdmin: user.isAdmin } : null,
+      userRole,
+      allowedMenuItemsCount: allowedMenuItems.length,
+      location: location.pathname,
+    });
+  }, [user, userRole, allowedMenuItems.length, location.pathname]);
 
   const isActive = (path?: string) => {
     if (!path) return false;

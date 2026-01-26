@@ -183,7 +183,7 @@ export class UsersAdminController {
       const buffer = await usersService.exportUsers(query, requestorRole);
       
       // Log export action
-      const AdminAuditService = (await import('../admin-audit.service')).AdminAuditService;
+      const AdminAuditService = (await import('../admin-audit.service.js')).AdminAuditService;
       await AdminAuditService.log({
         adminId,
         action: 'ADMIN_EXPORT_USERS',

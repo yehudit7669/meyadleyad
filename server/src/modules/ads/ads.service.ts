@@ -535,6 +535,7 @@ export class AdsService {
     limit?: number;
     categoryId?: string;
     cityId?: string;
+    cities?: string; // Comma-separated city slugs
     minPrice?: number;
     maxPrice?: number;
     search?: string;
@@ -551,7 +552,25 @@ export class AdsService {
       where.categoryId = filters.categoryId;
     }
 
-    if (filters.cityId) {
+    // Handle multiple cities filter
+    if (filters.cities) {
+      const citySlugs = filters.cities.split(',').map(s => s.trim()).filter(Boolean);
+      if (citySlugs.length > 0) {
+        // First get all city IDs from slugs
+        const cities = await prisma.city.findMany({
+          where: {
+            slug: { in: citySlugs }
+          },
+          select: { id: true }
+        });
+        
+        const cityIds = cities.map(c => c.id);
+        if (cityIds.length > 0) {
+          where.cityId = { in: cityIds };
+        }
+      }
+    } else if (filters.cityId) {
+      // Single city filter (backward compatibility)
       where.cityId = filters.cityId;
     }
 

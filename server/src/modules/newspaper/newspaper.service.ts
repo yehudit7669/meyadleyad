@@ -215,7 +215,7 @@ export class NewspaperService {
     }
 
     // Use the new newspaper-sheets service
-    const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service');
+    const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service.js');
     const result = await newspaperSheetService.generateSheetPDF(newspaperAdId, userId);
 
     // Log regeneration

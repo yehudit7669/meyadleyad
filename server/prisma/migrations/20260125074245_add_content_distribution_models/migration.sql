@@ -23,10 +23,10 @@ CREATE TYPE "DistributionMode" AS ENUM ('INITIAL', 'REDISTRIBUTE', 'PUSH');
 CREATE TYPE "DispatchStatus" AS ENUM ('SENT', 'FAILED', 'PENDING');
 
 -- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- DropIndex
-DROP INDEX "MailingListSubscriber_isActive_idx";
+DROP INDEX IF EXISTS "MailingListSubscriber_isActive_idx";
 
 -- AlterTable
 ALTER TABLE "ContentDispatchLog" ADD COLUMN     "contentDistributionId" TEXT,

@@ -116,6 +116,7 @@ export const getAdsSchema = z.object({
     limit: z.string().optional(),
     categoryId: z.string().optional(),
     cityId: z.string().optional(),
+    cities: z.string().optional(), // Support multiple cities as comma-separated string
     minPrice: z.string().optional(),
     maxPrice: z.string().optional(),
     search: z.string().optional(),

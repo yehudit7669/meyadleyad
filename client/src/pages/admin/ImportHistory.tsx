@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { Download, FileSpreadsheet, MapPin, History, FileText, Trash2, Eye, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { importHistoryService } from '../../services/api';
+import { History, FileText, Trash2, Eye, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
 interface ImportLog {
   id: string;
@@ -18,7 +17,7 @@ interface ImportLog {
   createdAt: string;
 }
 
-export default function ImportsPage() {
+export default function ImportHistoryPage() {
   const [page, setPage] = useState(1);
   const [importTypeFilter, setImportTypeFilter] = useState('');
   const [selectedImport, setSelectedImport] = useState<ImportLog | null>(null);
@@ -113,205 +112,158 @@ export default function ImportsPage() {
     setShowDetailsModal(true);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">טוען...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto" dir="rtl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-black">ייבוא ונתונים חיצוניים</h1>
-        <p className="text-black mt-2">
-          ניהול ייבוא נתונים ממקורות חיצוניים למערכת
+        <h1 className="text-2xl font-bold text-black flex items-center gap-2">
+          <History className="w-6 h-6" />
+          היסטוריית ייבוא
+        </h1>
+        <p className="text-gray-600 mt-2">
+          צפייה וניהול של כל הייבואים שבוצעו במערכת
         </p>
       </div>
 
-      {/* Import Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Cities & Streets Import */}
-        <Link
-          to="/admin/import-cities"
-          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-2 border-transparent hover:border-[#1F3F3A]"
-        >
-          <div className="flex items-start gap-4">
-            <div className="bg-[#1F3F3A]/10 p-3 rounded-lg">
-              <MapPin className="w-8 h-8 text-[#1F3F3A]" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-black mb-2">ייבוא ערים ורחובות</h2>
-              <p className="text-black text-sm mb-3">
-                ייבוא ערים, רחובות ושכונות מקובץ XLSX או CSV
-              </p>
-              <ul className="text-sm text-gray-500 space-y-1">
-                <li>• תמיכה ב-XLSX ו-CSV</li>
-                <li>• בדיקות תקינות מקדימות</li>
-                <li>• אפשרויות מיזוג או החלפה</li>
-              </ul>
-            </div>
-          </div>
-        </Link>
-
-        {/* Properties Import */}
-        <Link
-          to="/admin/import-ads"
-          className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-2 border-transparent hover:border-[#1F3F3A]"
-        >
-          <div className="flex items-start gap-4">
-            <div className="bg-[#1F3F3A]/10 p-3 rounded-lg">
-              <FileSpreadsheet className="w-8 h-8 text-[#1F3F3A]" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-black mb-2">ייבוא נכסים מקובץ</h2>
-              <p className="text-black text-sm mb-3">
-                ייבוא מודעות נכסים מקובץ XLSX
-              </p>
-              <ul className="text-sm text-gray-500 space-y-1">
-                <li>• תמיכה ב-XLSX בלבד</li>
-                <li>• בדיקות תקינות מקדימות</li>
-                <li>• ללא פרסום אוטומטי</li>
-              </ul>
-            </div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Import History */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <History className="w-6 h-6 text-[#1F3F3A]" />
-            <h2 className="text-xl font-semibold text-black">היסטוריית ייבוא</h2>
-          </div>
-
-          {/* Filters */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-black">סנן לפי סוג:</label>
-            <select
-              value={importTypeFilter}
-              onChange={(e) => {
-                setImportTypeFilter(e.target.value);
-                setPage(1);
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1F3F3A]"
-            >
-              <option value="">הכל</option>
-              <option value="PROPERTIES">ייבוא נכסים</option>
-              <option value="PROPERTIES_FILE">ייבוא נכסים מקובץ</option>
-              <option value="CITIES_STREETS">ייבוא ערים ורחובות</option>
-            </select>
-          </div>
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium text-black">סנן לפי סוג:</label>
+          <select
+            value={importTypeFilter}
+            onChange={(e) => {
+              setImportTypeFilter(e.target.value);
+              setPage(1);
+            }}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1F3F3A]"
+          >
+            <option value="">הכל</option>
+            <option value="PROPERTIES">ייבוא נכסים</option>
+            <option value="PROPERTIES_FILE">ייבוא נכסים מקובץ</option>
+            <option value="CITIES_STREETS">ייבוא ערים ורחובות</option>
+          </select>
         </div>
-
-        {isLoading ? (
-          <div className="text-center py-8 text-gray-500">טוען...</div>
-        ) : imports.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Download className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>אין היסטוריית ייבוא</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      תאריך
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      סוג ייבוא
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      שם קובץ
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      סה"כ שורות
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      הצלחה
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      כישלון
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                      פעולות
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {imports.map((importLog: ImportLog) => (
-                    <tr key={importLog.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-black whitespace-nowrap">
-                        {new Date(importLog.createdAt).toLocaleString('he-IL')}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {getImportTypeLabel(importLog.importType)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-black max-w-xs truncate">
-                        {importLog.fileName}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-black">{importLog.totalRows}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="flex items-center gap-1 text-green-600">
-                          <CheckCircle className="w-4 h-4" />
-                          {importLog.successRows}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="flex items-center gap-1 text-red-600">
-                          <XCircle className="w-4 h-4" />
-                          {importLog.failedRows}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleViewDetails(importLog)}
-                            className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                            title="צפייה בפרטים"
-                          >
-                            <Eye className="w-4 h-4" />
-                            צפה
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(importLog)}
-                            className="text-red-600 hover:text-red-800 flex items-center gap-1"
-                            title="מחיקת ייבוא"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            מחק
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="mt-6 flex justify-center gap-2">
-                <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className="px-4 py-2 bg-[#1F3F3A] text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  הקודם
-                </button>
-                <span className="px-4 py-2 text-black">
-                  עמוד {page} מתוך {pagination.totalPages}
-                </span>
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === pagination.totalPages}
-                  className="px-4 py-2 bg-[#1F3F3A] text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  הבא
-                </button>
-              </div>
-            )}
-          </>
-        )}
       </div>
+
+      {/* Import List */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                תאריך
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                סוג ייבוא
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                שם קובץ
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                סה״כ שורות
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                הצלחות
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                כשלונות
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                פעולות
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {imports.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  אין היסטוריית ייבוא
+                </td>
+              </tr>
+            ) : (
+              imports.map((importLog: ImportLog) => (
+                <tr key={importLog.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {new Date(importLog.createdAt).toLocaleString('he-IL')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {getImportTypeLabel(importLog.importType)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {importLog.fileName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {importLog.totalRows}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="flex items-center gap-1 text-sm text-green-600">
+                      <CheckCircle className="w-4 h-4" />
+                      {importLog.successRows}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="flex items-center gap-1 text-sm text-red-600">
+                      <XCircle className="w-4 h-4" />
+                      {importLog.failedRows}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleViewDetails(importLog)}
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        title="צפייה בפרטים"
+                      >
+                        <Eye className="w-4 h-4" />
+                        צפה
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(importLog)}
+                        className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                        title="מחיקת ייבוא"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        מחק
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="mt-6 flex justify-center gap-2">
+          <button
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+            className="px-4 py-2 bg-[#1F3F3A] text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            הקודם
+          </button>
+          <span className="px-4 py-2 text-black">
+            עמוד {page} מתוך {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage(page + 1)}
+            disabled={page === pagination.totalPages}
+            className="px-4 py-2 bg-[#1F3F3A] text-white rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            הבא
+          </button>
+        </div>
+      )}
 
       {/* View Details Modal */}
       {showDetailsModal && selectedImport && (
@@ -324,7 +276,7 @@ export default function ImportsPage() {
               </div>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700"
               >
                 ✕
               </button>

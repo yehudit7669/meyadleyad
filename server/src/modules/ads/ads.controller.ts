@@ -83,6 +83,7 @@ export class AdsController {
         limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
         categoryId: req.query.categoryId as string,
         cityId: req.query.cityId as string,
+        cities: req.query.cities as string, // Support multiple cities
         minPrice: req.query.minPrice ? parseFloat(req.query.minPrice as string) : undefined,
         maxPrice: req.query.maxPrice ? parseFloat(req.query.maxPrice as string) : undefined,
         search: req.query.search as string,

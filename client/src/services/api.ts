@@ -824,3 +824,52 @@ export const brokerService = {
   },
 };
 
+// =============== IMPORT HISTORY SERVICES ===============
+export const importHistoryService = {
+  // Get import history
+  getImportHistory: async (params?: {
+    page?: number;
+    limit?: number;
+    importType?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.importType) queryParams.append('importType', params.importType);
+
+    const response = await api.get(`/admin/import-history?${queryParams.toString()}`);
+    return (response.data as any).data;
+  },
+
+  // Get import details
+  getImportDetails: async (id: string) => {
+    const response = await api.get(`/admin/import-history/${id}`);
+    return (response.data as any).data;
+  },
+
+  // Check if import has approved properties
+  checkApprovedProperties: async (id: string) => {
+    const response = await api.get(`/admin/import-history/${id}/check-approved-properties`);
+    return (response.data as any).data;
+  },
+
+  // Check if cities/streets have approved ads
+  checkApprovedAdsCitiesStreets: async (id: string) => {
+    const response = await api.get(`/admin/import-history/${id}/check-approved-ads-cities-streets`);
+    return (response.data as any).data;
+  },
+
+  // Delete imported properties
+  deleteImportedProperties: async (id: string, includeApproved: boolean) => {
+    const response = await api.delete(`/admin/import-history/${id}/properties?includeApproved=${includeApproved}`);
+    return response.data as any;
+  },
+
+  // Delete imported cities/streets
+  deleteImportedCitiesStreets: async (id: string, deleteWithApprovedAds: boolean) => {
+    const response = await api.delete(`/admin/import-history/${id}/cities-streets?deleteWithApprovedAds=${deleteWithApprovedAds}`);
+    return response.data as any;
+  },
+};
+
+

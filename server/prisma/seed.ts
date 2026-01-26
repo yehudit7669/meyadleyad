@@ -24,17 +24,9 @@ async function main() {
   });
   console.log('✅ Created admin user');
 
-  // Create cities
+  // Create cities - only Beit Shemesh for now
   const cities = [
     { name: 'Beit Shemesh', nameHe: 'בית שמש', slug: 'beit-shemesh', latitude: 31.7450, longitude: 34.9896 },
-    { name: 'Tel Aviv', nameHe: 'תל אביב', slug: 'tel-aviv', latitude: 32.0853, longitude: 34.7818 },
-    { name: 'Jerusalem', nameHe: 'ירושלים', slug: 'jerusalem', latitude: 31.7683, longitude: 35.2137 },
-    { name: 'Haifa', nameHe: 'חיפה', slug: 'haifa', latitude: 32.7940, longitude: 34.9896 },
-    { name: 'Rishon LeZion', nameHe: 'rishon לציון', slug: 'rishon-lezion', latitude: 31.9730, longitude: 34.7925 },
-    { name: 'Petah Tikva', nameHe: 'פתח תקווה', slug: 'petah-tikva', latitude: 32.0878, longitude: 34.8878 },
-    { name: 'Ashdod', nameHe: 'אשדוד', slug: 'ashdod', latitude: 31.8044, longitude: 34.6553 },
-    { name: 'Netanya', nameHe: 'נתניה', slug: 'netanya', latitude: 32.3215, longitude: 34.8532 },
-    { name: 'Beersheba', nameHe: 'באר שבע', slug: 'beersheba', latitude: 31.2518, longitude: 34.7913 },
   ];
 
   for (const city of cities) {

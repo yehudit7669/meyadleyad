@@ -563,15 +563,17 @@ model ContentDispatchLog {
 }
 
 model ImportLog {
-  id          String   @id @default(cuid())
-  adminId     String
-  importType  String
-  fileName    String
-  totalRows   Int      @default(0)
-  successRows Int      @default(0)
-  failedRows  Int      @default(0)
-  errors      Json?
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  adminId         String
+  importType      String
+  fileName        String
+  totalRows       Int      @default(0)
+  successRows     Int      @default(0)
+  failedRows      Int      @default(0)
+  errors          Json?
+  importedItemIds Json?    // Array of IDs that were imported
+  metadata        Json?    // Additional metadata (cities, streets, etc.)
+  createdAt       DateTime @default(now())
 
   @@index([adminId])
   @@index([importType])

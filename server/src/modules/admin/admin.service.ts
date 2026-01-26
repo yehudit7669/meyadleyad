@@ -212,7 +212,7 @@ export class AdminService {
       if (isNewspaperCategory && ad.cityId) {
         console.log(`📰 Adding ad ${adId} to newspaper sheet...`);
         
-        const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service');
+        const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service.js');
         
         // קבלת או יצירת גיליון פעיל
         const sheet = await newspaperSheetService.getOrCreateActiveSheet(
@@ -427,7 +427,7 @@ export class AdminService {
     // Auto-generate newspaper PDF when ad becomes ACTIVE
     if (status === 'ACTIVE' && oldStatus !== 'ACTIVE') {
       try {
-        const { newspaperService } = await import('../newspaper/newspaper.service');
+        const { newspaperService } = await import('../newspaper/newspaper.service.js');
         await newspaperService.generateNewspaperPDF(adId, adminId);
         console.log(`✅ Newspaper PDF auto-generated for ad ${adId}`);
       } catch (error) {

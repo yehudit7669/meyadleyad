@@ -1,10 +1,15 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesService, adsService } from '../services/api';
 import AdCard from '../components/AdCard';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  
+  // Get cities from URL params
+  const citiesParam = searchParams.get('cities');
+  const selectedCities = citiesParam ? citiesParam.split(',') : [];
 
   const { data: category, isLoading: loadingCategory } = useQuery({
     queryKey: ['category', slug],
@@ -13,8 +18,17 @@ export default function CategoryPage() {
   });
 
   const { data: adsData, isLoading: loadingAds } = useQuery({
-    queryKey: ['category-ads', category?.id],
-    queryFn: () => adsService.getAds({ categoryId: category!.id }),
+    queryKey: ['category-ads', category?.id, selectedCities],
+    queryFn: () => {
+      const params: any = { categoryId: category!.id };
+      
+      // Add city filter if cities are selected
+      if (selectedCities.length > 0) {
+        params.cities = selectedCities.join(',');
+      }
+      
+      return adsService.getAds(params);
+    },
     enabled: !!category?.id,
   });
 
@@ -62,7 +76,22 @@ export default function CategoryPage() {
               )}
               <div className="mt-3 text-sm text-gray-500">
                 {ads.length} מודעות בקטגוריה זו
+                {selectedCities.length > 0 && (
+                  <span className="mr-2 text-[#C9A24D] font-semibold">
+                    (מסונן לפי {selectedCities.length} ערים)
+                  </span>
+                )}
               </div>
+              {selectedCities.length > 0 && (
+                <div className="mt-2">
+                  <Link
+                    to={`/category/${slug}`}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    הצג את כל הנכסים בקטגוריה ←
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -4,15 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class CitiesService {
   async getAllCities() {
-    // כרגע מוגבל רק לבית שמש - בעתיד ניתן להסיר את התנאי
     const cities = await prisma.city.findMany({
       where: { 
         isActive: true,
-        OR: [
-          { slug: 'beit-shemesh' },
-          { name: 'Beit Shemesh' },
-          { nameHe: { contains: 'בית שמש' } }
-        ]
       },
       orderBy: { nameHe: 'asc' },
     });

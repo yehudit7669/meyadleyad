@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, AlertCircle, CheckCircle, FileText, Trash2, GitMerge } from 'lucide-react';
 import { api } from '../../services/api';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface PreviewRow {
   rowNumber: number;
@@ -22,6 +23,7 @@ interface PreviewData {
 }
 
 export default function ImportCitiesStreets() {
+  const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -97,6 +99,10 @@ export default function ImportCitiesStreets() {
       setSuccess(
         `ייבוא הושלם בהצלחה! ${(response.data as any).successRows} שורות נוספו.`
       );
+      
+      // Invalidate cities cache to refresh the cities list in header
+      queryClient.invalidateQueries({ queryKey: ['cities'] });
+      
       setPreviewData(null);
       setFile(null);
     } catch (err: any) {
