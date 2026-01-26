@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 
 interface BrandingConfig {
   id: string;
@@ -44,11 +44,7 @@ const BrandingLogoSettings: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get('/api/admin/branding', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
+      const response = await api.get('/admin/branding');
       setConfig((response.data as { data: BrandingConfig }).data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'שגיאה בטעינת ההגדרות');
@@ -117,9 +113,8 @@ const BrandingLogoSettings: React.FC = () => {
         const formData = new FormData();
         formData.append('logo', file);
 
-        const response = await axios.post('/api/admin/branding/logo', formData, {
+        const response = await api.post('/admin/branding/logo', formData, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
             'Content-Type': 'multipart/form-data',
           },
         });
@@ -152,17 +147,12 @@ const BrandingLogoSettings: React.FC = () => {
       setError('');
       setSuccess('');
 
-      const response = await axios.patch(
-        '/api/admin/branding',
+      const response = await api.patch(
+        '/admin/branding',
         {
           position: config.position,
           opacity: config.opacity,
           sizePct: config.sizePct,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
         }
       );
 
@@ -185,14 +175,9 @@ const BrandingLogoSettings: React.FC = () => {
       setError('');
       setSuccess('');
 
-      const response = await axios.post(
-        '/api/admin/branding/reset',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        }
+      const response = await api.post(
+        '/admin/branding/reset',
+        {}
       );
 
       setConfig((response.data as { data: BrandingConfig }).data);
@@ -225,18 +210,13 @@ const BrandingLogoSettings: React.FC = () => {
         try {
           const base64Image = e.target?.result as string;
 
-          const response = await axios.post(
-            '/api/admin/branding/preview',
+          const response = await api.post(
+            '/admin/branding/preview',
             {
               position: config.position,
               opacity: config.opacity,
               sizePct: config.sizePct,
               sampleImageData: base64Image,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-              },
             }
           );
 
