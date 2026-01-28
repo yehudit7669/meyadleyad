@@ -1,6 +1,7 @@
 import prisma from '../../config/database';
 import { EmailService } from '../email/email.service';
 import { AdStatus } from '@prisma/client';
+import { emailOperationsFormController } from '../email-operations/email-operations-form.controller';
 
 export class AdminService {
   private emailService: EmailService;
@@ -191,6 +192,14 @@ export class AdminService {
       'ACTIVE'
     );
 
+    // ✅ Email Operations: שליחת מייל אישור פרסום
+    try {
+      await emailOperationsFormController.handleAdApproved(updatedAd.id, updatedAd.adNumber);
+    } catch (error) {
+      console.error('❌ Failed to send approval email:', error);
+      // לא נעצור את התהליך בגלל שגיאת מייל
+    }
+
     // ✅ NEW: הוספה אוטומטית לגיליון עיתון (קטגוריה + עיר)
     try {
       // בדיקה שהמודעה היא "לוח מודעות - תצורת עיתון"
@@ -244,16 +253,37 @@ export class AdminService {
 
     // שליחת מייל אישור (ללא PDF - המשתמש כבר קיבל PDF בזמן הפרסום)
     try {
+      console.log('📧 Attempting to send approval email...', {
+        adId: ad.id,
+        adNumber: ad.adNumber,
+        userEmail: ad.User.email,
+        isEmailVerified: ad.User.isEmailVerified,
+      });
+      
       if (ad.User.isEmailVerified) {
         await this.emailService.sendAdApprovedEmail(
           ad.User.email,
           ad.title,
-          ad.id
+          ad.id,
+          ad.adNumber?.toString()
         );
-        console.log('✅ Approval email sent', { adId: updatedAd.id });
+        console.log('✅ Approval email sent successfully', { 
+          adId: updatedAd.id,
+          adNumber: ad.adNumber,
+          to: ad.User.email 
+        });
+      } else {
+        console.log('⚠️ Approval email NOT sent - user email not verified', {
+          adId: ad.id,
+          email: ad.User.email,
+        });
       }
     } catch (error) {
-      console.error('Failed to send approval email:', error);
+      console.error('❌ Failed to send approval email:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
     }
 
     return updatedAd;

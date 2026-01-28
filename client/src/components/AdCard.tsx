@@ -74,7 +74,7 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
       // רענון המועדפים
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
-    onError: (err, shouldAdd, context) => {
+    onError: (_err, _shouldAdd, context) => {
       // החזרה למצב הקודם במקרה של שגיאה
       if (context?.previousFavorites) {
         queryClient.setQueryData(['favorites'], context.previousFavorites);

@@ -32,6 +32,8 @@ import usersAdminRoutes from '../modules/admin/users/users-admin.routes';
 import backupRoutes from '../modules/admin/backup/backup.routes';
 import uploadRoutes from '../modules/upload/upload.routes';
 import emailPermissionsRoutes from '../modules/admin/email-permissions.routes';
+import emailOperationsRoutes from '../modules/email-operations/email-operations.routes';
+import emailTestingRoutes from '../modules/email/email-testing.routes';
 
 const router = Router();
 
@@ -68,5 +70,7 @@ router.use('/admin/newspaper-sheets', newspaperSheetRoutes);
 router.use('/admin/backups', backupRoutes); // Backups & Recovery
 router.use('/admin/email-permissions', emailPermissionsRoutes); // Email-based permissions
 router.use('/upload', uploadRoutes); // File upload
+router.use('/email-operations', emailOperationsRoutes); // Email operations system
+router.use('/email-testing', emailTestingRoutes); // ✅ Email testing (DEV ONLY)
 
 export default router;

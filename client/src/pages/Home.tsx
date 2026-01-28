@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 import { useCategories } from '../hooks/useCategories';
 import HomeHero from '../components/home/HomeHero';
 import CategorySlider from '../components/home/CategorySlider';

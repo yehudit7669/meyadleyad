@@ -12,12 +12,11 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
   value,
   onChange,
   error,
-  minLength = 80,
   maxLength = 1200,
 }) => {
   const [localError, setLocalError] = useState<string>('');
   const charCount = value.length;
-  const isMinLengthMet = charCount >= minLength;
+  // const isMinLengthMet = charCount >= minLength;
   const isMaxLengthExceeded = charCount > maxLength;
 
   useEffect(() => {

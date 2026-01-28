@@ -900,3 +900,186 @@ enum DispatchStatus {
   FAILED
   PENDING
 }
+
+// ===============================================
+// EMAIL OPERATIONS SYSTEM - מערכת דיוור דרך אימייל
+// ===============================================
+
+// Email Inbound Messages: שמירת כל הודעות האימייל הנכנסות כפי שהתקבלו
+model EmailInboundMessage {
+  id                String               @id @default(cuid())
+  messageId         String               // Message-ID header
+  from              String               // כתובת השולח
+  to                String               // כתובת היעד
+  subject           String               // שורת הנושא
+  bodyText          String?              // גוף ההודעה (text/plain)
+  bodyHtml          String?              // גוף ההודעה (text/html)
+  headers           Json?                // כל ה-headers (Message-ID, In-Reply-To, References, וכו')
+  attachments       Json?                // מטא-דאטה על קבצים מצורפים
+  inReplyTo         String?              // In-Reply-To header
+  references        String?              // References header
+  receivedAt        DateTime             @default(now())
+  processed         Boolean              @default(false)
+  processedAt       DateTime?
+  createdAt         DateTime             @default(now())
+
+  // Relations
+  emailRequests     EmailRequest[]
+  pendingIntents    PendingIntent[]
+  auditLogs         EmailAuditLog[]
+
+  @@index([messageId])
+  @@index([from])
+  @@index([subject])
+  @@index([processed])
+  @@index([receivedAt])
+}
+
+// Email Requests: פעולות/בקשות שנוצרו מאימיילים נכנסים
+model EmailRequest {
+  id                 String               @id @default(cuid())
+  inboundMessageId   String               // קישור להודעה המקורית
+  senderEmail        String               // כתובת השולח
+  commandType        EmailCommandType     // סוג הפקודה
+  adId               String?              // מזהה מודעה (לעדכון/הסרה)
+  status             EmailRequestStatus   @default(PENDING)
+  payload            Json?                // נתונים נוספים (פרטי הבקשה)
+  failReason         String?              // סיבת כשל (פנימית)
+  publicFailMessage  String?              // הודעת שגיאה כללית למשתמש
+  retryCount         Int                  @default(0)
+  processedAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  // Relations
+  inboundMessage     EmailInboundMessage  @relation(fields: [inboundMessageId], references: [id], onDelete: Cascade)
+
+  @@index([senderEmail])
+  @@index([commandType])
+  @@index([status])
+  @@index([adId])
+  @@index([createdAt])
+}
+
+// Pending Intents: שמירת כוונות משתמשים לא רשומים
+model PendingIntent {
+  id                 String               @id @default(cuid())
+  email              String               // כתובת האימייל
+  commandType        EmailCommandType     // סוג הבקשה המקורית
+  inboundMessageId   String               // הודעה מקורית
+  payload            Json?                // נתוני הבקשה
+  status             PendingIntentStatus  @default(PENDING)
+  registrationSent   Boolean              @default(false)
+  registrationSentAt DateTime?
+  completedAt        DateTime?
+  expiresAt          DateTime
+  createdAt          DateTime             @default(now())
+
+  // Relations
+  inboundMessage     EmailInboundMessage  @relation(fields: [inboundMessageId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// Email Operations Mailing List: רשימת תפוצה עבור "קובץ הדירות השבועי"
+model EmailOperationsMailingList {
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  name               String?
+  status             EmailMailingStatus   @default(ACTIVE)
+  source             String               @default("email") // email, web, admin
+  subscriptionDate   DateTime             @default(now())
+  unsubscribeToken   String?              @unique
+  removedAt          DateTime?
+  lastCommandAt      DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+// Email Rate Limit: ניטור ו-rate limiting לפי כתובת
+model EmailRateLimit {
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  requestCount       Int                  @default(0)
+  errorCount         Int                  @default(0)
+  windowStartedAt    DateTime             @default(now())
+  lastRequestAt      DateTime             @default(now())
+  inCooldown         Boolean              @default(false)
+  cooldownUntil      DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([inCooldown])
+  @@index([windowStartedAt])
+}
+
+// Email Audit Trail: תיעוד כל פעולה/ניסיון פעולה דרך אימייל
+model EmailAuditLog {
+  id                 String               @id @default(cuid())
+  email              String
+  action             String               // הפעולה שביקש
+  commandType        EmailCommandType
+  adId               String?
+  success            Boolean
+  failReason         String?              // סיבת כשל פנימית
+  publicMessage      String?              // הודעה שנשלחה למשתמש
+  metadata           Json?                // מטא-דאטה נוסף
+  ip                 String?
+  userAgent          String?
+  inboundMessageId   String?
+  createdAt          DateTime             @default(now())
+
+  // Relations
+  inboundMessage     EmailInboundMessage? @relation(fields: [inboundMessageId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([action])
+  @@index([commandType])
+  @@index([adId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+// ===============================================
+// EMAIL OPERATIONS ENUMS
+// ===============================================
+
+enum EmailCommandType {
+  PUBLISH_SALE              // פרסום דירה למכירה
+  PUBLISH_RENT              // פרסום דירה להשכרה
+  PUBLISH_SHABBAT           // פרסום דירה לשבת
+  PUBLISH_COMMERCIAL        // פרסום שטח מסחרי
+  PUBLISH_SHARED_OWNERSHIP  // פרסום טאבו משותף
+  WANTED_BUY                // דרושה דירה לקנייה
+  WANTED_RENT               // דרושה דירה להשכרה
+  WANTED_SHABBAT            // דרושה דירה לשבת
+  UPDATE_AD                 // עדכון#<adId>
+  REMOVE_AD                 // הסרה#<adId>
+  MAILING_LIST_SUBSCRIBE    // הצטרפות
+  MAILING_LIST_UNSUBSCRIBE  // הסרה-תפוצה
+  REGISTRATION              // הרשמה
+  UNKNOWN                   // לא זוהה
+}
+
+enum EmailRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum PendingIntentStatus {
+  PENDING
+  EXPIRED
+  COMPLETED
+}
+
+enum EmailMailingStatus {
+  ACTIVE
+  REMOVED
+}

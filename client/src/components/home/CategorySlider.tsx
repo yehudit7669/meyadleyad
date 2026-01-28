@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAds } from '../../hooks/useAds';
 import AdCardCompact from './AdCardCompact';
+import { Ad } from '../../types';
 
 interface CategorySliderProps {
   categoryId: string;
@@ -22,7 +23,8 @@ const CategorySlider: React.FC<CategorySliderProps> = ({
     limit: 12,
   });
 
-  const ads = data?.ads || [];
+  // Extract ads from the response (server returns data.ads structure)
+  const ads = ((data as any)?.ads as Ad[]) || [];
 
   // Scroll functions
   const scroll = (direction: 'left' | 'right') => {

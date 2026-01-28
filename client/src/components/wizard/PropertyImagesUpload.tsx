@@ -18,7 +18,7 @@ interface PropertyImagesUploadProps {
 const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
   images,
   onChange,
-  minImages = 0,
+
   maxImages = 15,
   maxFileSize = 5, // 5MB default
 }) => {
@@ -149,7 +149,7 @@ const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
     setPreviewImage(null);
   };
 
-  const isMinimumMet = images.length >= minImages;
+  // const isMinimumMet = images.length >= minImages;
 
   return (
     <div className="space-y-4" dir="rtl">
