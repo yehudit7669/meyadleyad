@@ -15,12 +15,32 @@ export class NewspaperSheetPDFService {
    * רינדור תבנית עיתון מלאה עם כותרת, banner וגריד של כרטיסי נכסים
    */
   async generateSheetPDF(sheet: SheetWithListings): Promise<Buffer> {
+    // Debug logging for Render production
+    console.log('🚀 Puppeteer Debug Info:');
+    console.log('- Puppeteer version:', require('puppeteer/package.json').version);
+    console.log('- PUPPETEER_CACHE_DIR:', process.env.PUPPETEER_CACHE_DIR);
+    console.log('- PUPPETEER_SKIP_DOWNLOAD:', process.env.PUPPETEER_SKIP_DOWNLOAD);
+    console.log('- PUPPETEER_SKIP_CHROMIUM_DOWNLOAD:', process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD);
+    
+    // Check if cache directory exists
+    const cacheDir = process.env.PUPPETEER_CACHE_DIR || '/opt/render/.cache/puppeteer';
+    try {
+      const stat = await fs.stat(cacheDir);
+      console.log(`- Cache directory exists: ${cacheDir} (${stat.isDirectory() ? 'directory' : 'file'})`);
+      const files = await fs.readdir(cacheDir);
+      console.log(`- Files in cache:`, files);
+    } catch (err) {
+      console.log(`- Cache directory does NOT exist: ${cacheDir}`);
+    }
+
     const browser = await puppeteer.launch({
       headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
         '--font-render-hinting=none'
       ]
     });
