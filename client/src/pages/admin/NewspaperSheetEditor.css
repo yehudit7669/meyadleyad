@@ -1,136 +1,279 @@
-/* Newspaper Preview Styles - Matching PDF Output */
+/* Newspaper Preview Styles - Pixel-Perfect Match to Reference PDF */
 
 .newspaper-page {
   direction: rtl;
   font-family: 'Assistant', 'Segoe UI', Arial, sans-serif;
-  padding: 20mm;
+  padding: 0;
+  margin: 0;
   box-sizing: border-box;
-  background: #ffffff;
+  background: #FFFFFF;
   position: relative;
+  overflow: visible;
 }
 
 .newspaper-header {
-  text-align: center;
-  margin-bottom: 25px;
-  border-bottom: 3px double #1F3F3A;
-  padding-bottom: 15px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0;
+  position: relative;
 }
 
 .newspaper-title {
-  font-size: 2.5rem;
+  font-size: 2.7rem;
   font-weight: 800;
-  color: #1a1a1a;
-  margin: 0;
-  padding: 12px;
+  color: #C9943D;
+  margin: 1rem 6rem 0 0;
+  padding: 0;
   font-family: 'Assistant', sans-serif;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
+  white-space: nowrap;
+  grid-column: 1;
+  grid-row: 1 / 4;
 }
 
 .newspaper-title-input {
   width: 100%;
   text-align: center;
-  border: 2px dashed #3b82f6;
+  border: 0.125rem dashed #3b82f6;
   background: #eff6ff;
-  padding: 12px;
-  font-size: 2.5rem;
+  padding: 0.75rem;
+  font-size: 2.25rem;
   font-weight: 800;
   font-family: 'Assistant', sans-serif;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   outline: none;
 }
 
-.newspaper-banner {
-  margin-bottom: 25px;
-}
-
-.newspaper-content {
-  min-height: 600px;
-}
-
-.newspaper-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-bottom: 25px;
-}
-
-.newspaper-property-card {
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 14px;
-  background: #ffffff;
-  transition: all 0.25s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  cursor: move;
+.header-line {
+  height: 3px;
+  background: #C9943D;
+  margin: 1rem 1rem 0 3.7rem;
+  grid-column: 2 / 4;
+  grid-row: 2;
   position: relative;
 }
 
+.issue-number {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1F3F3A;
+  text-align: right;
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  margin-left: 3.7rem;
+  margin-top: 2rem;
+}
+
+.issue-date {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1F3F3A;
+  text-align: right;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  white-space: nowrap;
+  margin-left: 3.7rem;
+  margin-bottom: 1rem;
+}
+
+.newspaper-banner {
+  margin-bottom: 0.5rem;
+}
+
+.newspaper-content {
+  min-height: 37.5rem;
+  position: relative;
+  padding-left: 2.2rem;
+}
+
+/* ====== Vertical Ribbon (Category + City) ====== */
+.newspaper-ribbon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 80mm;
+  width: 2.5rem;
+  background: #1F3F3A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #C9943D;
+  font-size: 0.85rem;
+  font-weight: 700;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: 0.5rem 0;
+  border-top-right-radius: 0.90rem;
+  border-bottom-right-radius: 0.90rem;
+  border-top-left-radius: 1.3rem;
+  border-bottom-left-radius: 1.3rem;
+  margin: 0;
+}
+
+/* ====== Cards Grid Container ====== */
+.newspaper-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0 1.5rem;
+}
+
+/* ====== Individual Card (Property) ====== */
+.newspaper-property-card {
+  position: relative;
+  background: white;
+  border: 3px solid #bca5a5;
+  border-radius: 0.4rem;
+  overflow: visible;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease;
+  cursor: move;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .newspaper-property-card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-  border-color: #3b82f6;
-  transform: translateY(-2px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
 }
 
 .newspaper-property-card.dragging {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: grabbing;
-  transform: scale(0.95);
 }
 
-.dragging-overlay {
-  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.25);
-  transform: rotate(2deg) scale(1.05);
-  border: 3px solid #3b82f6;
-  background: #ffffff;
-  cursor: grabbing;
+/* ====== Brokerage Badge (Top Center) ====== */
+.brokerage-badge {
+  position: absolute;
+  top: -0.5rem;
+  left: 1rem;
+  background: #1F3F3A;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.5rem;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+/* ====== Card Header (Address) ====== */
+.property-card-header {
+  background: white;
+  color: #1F3F3A;
+  padding: 0.4rem 0.5rem 0.3rem 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: 0.4rem 0.4rem 0 0;
 }
 
 .property-title {
-  font-size: 1.1rem;
   font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-  line-height: 1.3;
-  min-height: 2.6rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 0.85rem;
+  color: #1F3F3A;
 }
 
-.property-address {
-  font-size: 0.9rem;
-  color: #6b7280;
-  margin: 0 0 8px 0;
-  line-height: 1.4;
+/* ====== Card Body (Meta + Description + Price) ====== */
+.property-card-body {
+  padding: 0.4rem 0.5rem 0.3rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+/* Icons Row (Rooms, Floor, Size) */
+.property-meta {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: #424242;
+  margin-bottom: 0.15rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid #C9943D;
 }
 
-.property-address::before {
-  content: '📍';
-  font-size: 0.85rem;
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
+.meta-icon {
+  font-size: 0.75rem;
+}
+
+.meta-value {
+  font-weight: 600;
+}
+
+/* Description */
+.property-description {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: #424242;
+  text-align: center;
+  min-height: 2.6rem;
+  font-weight: 500;
+}
+
+/* Features */
+.property-features {
+  font-size: 0.7rem;
+  color: #616161;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* Price */
 .property-price {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #2563eb;
-  margin: 0;
-  padding-top: 8px;
-  border-top: 1px solid #e5e7eb;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #C9943D;
+  text-align: left;
+  margin-top: auto;
+}
+
+/* ====== Card Footer (Contact Info) ====== */
+.property-contact {
+  background: #C9943D;
+  color: white;
+  padding: 0.4rem 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.4rem 0.4rem 0 0;
+  margin-top: auto;
+}
+
+.contact-name {
+  font-weight: 600;
+}
+
+.contact-phone {
+  font-weight: 700;
   direction: ltr;
-  text-align: right;
 }
 
 .newspaper-footer {
   text-align: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 3px double #e5e7eb;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #E0E0E0;
   color: #6b7280;
   font-size: 0.9rem;
   font-weight: 500;

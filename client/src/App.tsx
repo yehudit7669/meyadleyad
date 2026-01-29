@@ -64,6 +64,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminAdsPage from './pages/admin/AdminAdsPage';
 import NewspaperLayoutPage from './pages/admin/NewspaperLayoutPage';
 import NewspaperSheetEditorPage from './pages/admin/NewspaperSheetEditorPage';
+import NewspaperVisualTestPage from './pages/admin/NewspaperVisualTestPage';
 import ContentDistributionPage from './pages/admin/ContentDistributionPage';
 import BrandingMediaPage from './pages/admin/BrandingMediaPage';
 import ImportsPage from './pages/admin/ImportsPage';
@@ -165,6 +166,7 @@ const App: React.FC = () => {
                   
                   <Route path="/admin/newspaper" element={<AdminRoute><AdminLayout><NewspaperLayoutPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/newspaper/:sheetId/edit" element={<AdminRoute><AdminLayout><NewspaperSheetEditorPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/newspaper-visual-test" element={<AdminRoute><AdminLayout><NewspaperVisualTestPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/users" element={<AdminRoute><AdminLayout><UsersManagementPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/users/:userId" element={<AdminRoute><AdminLayout><UserProfilePage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdminPage /></AdminLayout></AdminRoute>} />

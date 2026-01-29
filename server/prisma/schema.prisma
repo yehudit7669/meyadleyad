@@ -716,6 +716,8 @@ model NewspaperSheet {
   version       Int                      @default(1)
   pdfPath       String?                  // נתיב ל-PDF הנוכחי
   status        NewspaperSheetStatus     @default(DRAFT)
+  issueNumber   String?                  // מספר גיליון (ניתן לעריכה)
+  issueDate     String?                  // תאריך גיליון (ניתן לעריכה)
   createdBy     String
   createdAt     DateTime                 @default(now())
   updatedAt     DateTime                 @updatedAt

@@ -40,10 +40,10 @@ export class NewspaperSheetPDFService {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '10mm',
-        right: '10mm',
-        bottom: '10mm',
-        left: '10mm'
+        top: '0mm',
+        right: '0mm',
+        bottom: '0mm',
+        left: '0mm'
       }
     });
 
@@ -56,19 +56,32 @@ export class NewspaperSheetPDFService {
    * Generate HTML template for the newspaper sheet
    */
   private async generateHTML(sheet: SheetWithListings): Promise<string> {
-    const layoutConfig = (sheet.layoutConfig as LayoutConfig) || {
+    const layoutConfig = (sheet.layoutConfig as LayoutConfig & { headerImageHeight?: number }) || {
       gridColumns: 3,
-      cardPositions: []
+      cardPositions: [],
+      headerImageHeight: 120
     };
 
     // טעינת תמונת כותרת (אם יש)
-    let headerImageBase64 = '';
+    let headerImageHTML = '';
     if (sheet.headerImage) {
-      headerImageBase64 = await this.imageToBase64(sheet.headerImage);
+      const headerImageBase64 = await this.imageToBase64(sheet.headerImage);
+      const imageHeight = layoutConfig.headerImageHeight || 120;
+      if (headerImageBase64) {
+        headerImageHTML = `
+          <div style="width: 100%; height: ${imageHeight * 0.265}mm; margin-top: 3mm; margin-bottom: 3mm;">
+            <img src="${headerImageBase64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          </div>
+        `;
+      }
     }
 
     // יצירת כרטיסי נכסים
     const cardsHTML = this.generatePropertyCards(sheet);
+    
+    // מספר גיליון ותאריך
+    const issueNumber = (sheet as any).issueNumber || `גליון ${sheet.version}`;
+    const issueDate = (sheet as any).issueDate || new Date().toLocaleDateString('he-IL', { weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric' });
 
     return `
 <!DOCTYPE html>
@@ -76,6 +89,8 @@ export class NewspaperSheetPDFService {
 <head>
   <meta charset="UTF-8">
   <style>
+    @page { size: A4 portrait; margin: 0; }
+    
     * {
       margin: 0;
       padding: 0;
@@ -83,131 +98,291 @@ export class NewspaperSheetPDFService {
     }
 
     body {
-      font-family: 'Arial', 'Segoe UI', 'Helvetica', sans-serif;
-      background: white;
-      padding: 20px;
-      direction: rtl;
+      font-family: "Assistant", "Rubik", Arial, sans-serif;
+      background: #FFFFFF;
+      -webkit-font-smoothing: antialiased;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
+    .newspaper-page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      background: #FFFFFF;
+      padding: 0;
+      overflow: visible;
+    }
+
+    /* ====== Header ====== */
     .newspaper-header {
-      text-align: center;
-      border-bottom: 4px solid #333;
-      padding-bottom: 20px;
-      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto auto auto;
+      align-items: center;
+      margin-bottom: 2.12mm;
+      padding: 2.12mm 0;
+      position: relative;
     }
 
     .newspaper-title {
-      font-size: 42px;
-      font-weight: bold;
-      color: #1a1a1a;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
+      font-size: 11.42mm;
+      font-weight: 800;
+      color: #C9943D;
+      margin: 4.23mm 25.38mm 0 0;
+      padding: 0;
+      font-family: 'Assistant', sans-serif;
+      white-space: nowrap;
+      grid-column: 1;
+      grid-row: 1 / 4;
     }
 
-    .newspaper-subtitle {
-      font-size: 18px;
-      color: #666;
-      margin-bottom: 15px;
+    .header-line {
+      height: 0.79mm;
+      background: #C9943D;
+      margin: 4.23mm 4.23mm 0 15.65mm;
+      grid-column: 2 / 4;
+      grid-row: 2;
+      position: relative;
     }
 
-    .header-banner {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-top: 15px;
+    .issue-number {
+      font-size: 3.6mm;
+      font-weight: 700;
+      color: #1F3F3A;
+      text-align: right;
+      position: absolute;
+      left: 0;
+      top: 0;
+      white-space: nowrap;
+      margin-left: 15.65mm;
+      margin-top: 8.46mm;
     }
 
-    .properties-grid {
+    .issue-date {
+      font-size: 3.17mm;
+      font-weight: 500;
+      color: #1F3F3A;
+      text-align: right;
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      white-space: nowrap;
+      margin-left: 15.65mm;
+      margin-bottom: 4.23mm;
+    }
+
+    /* ====== Content Area ====== */
+    .newspaper-content {
+      min-height: 158.61mm;
+      position: relative;
+      padding-left: 9.31mm;
+    }
+
+    /* ====== Vertical Ribbon ====== */
+    .newspaper-ribbon {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 80mm;
+      width: 10.58mm;
+      background: #1F3F3A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      color: #C9943D;
+      font-size: 3.6mm;
+      font-weight: 700;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      padding: 2.12mm 0;
+      border-top-right-radius: 3.81mm;
+      border-bottom-right-radius: 3.81mm;
+      border-top-left-radius: 5.5mm;
+      border-bottom-left-radius: 5.5mm;
+      margin: 0;
+    }
+
+    /* ====== Cards Grid ====== */
+    .newspaper-grid {
       display: grid;
-      grid-template-columns: repeat(${layoutConfig.gridColumns}, 1fr);
-      gap: 15px;
-      margin-top: 25px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4.23mm;
+      padding: 0 6.35mm;
+      margin-top: 3.17mm;
     }
 
-    .property-card {
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
-      background: #fafafa;
-      break-inside: avoid;
+    /* ====== Property Card ====== */
+    .newspaper-property-card {
+      position: relative;
+      background: white;
+      border: 0.79mm solid #bca5a5;
+      border-radius: 1.69mm;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: visible;
+      box-shadow: 0 0.53mm 1.06mm rgba(0, 0, 0, 0.05);
     }
 
-    .property-card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 6px;
-      margin-bottom: 10px;
+    /* Brokerage Badge */
+    .brokerage-badge {
+      position: absolute;
+      top: -2.12mm;
+      left: 4.23mm;
+      background: #1F3F3A;
+      color: white;
+      font-size: 2.75mm;
+      font-weight: 700;
+      padding: 0.63mm 2.12mm;
+      border-radius: 2.12mm;
+      z-index: 5;
+      white-space: nowrap;
+    }
+
+    /* Card Header */
+    .property-card-header {
+      background: white;
+      color: #1F3F3A;
+      padding: 1.69mm 2.12mm 1.27mm 2.12mm;
+      font-weight: 700;
+      font-size: 3.6mm;
+      line-height: 1.2;
+      text-align: center;
+      border-radius: 1.69mm 1.69mm 0 0;
     }
 
     .property-title {
-      font-size: 18px;
-      font-weight: bold;
-      color: #222;
-      margin-bottom: 8px;
+      font-weight: 700;
+      font-size: 3.6mm;
+      color: #1F3F3A;
+    }
+
+    /* Card Body */
+    .property-card-body {
+      padding: 1.69mm 2.12mm 1.27mm 2.12mm;
+      display: flex;
+      flex-direction: column;
+      gap: 1.06mm;
+      flex: 1;
+    }
+
+    /* Meta Icons */
+    .property-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2.12mm;
+      font-size: 2.96mm;
+      color: #424242;
+      margin-bottom: 0.63mm;
+      padding-bottom: 1.27mm;
+      border-bottom: 0.53mm solid #C9943D;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85mm;
+    }
+
+    .meta-icon {
+      font-size: 3.17mm;
+    }
+
+    .meta-value {
+      font-weight: 600;
+    }
+
+    /* Description */
+    .property-description {
+      font-size: 3.17mm;
+      line-height: 1.3;
+      color: #424242;
+      text-align: center;
+      min-height: 11mm;
+      font-weight: 500;
+    }
+
+    /* Features */
+    .property-features {
+      font-size: 2.96mm;
+      color: #616161;
+      text-align: center;
+      font-weight: 500;
       line-height: 1.3;
     }
 
-    .property-details {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 6px;
+    /* Price */
+    .property-price {
+      font-size: 4.02mm;
+      font-weight: 700;
+      color: #C9943D;
+      text-align: left;
+      margin-top: auto;
+    }
+
+    /* Contact Footer */
+    .property-contact {
+      background: #C9943D;
+      color: white;
+      padding: 1.69mm 2.12mm;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 3.17mm;
+      font-weight: 600;
+      border-radius: 1.69mm 1.69mm 0 0;
+      margin-top: auto;
     }
 
-    .property-price {
-      font-size: 22px;
-      font-weight: bold;
-      color: #d32f2f;
-      margin-top: 8px;
-      text-align: center;
-      background: #fff3e0;
-      padding: 8px;
-      border-radius: 4px;
+    .contact-name {
+      font-weight: 600;
     }
 
-    .property-description {
-      font-size: 13px;
-      color: #666;
-      line-height: 1.4;
-      margin-top: 8px;
-      max-height: 40px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+    .contact-phone {
+      font-weight: 700;
+      direction: ltr;
+    }
+      margin-top: auto;
     }
 
-    .footer {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 12px;
-      color: #999;
-      border-top: 2px solid #ddd;
-      padding-top: 15px;
+    .contact-name {
+      font-weight: 600;
+    }
+
+    .contact-phone {
+      font-weight: 700;
+      direction: ltr;
     }
   </style>
 </head>
 <body>
-  <div class="newspaper-header">
-    <div class="newspaper-title">${this.escapeHtml(sheet.title)}</div>
-    <div class="newspaper-subtitle">
-      ${this.escapeHtml(sheet.category.nameHe)} | ${this.escapeHtml(sheet.city.nameHe)}
+  <div class="newspaper-page">
+    <!-- Header -->
+    <div class="newspaper-header">
+      <div class="newspaper-title">${this.escapeHtml(sheet.title || 'לוח מודעות')}</div>
+      <div class="header-line"></div>
+      <div class="issue-number">${this.escapeHtml(issueNumber)}</div>
+      <div class="issue-date">${this.escapeHtml(issueDate)}</div>
     </div>
-    ${headerImageBase64 ? `<img src="${headerImageBase64}" alt="כותרת" class="header-banner" />` : ''}
-  </div>
 
-  <div class="properties-grid">
-    ${cardsHTML}
-  </div>
+    ${headerImageHTML}
 
-  <div class="footer">
-    גרסה ${sheet.version} | ${new Date().toLocaleDateString('he-IL')}
+    <!-- Content with Ribbon + Grid -->
+    <div class="newspaper-content">
+      <!-- Vertical Ribbon -->
+      <div class="newspaper-ribbon">
+        <span style="font-size: 4.5mm;">${this.escapeHtml(sheet.category.nameHe)}</span>
+        <span style="margin-bottom: 2mm;">${this.escapeHtml(sheet.city.nameHe)}</span>
+      </div>
+
+      <!-- Grid -->
+      <div class="newspaper-grid">
+        ${cardsHTML}
+      </div>
+    </div>
   </div>
 </body>
 </html>
@@ -245,17 +420,20 @@ export class NewspaperSheetPDFService {
         const rooms = customFields.rooms || '';
         const size = customFields.size || '';
         const floor = customFields.floor || '';
+        
+        // בדיקה אם זה תיווך
+        const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
 
         // תמונה ראשית
         const mainImage = listing.AdImage && listing.AdImage.length > 0
           ? listing.AdImage[0].url
           : '';
 
-        // תיאור קצר
+        // תיאור
         const description = listing.title || '';
 
-        // כתובת
-        const address = listing.address || '';
+        // כתובת - שדה ראשי בכותרת הקוביה
+        const address = listing.address || 'נכס';
 
         // מחיר
         let priceDisplay = '';
@@ -263,17 +441,87 @@ export class NewspaperSheetPDFService {
           priceDisplay = `₪${listing.price.toLocaleString('he-IL')}`;
         }
 
+        // מאפיינים - רק אלה שיש להם ערך
+        const features: string[] = [];
+        const featuresObj = customFields.features || {};
+        
+        if (featuresObj.hasOption) features.push('אופציה');
+        if (featuresObj.parking) features.push('חניה');
+        if (featuresObj.parentalUnit || featuresObj.masterUnit) features.push('יחידת הורים');
+        if (featuresObj.storage) features.push('מחסן');
+        if (featuresObj.ac || featuresObj.airConditioning) features.push('מיזוג');
+        if (featuresObj.elevator) features.push('מעלית');
+        if (featuresObj.balcony) features.push('מרפסת');
+        if (featuresObj.safeRoom) features.push('ממ״ד');
+        if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
+        if (featuresObj.view) features.push('נוף');
+        if (featuresObj.yard) features.push('חצר');
+        if (featuresObj.housingUnit) features.push('יח׳ דיור');
+
+        const featuresHTML = features.length > 0 
+          ? `<div class="property-features">${features.map(f => `<span>${f}</span>`).join(' ')}</div>`
+          : '';
+
+        // שם ליצירת קשר - מהמשתמש או מתווך
+        const contactName = customFields.contactName || 'פרטים נוספים';
+        const contactPhone = customFields.contactPhone || listing.User?.phone || '050-000-0000';
+
+        // הסרת שם העיר מהכתובת (רק רחוב ומספר)
+        const formatAddress = (fullAddress: string) => {
+          if (!fullAddress) return 'נכס';
+          const parts = fullAddress.split(',');
+          return parts[0].trim();
+        };
+
         return `
-          <div class="property-card">
-            ${mainImage ? `<img src="${mainImage}" alt="${this.escapeHtml(description)}" />` : ''}
-            <div class="property-title">${this.escapeHtml(address)}</div>
-            <div class="property-details">
-              ${rooms ? `<span>${rooms} חדרים</span>` : ''}
-              ${size ? `<span>${size} מ"ר</span>` : ''}
+          <div class="newspaper-property-card">
+            ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
+            
+            <div class="property-card-header">
+              <div class="property-title">${this.escapeHtml(formatAddress(address))}</div>
             </div>
-            ${floor ? `<div class="property-details"><span>קומה ${floor}</span></div>` : ''}
-            <div class="property-description">${this.escapeHtml(description)}</div>
-            ${priceDisplay ? `<div class="property-price">${priceDisplay}</div>` : ''}
+
+            <div class="property-card-body">
+              <div class="property-meta">
+                ${size ? `
+                  <div class="meta-item">
+                    <span class="meta-icon">📐</span>
+                    <span class="meta-value">${size}</span>
+                  </div>
+                ` : ''}
+                ${floor ? `
+                  <div class="meta-item">
+                    <span class="meta-icon">🏢</span>
+                    <span class="meta-value">${floor}</span>
+                  </div>
+                ` : ''}
+                ${rooms ? `
+                  <div class="meta-item">
+                    <span class="meta-icon">🚪</span>
+                    <span class="meta-value">${rooms}</span>
+                  </div>
+                ` : ''}
+              </div>
+
+              <div class="property-description">
+                ${this.escapeHtml(description)}
+              </div>
+
+              ${features.length > 0 ? `
+                <div class="property-features">
+                  ${features.join(' · ')}
+                </div>
+              ` : ''}
+
+              ${priceDisplay && listing.price ? `
+                <div class="property-price">₪${listing.price.toLocaleString('he-IL')}</div>
+              ` : ''}
+            </div>
+
+            <div class="property-contact">
+              <div class="contact-name">${this.escapeHtml(contactName)}</div>
+              <div class="contact-phone">${this.escapeHtml(contactPhone)}</div>
+            </div>
           </div>
         `;
       })

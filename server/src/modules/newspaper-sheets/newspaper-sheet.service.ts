@@ -48,6 +48,13 @@ export class NewspaperSheetService {
                 address: true,
                 price: true,
                 customFields: true,
+                User: {
+                  select: {
+                    name: true,
+                    email: true,
+                    phone: true
+                  }
+                },
                 AdImage: {
                   orderBy: { order: 'asc' },
                   take: 1
@@ -104,6 +111,13 @@ export class NewspaperSheetService {
                   address: true,
                   price: true,
                   customFields: true,
+                  User: {
+                    select: {
+                      name: true,
+                      email: true,
+                      phone: true
+                    }
+                  },
                   AdImage: {
                     orderBy: { order: 'asc' },
                     take: 1
@@ -218,20 +232,40 @@ export class NewspaperSheetService {
     newPosition: number,
     userId: string
   ) {
-    // Update position in database
-    await prisma.newspaperSheetListing.update({
-      where: {
-        id: sheetListingId
-      },
-      data: {
-        positionIndex: newPosition
-      }
+    // Get all listings in this sheet
+    const allListings = await prisma.newspaperSheetListing.findMany({
+      where: { sheetId },
+      orderBy: { positionIndex: 'asc' }
     });
+
+    // Find the listing being moved
+    const movedListingIndex = allListings.findIndex(l => l.id === sheetListingId);
+    if (movedListingIndex === -1) {
+      throw new Error('Listing not found in sheet');
+    }
+
+    const movedListing = allListings[movedListingIndex];
+    const oldPosition = movedListing.positionIndex;
+
+    // Remove from old position and insert at new position
+    allListings.splice(movedListingIndex, 1);
+    allListings.splice(newPosition, 0, movedListing);
+
+    // Update all positions in a transaction
+    await prisma.$transaction(
+      allListings.map((listing, index) =>
+        prisma.newspaperSheetListing.update({
+          where: { id: listing.id },
+          data: { positionIndex: index }
+        })
+      )
+    );
 
     // Log the action
     await AuditService.log(userId, 'LISTING_POSITION_UPDATED', {
       sheetId,
       listingId: sheetListingId,
+      oldPosition,
       newPosition
     });
 
@@ -299,6 +333,13 @@ export class NewspaperSheetService {
                 address: true,
                 price: true,
                 customFields: true,
+                User: {
+                  select: {
+                    name: true,
+                    email: true,
+                    phone: true
+                  }
+                },
                 AdImage: {
                   orderBy: { order: 'asc' }
                 }
@@ -331,12 +372,19 @@ export class NewspaperSheetService {
     data: UpdateSheetData,
     userId: string
   ) {
+    // Parse layoutConfig if it's a string
+    const updateData: any = { ...data };
+    if (data.layoutConfig && typeof data.layoutConfig === 'string') {
+      try {
+        updateData.layoutConfig = JSON.parse(data.layoutConfig);
+      } catch (e) {
+        console.error('Failed to parse layoutConfig:', e);
+      }
+    }
+
     const sheet = await prisma.newspaperSheet.update({
       where: { id: sheetId },
-      data: {
-        ...data,
-        layoutConfig: data.layoutConfig as any
-      }
+      data: updateData
     });
 
     await AuditService.log(userId, 'NEWSPAPER_SHEET_UPDATED', {

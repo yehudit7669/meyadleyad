@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
@@ -9,14 +10,39 @@ import {
   ArrowLeft,
   Upload,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  X
 } from 'lucide-react';
 import { api } from '../../services/api';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay, type Modifier } from '@dnd-kit/core';
-import { arrayMove, SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
+import { 
+  DndContext, 
+  closestCenter, 
+  PointerSensor, 
+  useSensor, 
+  useSensors, 
+  DragOverlay,
+  DragEndEvent,
+  DragStartEvent
+} from '@dnd-kit/core';
+import { 
+  arrayMove, 
+  SortableContext, 
+  rectSortingStrategy,
+  useSortable 
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import './NewspaperSheetEditor.css';
+
+// Helper to get full image URL
+const getImageUrl = (url: string | null) => {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  // Remove /api from the end if it exists, since uploads are served from root
+  const baseUrl = apiUrl.replace(/\/api$/, '');
+  return `${baseUrl}${url}`;
+};
 
 interface Listing {
   id: string;
@@ -27,6 +53,12 @@ interface Listing {
     title: string;
     address: string;
     price: number;
+    customFields?: any;
+    User?: {
+      name: string | null;
+      email: string;
+      phone: string | null;
+    };
   };
 }
 
@@ -51,7 +83,7 @@ interface NewspaperSheet {
 }
 
 // Sortable Property Card in Grid (with newspaper styling)
-function SortablePropertyCard({ listing }: { listing: Listing }) {
+function SortablePropertyCard({ listing, onRemove }: { listing: Listing; onRemove: (listing: Listing) => void }) {
   const {
     attributes,
     listeners,
@@ -67,6 +99,40 @@ function SortablePropertyCard({ listing }: { listing: Listing }) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Extract data
+  const customFields = (listing.listing as any).customFields || {};
+  const rooms = customFields.rooms || '';
+  const size = customFields.size || '';
+  const floor = customFields.floor || '';
+  const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
+
+  // Features
+  const features: string[] = [];
+  const featuresObj = customFields.features || {};
+  
+  if (featuresObj.hasOption) features.push('אופציה');
+  if (featuresObj.parking) features.push('חניה');
+  if (featuresObj.parentalUnit || featuresObj.masterUnit) features.push('יחידת הורים');
+  if (featuresObj.storage) features.push('מחסן');
+  if (featuresObj.ac || featuresObj.airConditioning) features.push('מיזוג');
+  if (featuresObj.elevator) features.push('מעלית');
+  if (featuresObj.balcony) features.push('מרפסת');
+  if (featuresObj.safeRoom) features.push('ממ״ד');
+  if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
+  if (featuresObj.view) features.push('נוף');
+  if (featuresObj.yard) features.push('חצר');
+  if (featuresObj.housingUnit) features.push('יח׳ דיור');
+
+  const contactName = customFields.contactName || 'פרטים נוספים';
+  const contactPhone = customFields.contactPhone || (listing.listing as any).User?.phone || '050-000-0000';
+
+  // Extract street and house number only (remove city)
+  const formatAddress = (fullAddress: string) => {
+    if (!fullAddress) return 'נכס';
+    const parts = fullAddress.split(',');
+    return parts[0].trim();
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -74,11 +140,168 @@ function SortablePropertyCard({ listing }: { listing: Listing }) {
       {...attributes}
       {...listeners}
       data-id={listing.id}
-      className={`newspaper-property-card cursor-move ${isDragging ? 'dragging' : ''}`}
+      className={`newspaper-property-card cursor-move group ${isDragging ? 'dragging' : ''}`}
     >
-      <h4 className="property-title">{listing.listing.title}</h4>
-      <p className="property-address">{listing.listing.address}</p>
-      <p className="property-price">₪{listing.listing.price.toLocaleString()}</p>
+      {/* Remove Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (window.confirm('האם להסיר כרטיס זה מהגיליון?')) {
+            onRemove(listing);
+          }
+        }}
+        className="absolute top-2 left-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center z-20 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        title="הסר כרטיס מהגיליון"
+      >
+        <X className="w-4 h-4" />
+      </button>
+
+      {/* Brokerage Badge */}
+      {isBrokerage && <div className="brokerage-badge">תיווך</div>}
+
+      {/* Card Header: Address */}
+      <div className="property-card-header">
+        <div className="property-title">{formatAddress(listing.listing.address)}</div>
+      </div>
+
+      {/* Card Body */}
+      <div className="property-card-body">
+        {/* Icons Row: Size, Floor, Rooms */}
+        <div className="property-meta">
+          {size && (
+            <div className="meta-item">
+              <span className="meta-icon">📐</span>
+              <span className="meta-value">{size}</span>
+            </div>
+          )}
+          {floor && (
+            <div className="meta-item">
+              <span className="meta-icon">🏢</span>
+              <span className="meta-value">{floor}</span>
+            </div>
+          )}
+          {rooms && (
+            <div className="meta-item">
+              <span className="meta-icon">🚪</span>
+              <span className="meta-value">{rooms}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        <div className="property-description">
+          {listing.listing.title}
+        </div>
+
+        {/* Features */}
+        {features.length > 0 && (
+          <div className="property-features">
+            {features.join(' · ')}
+          </div>
+        )}
+
+        {/* Price */}
+        {listing.listing.price && (
+          <div className="property-price">₪{listing.listing.price.toLocaleString()}</div>
+        )}
+      </div>
+
+      {/* Footer: Contact */}
+      <div className="property-contact">
+        <div className="contact-name">{contactName}</div>
+        <div className="contact-phone">{contactPhone}</div>
+      </div>
+    </div>
+  );
+}
+
+// PropertyCardOverlay - for DragOverlay (simple clone without drag handlers)
+function PropertyCardOverlay({ listing }: { listing: Listing }) {
+  const customFields = (listing.listing as any).customFields || {};
+  const rooms = customFields.rooms || '';
+  const size = customFields.size || '';
+  const floor = customFields.floor || '';
+  const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
+
+  const features: string[] = [];
+  const featuresObj = customFields.features || {};
+  
+  if (featuresObj.hasOption) features.push('אופציה');
+  if (featuresObj.parking) features.push('חניה');
+  if (featuresObj.parentalUnit || featuresObj.masterUnit) features.push('יחידת הורים');
+  if (featuresObj.storage) features.push('מחסן');
+  if (featuresObj.ac || featuresObj.airConditioning) features.push('מיזוג');
+  if (featuresObj.elevator) features.push('מעלית');
+  if (featuresObj.balcony) features.push('מרפסת');
+  if (featuresObj.safeRoom) features.push('ממ״ד');
+  if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
+  if (featuresObj.view) features.push('נוף');
+  if (featuresObj.yard) features.push('חצר');
+  if (featuresObj.housingUnit) features.push('יח׳ דיור');
+
+  const contactName = customFields.contactName || 'פרטים נוספים';
+  const contactPhone = customFields.contactPhone || (listing.listing as any).User?.phone || '050-000-0000';
+
+  const formatAddress = (fullAddress: string) => {
+    if (!fullAddress) return 'נכס';
+    const parts = fullAddress.split(',');
+    return parts[0].trim();
+  };
+
+  return (
+    <div 
+      className="newspaper-property-card" 
+      style={{ 
+        cursor: 'grabbing'
+      }}
+    >
+      {isBrokerage && <div className="brokerage-badge">תיווך</div>}
+      
+      <div className="property-card-header">
+        <div className="property-title">{formatAddress(listing.listing.address)}</div>
+      </div>
+
+      <div className="property-card-body">
+        <div className="property-meta">
+          {size && (
+            <div className="meta-item">
+              <span className="meta-icon">📐</span>
+              <span className="meta-value">{size}</span>
+            </div>
+          )}
+          {floor && (
+            <div className="meta-item">
+              <span className="meta-icon">🏢</span>
+              <span className="meta-value">{floor}</span>
+            </div>
+          )}
+          {rooms && (
+            <div className="meta-item">
+              <span className="meta-icon">🚪</span>
+              <span className="meta-value">{rooms}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="property-description">
+          {listing.listing.title}
+        </div>
+
+        {features.length > 0 && (
+          <div className="property-features">
+            {features.join(' · ')}
+          </div>
+        )}
+
+        {listing.listing.price && (
+          <div className="property-price">₪{listing.listing.price.toLocaleString()}</div>
+        )}
+      </div>
+
+      <div className="property-contact">
+        <div className="contact-name">{contactName}</div>
+        <div className="contact-phone">{contactPhone}</div>
+      </div>
     </div>
   );
 }
@@ -88,8 +311,12 @@ export default function NewspaperSheetEditorPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState('לוח מודעות');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [issueNumber, setIssueNumber] = useState('');
+  const [isEditingIssueNumber, setIsEditingIssueNumber] = useState(false);
+  const [issueDate, setIssueDate] = useState('');
+  const [isEditingIssueDate, setIsEditingIssueDate] = useState(false);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [headerImageHeight, setHeaderImageHeight] = useState(120); // Height in pixels
   const [isResizingHeader, setIsResizingHeader] = useState(false);
@@ -99,54 +326,15 @@ export default function NewspaperSheetEditorPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const dragOffsetRef = useRef<{ x: number; y: number } | null>(null);
-  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
+  // Sensors with proper activation constraint
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Drag only starts after moving 8px
+        distance: 4,
       },
     })
   );
-
-  // Mouse move handler with useCallback
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    setCursorPosition({ x: e.clientX, y: e.clientY });
-  }, []);
-
-  // Effect to manage mousemove listener
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-      };
-    }
-  }, [isDragging, handleMouseMove]);
-
-  // Modifier to snap cursor to dragged item
-  // @ts-expect-error - Modifier for future use
-  const _snapCursorToDraggedItem: Modifier = ({ transform }) => {
-    const offset = dragOffsetRef.current;
-    if (!offset) {
-      console.log('⚠️ Modifier: no offset in ref');
-      return transform;
-    }
-    
-    const adjusted = {
-      ...transform,
-      x: transform.x - offset.x,
-      y: transform.y - offset.y,
-      scaleX: 1,
-      scaleY: 1,
-    };
-    
-    console.log(`🔧 Modifier: offset(${offset.x.toFixed(1)}, ${offset.y.toFixed(1)}) | orig(${transform.x.toFixed(1)}, ${transform.y.toFixed(1)}) -> adj(${adjusted.x.toFixed(1)}, ${adjusted.y.toFixed(1)})`);
-    
-    return adjusted;
-  };
 
   // Fetch sheet data
   const { data: sheet, isLoading } = useQuery({
@@ -161,7 +349,9 @@ export default function NewspaperSheetEditorPage() {
   // Initialize state when data loads
   useEffect(() => {
     if (sheet) {
-      setTitle(sheet.title);
+      setTitle(sheet.title || 'לוח מודעות');
+      setIssueNumber((sheet as any).issueNumber || `גליון ${sheet.version}`);
+      setIssueDate((sheet as any).issueDate || new Date().toLocaleDateString('he-IL', { weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric' }));
       setHeaderImage(sheet.headerImage);
       // Initialize header image height from layoutConfig or use default
       try {
@@ -181,7 +371,13 @@ export default function NewspaperSheetEditorPage() {
 
   // Update sheet mutation
   const updateSheetMutation = useMutation({
-    mutationFn: async (data: { title?: string; headerImage?: string | null; layoutConfig?: string }) => {
+    mutationFn: async (data: { 
+      title?: string; 
+      headerImage?: string | null; 
+      layoutConfig?: string;
+      issueNumber?: string;
+      issueDate?: string;
+    }) => {
       const response = await api.patch(`/admin/newspaper-sheets/${sheetId}`, data);
       return response.data;
     },
@@ -208,6 +404,22 @@ export default function NewspaperSheetEditorPage() {
     },
     onError: (error: any) => {
       alert(`❌ שגיאה בעדכון מיקום: ${error.response?.data?.error || error.message}`);
+    },
+  });
+
+  // Remove listing from sheet mutation
+  const removeListingMutation = useMutation({
+    mutationFn: async (listingId: string) => {
+      const response = await api.delete(
+        `/admin/newspaper-sheets/${sheetId}/listings/${listingId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['newspaper-sheet', sheetId] });
+    },
+    onError: (error: any) => {
+      alert(`❌ שגיאה בהסרת כרטיס: ${error.response?.data?.error || error.message}`);
     },
   });
 
@@ -246,11 +458,6 @@ export default function NewspaperSheetEditorPage() {
   const handleResizeEnd = () => {
     if (isResizingHeader) {
       setIsResizingHeader(false);
-      // Save the new height to backend
-      const layoutConfig = { headerImageHeight };
-      updateSheetMutation.mutate({ 
-        layoutConfig: JSON.stringify(layoutConfig) 
-      } as any);
     }
   };
 
@@ -265,58 +472,40 @@ export default function NewspaperSheetEditorPage() {
     }
   }, [isResizingHeader, resizeStartY, resizeStartHeight, headerImageHeight, zoom]);
 
-  // Handle drag start
-  const handleDragStart = (event: any) => {
-    console.log('🚀 Drag started:', event.active.id);
-    setActiveId(event.active.id);
-    
-    // Calculate offset using the actual dragged element
-    const draggedElement = document.querySelector(`[data-id="${event.active.id}"]`);
-    if (draggedElement && event.activatorEvent) {
-      const rect = draggedElement.getBoundingClientRect();
-      const offsetX = event.activatorEvent.clientX - rect.left;
-      const offsetY = event.activatorEvent.clientY - rect.top;
-      dragOffsetRef.current = { x: offsetX, y: offsetY };
-      // Store initial cursor position
-      setCursorPosition({
-        x: event.activatorEvent.clientX,
-        y: event.activatorEvent.clientY
-      });
-      setIsDragging(true);
-      console.log('🎯 Offset:', { x: offsetX, y: offsetY });
-    } else {
-      dragOffsetRef.current = null;
-      setCursorPosition(null);
-    }
+  // Handle remove listing from sheet
+  const handleRemoveListing = (listing: Listing) => {
+    // Update local state immediately for responsive UI
+    setListings(prev => prev.filter(l => l.id !== listing.id));
+    // Update server with the actual listing ID (not the junction table ID)
+    removeListingMutation.mutate(listing.listingId);
   };
 
-  // Handle drag move - no longer needed, using mousemove instead
-  const handleDragMove = (_event: any) => {
-    // Using document mousemove listener instead
+  // Handle drag start
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
   };
 
   // Handle drag end
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
-    dragOffsetRef.current = null;
-    setCursorPosition(null);
-    setIsDragging(false);
 
     if (!over || active.id === over.id) return;
 
     const oldIndex = listings.findIndex((item) => item.id === active.id);
     const newIndex = listings.findIndex((item) => item.id === over.id);
 
+    if (oldIndex === -1 || newIndex === -1) return;
+
     const newListings = arrayMove(listings, oldIndex, newIndex);
     
     // Update local state immediately
     setListings(newListings);
 
-    // Update position in backend
+    // Update position in backend - use the junction table ID (NewspaperSheetListing.id)
     const movedListing = newListings[newIndex];
     updatePositionMutation.mutate({
-      listingId: movedListing.id,
+      listingId: movedListing.id, // This is the NewspaperSheetListing ID, not the Listing ID
       newPosition: newIndex,
     });
   };
@@ -325,11 +514,10 @@ export default function NewspaperSheetEditorPage() {
   const handleSaveTitle = () => {
     if (!title.trim()) {
       alert('❌ כותרת לא יכולה להיות ריקה');
-      setTitle(sheet?.title || '');
+      setTitle('לוח מודעות');
       setIsEditingTitle(false);
       return;
     }
-    updateSheetMutation.mutate({ title });
     setIsEditingTitle(false);
   };
 
@@ -348,7 +536,6 @@ export default function NewspaperSheetEditorPage() {
       });
 
       setHeaderImage(response.data.url);
-      updateSheetMutation.mutate({ headerImage: response.data.url });
     } catch (error: any) {
       alert(`❌ שגיאה בהעלאת תמונה: ${error.response?.data?.error || error.message}`);
     } finally {
@@ -359,7 +546,13 @@ export default function NewspaperSheetEditorPage() {
   // Handle save and generate PDF
   const handleSaveAndGeneratePdf = async () => {
     try {
-      await updateSheetMutation.mutateAsync({ title, headerImage });
+      await updateSheetMutation.mutateAsync({ 
+        title, 
+        headerImage,
+        layoutConfig: JSON.stringify({ headerImageHeight }),
+        issueNumber,
+        issueDate
+      });
       await generatePdfMutation.mutateAsync();
     } catch (error) {
       // Errors already handled in mutations
@@ -404,8 +597,6 @@ export default function NewspaperSheetEditorPage() {
     );
   }
 
-  const activeListing = activeId ? listings.find(l => l.id === activeId) : null;
-
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Top Bar */}
@@ -432,16 +623,16 @@ export default function NewspaperSheetEditorPage() {
             <div className="flex items-center gap-1 border border-gray-300 rounded-lg overflow-hidden">
               <button
                 onClick={() => setZoom(Math.max(50, zoom - 10))}
-                className="px-3 py-2 hover:bg-gray-100"
+                className="px-3 py-2 hover:bg-gray-100 text-gray-900"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
-              <div className="px-3 py-2 text-sm font-medium border-x border-gray-300 min-w-[60px] text-center">
+              <div className="px-3 py-2 text-sm font-medium border-x border-gray-300 min-w-[60px] text-center text-gray-900">
                 {zoom}%
               </div>
               <button
                 onClick={() => setZoom(Math.min(150, zoom + 10))}
-                className="px-3 py-2 hover:bg-gray-100"
+                className="px-3 py-2 hover:bg-gray-100 text-gray-900"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
@@ -454,17 +645,26 @@ export default function NewspaperSheetEditorPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT: A4 Preview Canvas */}
         <div className="flex-1 overflow-auto p-8 bg-gray-100">
+          {/* Zoom wrapper - isolated from DnD */}
           <div 
-            className="mx-auto bg-white shadow-2xl newspaper-page"
+            className="mx-auto"
             style={{
               width: `${(210 * zoom) / 100}mm`,
-              minHeight: `${(297 * zoom) / 100}mm`,
               transform: `scale(${zoom / 100})`,
               transformOrigin: 'top center',
             }}
           >
-            {/* Inline Editable Title */}
+            {/* Newspaper page - NO transform here for accurate DnD */}
+            <div 
+              className="bg-white shadow-2xl newspaper-page"
+              style={{
+                width: '210mm',
+                minHeight: '297mm',
+              }}
+            >
+            {/* Header - Matching Reference HTML Design */}
             <div className="newspaper-header">
+              {/* Title (Right Side) - Editable */}
               {isEditingTitle ? (
                 <input
                   type="text"
@@ -480,15 +680,6 @@ export default function NewspaperSheetEditorPage() {
                   }}
                   autoFocus
                   className="newspaper-title-input"
-                  style={{
-                    width: '100%',
-                    textAlign: 'center',
-                    border: '2px dashed #3b82f6',
-                    background: '#eff6ff',
-                    padding: '8px',
-                    fontSize: '2rem',
-                    fontWeight: 'bold',
-                  }}
                 />
               ) : (
                 <h1 
@@ -496,101 +687,140 @@ export default function NewspaperSheetEditorPage() {
                   onClick={() => setIsEditingTitle(true)}
                   style={{
                     cursor: 'pointer',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    transition: 'background 0.2s',
+                    transition: 'opacity 0.2s',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f3f4f6';
+                    e.currentTarget.style.opacity = '0.8';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.opacity = '1';
                   }}
                 >
                   {title}
                 </h1>
               )}
-            </div>
 
-            {/* Click-to-Upload Header Image with Resize Handles */}
-            <div className="newspaper-banner relative">
-              {headerImage ? (
-                <div 
-                  className="relative group"
-                  style={{ height: `${headerImageHeight}px` }}
-                >
-                  {/* Top Resize Handle */}
-                  <div
-                    onMouseDown={(e) => handleResizeStart(e, 'top')}
-                    className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize z-10 hover:bg-blue-400 transition-colors"
-                    style={{ 
-                      background: isResizingHeader ? '#3b82f6' : 'transparent',
-                      marginTop: '-4px'
-                    }}
-                  >
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-1 bg-blue-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </div>
-                  
-                  {/* Image Container */}
-                  <div 
-                    className="relative cursor-pointer overflow-hidden h-full"
-                    onClick={() => document.getElementById('header-image-upload')?.click()}
-                  >
-                    <img 
-                      src={headerImage.startsWith('http') ? headerImage : `http://localhost:5000${headerImage}`} 
-                      alt="Header" 
-                      onError={(e) => {
-                        console.error('Image failed to load:', headerImage);
-                        console.log('Full URL:', headerImage.startsWith('http') ? headerImage : `http://localhost:5000${headerImage}`);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                      onLoad={() => console.log('Image loaded successfully')}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '4px',
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all rounded-md">
-                      <Upload className="w-8 h-8 text-white opacity-0 group-hover:opacity-100" />
-                    </div>
-                  </div>
+              {/* Horizontal Line */}
+              <div className="header-line"></div>
 
-                  {/* Bottom Resize Handle */}
-                  <div
-                    onMouseDown={(e) => handleResizeStart(e, 'bottom')}
-                    className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize z-10 hover:bg-blue-400 transition-colors"
-                    style={{ 
-                      background: isResizingHeader ? '#3b82f6' : 'transparent',
-                      marginBottom: '-4px'
-                    }}
-                  >
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-1 bg-blue-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </div>
-                </div>
+              {/* Issue Number & Date (Left Side) */}
+              {isEditingIssueNumber ? (
+                <input
+                  type="text"
+                  value={issueNumber}
+                  onChange={(e) => setIssueNumber(e.target.value)}
+                  onBlur={() => setIsEditingIssueNumber(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') setIsEditingIssueNumber(false);
+                    if (e.key === 'Escape') {
+                      setIssueNumber(`גליון ${sheet.version}`);
+                      setIsEditingIssueNumber(false);
+                    }
+                  }}
+                  autoFocus
+                  className="issue-number"
+                  style={{ background: '#eff6ff', border: '1px dashed #3b82f6', cursor: 'text' }}
+                />
               ) : (
-                <div
-                  onClick={() => document.getElementById('header-image-upload')?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-md p-8 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
-                  style={{ height: '120px' }}
+                <div 
+                  className="issue-number" 
+                  onClick={() => setIsEditingIssueNumber(true)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                  <span className="text-sm text-gray-500">לחץ להעלאת תמונת כותרת</span>
+                  {issueNumber}
                 </div>
               )}
-              <input
-                id="header-image-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={isUploading}
-                className="hidden"
-              />
+              {isEditingIssueDate ? (
+                <input
+                  type="text"
+                  value={issueDate}
+                  onChange={(e) => setIssueDate(e.target.value)}
+                  onBlur={() => setIsEditingIssueDate(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') setIsEditingIssueDate(false);
+                    if (e.key === 'Escape') {
+                      setIssueDate(new Date().toLocaleDateString('he-IL', { weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric' }));
+                      setIsEditingIssueDate(false);
+                    }
+                  }}
+                  autoFocus
+                  className="issue-date"
+                  style={{ background: '#eff6ff', border: '1px dashed #3b82f6', cursor: 'text' }}
+                />
+              ) : (
+                <div 
+                  className="issue-date" 
+                  onClick={() => setIsEditingIssueDate(true)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {issueDate}
+                </div>
+              )}
             </div>
 
-            {/* Drag & Drop Grid */}
+            {/* Header Image Section */}
+            {headerImage && (
+              <div 
+                style={{ 
+                  position: 'relative',
+                  width: '100%',
+                  height: `${headerImageHeight}px`,
+                  marginTop: '1rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                {/* Top Resize Handle */}
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'top')}
+                  style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    left: 0,
+                    right: 0,
+                    height: '8px',
+                    cursor: 'ns-resize',
+                    zIndex: 10,
+                    background: isResizingHeader ? '#3b82f6' : 'transparent',
+                  }}
+                />
+                
+                {/* Image */}
+                <img
+                  src={getImageUrl(headerImage) || ''}
+                  alt="Header"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+                
+                {/* Bottom Resize Handle */}
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+                  style={{
+                    position: 'absolute',
+                    bottom: '-4px',
+                    left: 0,
+                    right: 0,
+                    height: '8px',
+                    cursor: 'ns-resize',
+                    zIndex: 10,
+                    background: isResizingHeader ? '#3b82f6' : 'transparent',
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Content Area with Ribbon + Grid */}
             <div className="newspaper-content">
+              {/* Vertical Ribbon - Category + City */}
+              <div className="newspaper-ribbon">
+                <span style={{ fontSize: '1.25rem' }}>{sheet.category.nameHe}</span> <span style={{ marginBottom: '0.5rem' }}>{sheet.city.nameHe}</span>
+              </div>
+
+              {/* Drag & Drop Grid with Absolute Positioning (3x5) */}
               {listings.length === 0 ? (
                 <div className="text-center py-20 text-gray-400">
                   <p className="text-lg">אין מודעות בגיליון</p>
@@ -601,90 +831,30 @@ export default function NewspaperSheetEditorPage() {
                   sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragStart={handleDragStart}
-                  onDragMove={handleDragMove}
                   onDragEnd={handleDragEnd}
+                  modifiers={[snapCenterToCursor]}
                 >
-                  <SortableContext
-                    items={listings.map((l) => l.id)}
-                    strategy={rectSortingStrategy}
-                  >
+                  <SortableContext items={listings.map(l => l.id)} strategy={rectSortingStrategy}>
                     <div className="newspaper-grid">
                       {listings.map((listing) => (
-                        <SortablePropertyCard key={listing.id} listing={listing} />
+                        <SortablePropertyCard 
+                          key={listing.id} 
+                          listing={listing} 
+                          onRemove={handleRemoveListing}
+                        />
                       ))}
                     </div>
                   </SortableContext>
-                  <DragOverlay dropAnimation={null}>
-                    {(() => {
-                      console.log('📦 DragOverlay render:', { 
-                        hasActiveListing: !!activeListing, 
-                        cursorPosition, 
-                        hasOffset: !!dragOffsetRef.current 
-                      });
-                      
-                      if (!activeListing) return null;
-                      
-                      if (!cursorPosition || !dragOffsetRef.current) {
-                        return <div style={{ position: 'fixed', top: 0, left: 0, background: 'red', padding: '10px', color: 'white' }}>❌ No cursor or offset</div>;
-                      }
-                      
-                      const left = cursorPosition.x - dragOffsetRef.current.x;
-                      const top = cursorPosition.y - dragOffsetRef.current.y;
-                      
-                      console.log(`📍 Positioning card at: left=${left}, top=${top}`);
-                      
-                      return (
-                        <div 
-                          className="newspaper-property-card dragging-overlay"
-                          style={{ 
-                            cursor: 'grabbing',
-                            position: 'fixed',
-                            left: `${left}px`,
-                            top: `${top}px`,
-                            pointerEvents: 'none',
-                            zIndex: 9999,
-                          }}
-                        >
-                          <h4 className="property-title">{activeListing.listing.title}</h4>
-                          <p className="property-address">{activeListing.listing.address}</p>
-                          <p className="property-price">₪{activeListing.listing.price.toLocaleString()}</p>
-                        </div>
-                      );
-                    })()}
-                  </DragOverlay>
                 </DndContext>
               )}
-            </div>
+            </div> {/* End newspaper-content */}
 
-            {/* Footer / Logo */}
-            <div className="newspaper-footer">
-              <p>מעודכן ל-{new Date().toLocaleDateString('he-IL')}</p>
-            </div>
-          </div>
+          </div> {/* End newspaper-page */}
+          </div> {/* End zoom wrapper */}
         </div>
 
         {/* RIGHT: Action Sidebar */}
         <div className="w-80 bg-white border-l border-gray-200 p-6 overflow-auto">
-
-        {/* Dragging card portal - outside of everything */}
-        {activeListing && cursorPosition && dragOffsetRef.current && (
-          <div 
-            className="newspaper-property-card dragging-overlay"
-            style={{ 
-              cursor: 'grabbing',
-              position: 'fixed',
-              left: `${cursorPosition.x - dragOffsetRef.current.x}px`,
-              top: `${cursorPosition.y - dragOffsetRef.current.y}px`,
-              pointerEvents: 'none',
-              zIndex: 99999,
-              width: '312px',
-            }}
-          >
-            <h4 className="property-title">{activeListing.listing.title}</h4>
-            <p className="property-address">{activeListing.listing.address}</p>
-            <p className="property-price">\u20aa{activeListing.listing.price.toLocaleString()}</p>
-          </div>
-        )}
           <h2 className="text-lg font-bold text-gray-900 mb-6">פעולות</h2>
 
           <div className="space-y-4">
@@ -721,7 +891,13 @@ export default function NewspaperSheetEditorPage() {
 
             {/* Save (JSON only) */}
             <button
-              onClick={() => updateSheetMutation.mutate({ title, headerImage })}
+              onClick={() => updateSheetMutation.mutate({ 
+                title, 
+                headerImage,
+                layoutConfig: JSON.stringify({ headerImageHeight }),
+                issueNumber,
+                issueDate
+              })}
               disabled={updateSheetMutation.isPending}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
@@ -749,12 +925,29 @@ export default function NewspaperSheetEditorPage() {
               צפה ב-PDF
             </button>
 
-            {/* Reset to Default (conceptual) */}
+            {/* Reset to Default */}
             <button
               onClick={() => {
-                if (confirm('האם לאפס את הכותרת והתמונה?')) {
-                  setTitle(sheet.title);
-                  setHeaderImage(sheet.headerImage);
+                if (confirm('האם לאפס את הכותרת, התמונה וגובה התמונה לברירת מחדל?')) {
+                  // Reset to defaults
+                  const defaultTitle = 'לוח מודעות';
+                  setTitle(defaultTitle);
+                  setHeaderImage(null);
+                  setHeaderImageHeight(120);
+                  setIssueNumber(`גליון ${sheet.version}`);
+                  setIssueDate(new Date().toLocaleDateString('he-IL', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'numeric', 
+                    day: 'numeric' 
+                  }));
+                  
+                  // Save to server
+                  updateSheetMutation.mutate({
+                    title: defaultTitle,
+                    headerImage: null,
+                    layoutConfig: JSON.stringify({ headerImageHeight: 120 })
+                  });
                 }
               }}
               className="w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -766,7 +959,7 @@ export default function NewspaperSheetEditorPage() {
             <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">גרסה:</span>
-                <span className="font-semibold">{sheet.version}</span>
+                <span className="font-semibold text-gray-900">{sheet.version}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">סטטוס:</span>
@@ -774,12 +967,24 @@ export default function NewspaperSheetEditorPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">מודעות:</span>
-                <span className="font-semibold">{listings.length}</span>
+                <span className="font-semibold text-gray-900">{listings.length}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* DragOverlay Portal - rendered at document.body for accurate positioning */}
+      {createPortal(
+        <DragOverlay dropAnimation={null} adjustScale={false}>
+          {activeId ? (
+            <PropertyCardOverlay 
+              listing={listings.find(l => l.id === activeId)!} 
+            />
+          ) : null}
+        </DragOverlay>,
+        document.body
+      )}
     </div>
   );
 }

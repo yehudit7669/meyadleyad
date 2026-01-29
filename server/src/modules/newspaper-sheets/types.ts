@@ -39,6 +39,8 @@ export interface UpdateSheetData {
   headerImage?: string;
   layoutConfig?: LayoutConfig;
   status?: NewspaperSheetStatus;
+  issueNumber?: string;
+  issueDate?: string;
 }
 
 /**
@@ -88,6 +90,11 @@ export interface SheetWithListings {
       address: string | null;
       price: number | null;
       customFields: any;
+      User?: {
+        name: string | null;
+        email: string;
+        phone: string | null;
+      };
       AdImage: Array<{
         url: string;
         order: number;
