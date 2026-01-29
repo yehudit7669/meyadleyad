@@ -21,8 +21,8 @@ CREATE TYPE "PendingIntentStatus" AS ENUM ('PENDING', 'EXPIRED', 'COMPLETED');
 -- CreateEnum
 CREATE TYPE "EmailMailingStatus" AS ENUM ('ACTIVE', 'REMOVED');
 
--- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+-- DropIndex (if exists - safe version)
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "EmailAuditLog" DROP COLUMN "commandType",
