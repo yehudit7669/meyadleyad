@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -68,7 +69,7 @@ export const config = {
   },
   
   upload: {
-    dir: process.env.UPLOAD_DIR || './uploads',
+    dir: process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads'),
     maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880', 10),
     allowedMimeTypes: (process.env.ALLOWED_MIME_TYPES || 'image/jpeg,image/png,image/webp').split(','),
   },

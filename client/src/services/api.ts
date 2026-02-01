@@ -432,12 +432,14 @@ export const adminService = {
     limit?: number;
     status?: string;
     search?: string;
+    adNumber?: string;
   }) => {
     const params = new URLSearchParams();
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.status) params.append('status', filters.status);
     if (filters?.search) params.append('search', filters.search);
+    if (filters?.adNumber) params.append('adNumber', filters.adNumber);
 
     const response = await api.get(`/admin/ads?${params.toString()}`);
     // השרת מחזיר { status: 'success', data: { ads: [...], pagination: {...} } }

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import fs from 'fs';
 import { config } from './config';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
@@ -120,9 +121,18 @@ app.use(performanceMonitor);
 app.use(requestLogger);
 
 // Static files - serve uploads from server/uploads
-const uploadsPath = path.join(__dirname, '../uploads');
+// Use process.cwd() instead of __dirname to work correctly in production
+const uploadsPath = path.resolve(process.cwd(), 'uploads');
 app.use('/uploads', express.static(uploadsPath));
 console.log('📁 Serving static files from:', uploadsPath);
+
+// Create uploads directory if it doesn't exist
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+  console.log('📁 Created uploads directory');
+} else {
+  console.log('📁 Uploads directory exists');
+}
 
 // Health check
 app.get('/health', (_req, res) => {

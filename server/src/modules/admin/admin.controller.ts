@@ -94,6 +94,7 @@ export class AdminController {
       const filters = {
         status: req.query.status as AdStatus,
         search: req.query.search as string,
+        adNumber: req.query.adNumber as string,
       };
 
       const result = await adminService.getAllAds(page, limit, filters);

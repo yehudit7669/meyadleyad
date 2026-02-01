@@ -354,6 +354,7 @@ export class AdminService {
     filters?: {
       status?: AdStatus | string;
       search?: string;
+      adNumber?: string;
     }
   ) {
     const skip = (page - 1) * limit;
@@ -367,6 +368,13 @@ export class AdminService {
         where.status = { in: statuses };
       } else {
         where.status = filters.status;
+      }
+    }
+
+    if (filters?.adNumber) {
+      const adNum = parseInt(filters.adNumber, 10);
+      if (!isNaN(adNum)) {
+        where.adNumber = adNum;
       }
     }
 

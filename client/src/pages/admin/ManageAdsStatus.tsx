@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -28,9 +28,12 @@ export default function ManageAdsStatus() {
   const _isSuperAdmin = userRole === 'SUPER_ADMIN';
   
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [adNumber, setAdNumber] = useState('');
+  const [debouncedAdNumber, setDebouncedAdNumber] = useState('');
   const [previewAdId, setPreviewAdId] = useState<string | null>(null);
   const [_selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [editingAdId, setEditingAdId] = useState<string | null>(null);
@@ -39,12 +42,28 @@ export default function ManageAdsStatus() {
   const [sortBy, setSortBy] = useState<'date' | 'views'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Debounce search inputs
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAdNumber(adNumber);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [adNumber]);
+
   // Fetch ads with filters
   const { data, isLoading, refetch: _refetch } = useQuery({
-    queryKey: ['admin-all-ads', search, statusFilter, dateFrom, dateTo],
+    queryKey: ['admin-all-ads', debouncedSearch, statusFilter, dateFrom, dateTo, debouncedAdNumber],
     queryFn: () => adminService.getAllAds({
-      search,
+      search: debouncedSearch,
       status: statusFilter.length > 0 ? statusFilter.join(',') : undefined,
+      adNumber: debouncedAdNumber ? debouncedAdNumber : undefined,
     }),
   });
 
@@ -184,16 +203,32 @@ export default function ManageAdsStatus() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-lg font-bold mb-4 text-black">סינון וחיפוש</h2>
           
-          {/* Search */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-black">חיפוש (שם, כתובת, טלפון)</label>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="הקלד לחיפוש..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
+          {/* Search Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Search by name, address, phone - Right side */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-black">חיפוש (שם, כתובת, טלפון)</label>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="הקלד לחיפוש..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Ad Number Search - Left side */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-black">מספר סידורי של מודעה</label>
+              <input
+                type="number"
+                value={adNumber}
+                onChange={(e) => setAdNumber(e.target.value)}
+                placeholder="הקלד מספר סידורי..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                min="1"
+              />
+            </div>
           </div>
 
           {/* Status filters */}
@@ -239,13 +274,16 @@ export default function ManageAdsStatus() {
           </div>
 
           {/* Clear filters */}
-          {(search || statusFilter.length > 0 || dateFrom || dateTo) && (
+          {(search || statusFilter.length > 0 || dateFrom || dateTo || adNumber) && (
             <button
               onClick={() => {
                 setSearch('');
+                setDebouncedSearch('');
                 setStatusFilter([]);
                 setDateFrom('');
                 setDateTo('');
+                setAdNumber('');
+                setDebouncedAdNumber('');
               }}
               className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
