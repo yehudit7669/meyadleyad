@@ -6,6 +6,7 @@ import { WhatsAppService } from '../whatsapp/whatsapp.service';
 import { PDFService } from '../pdf/pdf.service';
 import { config } from '../../config';
 import { v4 as uuidv4 } from 'uuid';
+import { emailPermissionsService } from '../admin/email-permissions.service';
 
 export class AdsService {
   private emailService: EmailService;
@@ -78,6 +79,30 @@ export class AdsService {
       adType: data.adType,
     });
 
+    // Get user to check role and email
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, email: true }
+    });
+
+    // Auto-approve for ADMIN and SUPER_ADMIN
+    const isAdminOrSuperAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+    
+    // Check if user has special permission to publish without approval
+    const hasPublishPermission = user?.email 
+      ? await emailPermissionsService.hasPermission(user.email, 'publish_without_approval')
+      : false;
+    
+    const shouldAutoApprove = isAdminOrSuperAdmin || hasPublishPermission;
+    const adStatus = shouldAutoApprove ? AdStatus.ACTIVE : AdStatus.PENDING;
+
+    console.log('ADS SERVICE - Auto-approve check:', {
+      userEmail: user?.email,
+      isAdminOrSuperAdmin,
+      hasPublishPermission,
+      shouldAutoApprove
+    });
+
     // Prepare customFields with contact info and wanted-specific data
     const finalCustomFields = {
       ...data.customFields,
@@ -101,7 +126,8 @@ export class AdsService {
           requestedLocationText: data.requestedLocationText,
           address: data.requestedLocationText, // For display purposes
           customFields: finalCustomFields,
-          status: AdStatus.PENDING,
+          status: adStatus,
+          publishedAt: shouldAutoApprove ? new Date() : null,
           updatedAt: new Date(),
         },
         include: {
@@ -173,6 +199,30 @@ export class AdsService {
 
     console.log('ADS SERVICE - Validation passed, creating regular ad in DB');
 
+    // Get user to check role and email
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, email: true }
+    });
+
+    // Auto-approve for ADMIN and SUPER_ADMIN
+    const isAdminOrSuperAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+    
+    // Check if user has special permission to publish without approval
+    const hasPublishPermission = user?.email 
+      ? await emailPermissionsService.hasPermission(user.email, 'publish_without_approval')
+      : false;
+    
+    const shouldAutoApprove = isAdminOrSuperAdmin || hasPublishPermission;
+    const adStatus = shouldAutoApprove ? AdStatus.ACTIVE : AdStatus.PENDING;
+
+    console.log('ADS SERVICE - Auto-approve check:', {
+      userEmail: user?.email,
+      isAdminOrSuperAdmin,
+      hasPublishPermission,
+      shouldAutoApprove
+    });
+
     // Prepare customFields with contact info
     const finalCustomFields = {
       ...data.customFields,
@@ -198,7 +248,8 @@ export class AdsService {
           longitude: data.longitude,
           customFields: finalCustomFields,
           userId,
-          status: AdStatus.PENDING,
+          status: adStatus,
+          publishedAt: shouldAutoApprove ? new Date() : null,
           updatedAt: new Date(),
         },
         include: {

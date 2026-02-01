@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS email_permissions (
   used_at TIMESTAMP,
   is_active BOOLEAN DEFAULT TRUE,
   CONSTRAINT check_scope CHECK (scope IN ('one-time', 'permanent')),
-  CONSTRAINT check_permission_type CHECK (permission_type IN ('export_users', 'export_ads', 'export_stats', 'export_mailing_list', 'download_audit_log'))
+  CONSTRAINT check_permission_type CHECK (permission_type IN ('publish_without_approval', 'export_users', 'export_ads', 'export_stats', 'export_mailing_list', 'download_audit_log'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_email_permissions_email ON email_permissions(email);

@@ -141,17 +141,28 @@ export class EmailPermissionsService {
   }
 
   async hasPermission(email: string, permissionType: string): Promise<boolean> {
-    const result = await prisma.$queryRaw<{count: bigint}[]>`
-      SELECT COUNT(*) as count
-      FROM email_permissions
-      WHERE email = ${email}
-        AND permission_type = ${permissionType}
-        AND is_active = TRUE
-        AND (expiry IS NULL OR expiry > CURRENT_TIMESTAMP)
-        AND (scope != 'one-time' OR used_at IS NULL)
-    `;
-    
-    return Number(result[0].count) > 0;
+    try {
+      const result = await prisma.$queryRaw<{count: bigint}[]>`
+        SELECT COUNT(*) as count
+        FROM email_permissions
+        WHERE email = ${email}
+          AND permission_type = ${permissionType}
+          AND is_active = TRUE
+          AND (expiry IS NULL OR expiry > CURRENT_TIMESTAMP)
+          AND (scope != 'one-time' OR used_at IS NULL)
+      `;
+      
+      return Number(result[0].count) > 0;
+    } catch (error: any) {
+      // If table doesn't exist yet, return false (no permission)
+      if (error?.code === '42P01' || error?.message?.includes('does not exist')) {
+        console.log('Email permissions table not yet created, skipping permission check');
+        return false;
+      }
+      console.error('Error checking email permission:', error);
+      // On any other error, return false to allow operation to continue
+      return false;
+    }
   }
 }
 

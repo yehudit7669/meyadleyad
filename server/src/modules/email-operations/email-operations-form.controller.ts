@@ -8,6 +8,7 @@
 
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { emailPermissionsService } from '../admin/email-permissions.service';
 import { emailOperationsTemplates } from './email-operations-templates.service';
 import { emailAuditLogger } from './email-audit-logger.service';
 import { EmailCommandType } from './email-command-parser.service';
@@ -90,7 +91,16 @@ export class EmailOperationsFormController {
         return;
       }
 
-      // יצירת המודעה בסטטוס PENDING
+      // Auto-approve for ADMIN and SUPER_ADMIN
+      const isAdminOrSuperAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+      
+      // Check if user has special permission to publish without approval
+      const hasPublishPermission = await emailPermissionsService.hasPermission(user.email, 'publish_without_approval');
+      
+      const shouldAutoApprove = isAdminOrSuperAdmin || hasPublishPermission;
+      const adStatus = shouldAutoApprove ? 'ACTIVE' : 'PENDING';
+
+      // יצירת המודעה
       const ad = await prisma.ad.create({
         data: {
           id: uuidv4(),
@@ -103,14 +113,15 @@ export class EmailOperationsFormController {
           price: formData.price,
           address: formData.address,
           customFields: formData.customFields || {},
-          status: 'PENDING',
+          status: adStatus,
+          publishedAt: shouldAutoApprove ? new Date() : null,
           isWanted: formData.isWanted || false,
           requestedLocationText: formData.requestedLocationText,
           updatedAt: new Date(),
         },
       });
 
-      console.log(`✅ Created ad ${ad.adNumber} in PENDING status`);
+      console.log(`✅ Created ad ${ad.adNumber} in ${adStatus} status`);
 
       // תיעוד
       await emailAuditLogger.logSuccess({
