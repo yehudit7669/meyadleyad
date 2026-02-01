@@ -76,8 +76,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const validPermissionTypes = [
       'publish_without_approval',
-      'export_users',
-      'export_ads', 
+    'manage_branding',
       'export_stats',
       'export_mailing_list',
       'download_audit_log'

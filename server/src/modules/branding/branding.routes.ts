@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { brandingController } from './branding.controller';
-import { authenticate, authorize } from '../../middlewares/auth';
+import { authenticate, authorizeWithPermission } from '../../middlewares/auth';
 import multer from 'multer';
 import path from 'path';
 import { config } from '../../config';
@@ -35,9 +35,9 @@ const uploadLogo = multer({
   },
 });
 
-// כל הנתיבים דורשים אימות ו-ADMIN
+// כל הנתיבים דורשים אימות ו-ADMIN או הרשאת manage_branding
 router.use(authenticate);
-router.use(authorize('ADMIN'));
+router.use(authorizeWithPermission(['ADMIN', 'SUPER_ADMIN'], 'manage_branding'));
 
 // נתיבים
 router.get('/', brandingController.getBranding);

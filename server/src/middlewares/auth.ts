@@ -94,3 +94,51 @@ export const authorize = (...roles: string[]) => {
     next();
   };
 };
+
+/**
+ * Advanced authorization that also checks email permissions
+ * @param roles - Required roles (ADMIN, SUPER_ADMIN, etc.)
+ * @param permission - Optional email permission that can grant access
+ */
+export const authorizeWithPermission = (roles: string[], permission?: string) => {
+  return async (req: AuthRequest, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new UnauthorizedError());
+    }
+
+    // SUPER_ADMIN has access to everything
+    if (req.user.role === 'SUPER_ADMIN') {
+      return next();
+    }
+
+    // Check if user's role is in the allowed roles
+    if (roles.includes(req.user.role)) {
+      return next();
+    }
+
+    // If permission is specified, check email permissions
+    if (permission && req.user.email) {
+      try {
+        const emailPermission = await prisma.$queryRaw<any[]>`
+          SELECT id, permission_type
+          FROM email_permissions
+          WHERE email = ${req.user.email}
+            AND permission_type = ${permission}
+            AND is_active = TRUE
+            AND (expiry IS NULL OR expiry > NOW())
+          LIMIT 1
+        `;
+
+        if (emailPermission && emailPermission.length > 0) {
+          console.log('✅ Access granted via email permission:', permission, 'for user:', req.user.email);
+          return next();
+        }
+      } catch (error) {
+        console.error('Error checking email permissions:', error);
+      }
+    }
+
+    console.log('❌ authorize failed - user role:', req.user.role, 'allowed:', roles, 'permission:', permission);
+    return next(new UnauthorizedError('Insufficient permissions'));
+  };
+};

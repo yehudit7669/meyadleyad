@@ -8,9 +8,9 @@ async function updateConstraint() {
       `ALTER TABLE email_permissions DROP CONSTRAINT IF EXISTS check_permission_type`
     );
     
-    console.log('Adding new constraint with publish_without_approval...');
+    console.log('Adding new constraint with publish_without_approval and manage_branding...');
     await prisma.$executeRawUnsafe(
-      `ALTER TABLE email_permissions ADD CONSTRAINT check_permission_type CHECK (permission_type IN ('publish_without_approval', 'export_users', 'export_ads', 'export_stats', 'export_mailing_list', 'download_audit_log'))`
+      `ALTER TABLE email_permissions ADD CONSTRAINT check_permission_type CHECK (permission_type IN ('publish_without_approval', 'manage_branding', 'export_users', 'export_ads', 'export_stats', 'export_mailing_list', 'download_audit_log'))`
     );
     
     console.log('✅ Constraint updated successfully!');

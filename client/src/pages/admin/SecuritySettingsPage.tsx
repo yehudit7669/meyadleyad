@@ -681,6 +681,7 @@ export default function SecuritySettingsPage() {
                     >
                       <option value="">בחר סוג הרשאה</option>
                       <option value="publish_without_approval">פרסום מודעות ללא אישור</option>
+                      <option value="manage_branding">ניהול מדיה ומיתוג</option>
                       <option value="export_users">ייצוא משתמשים</option>
                       <option value="export_ads">ייצוא מודעות</option>
                       <option value="export_stats">ייצוא סטטיסטיקות</option>

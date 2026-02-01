@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './hooks/useAuth';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
-import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
+import { ProtectedRoute, AdminRoute, BrandingRoute } from './components/ProtectedRoute';
 import AdminLayout from './components/admin/AdminLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -171,7 +171,7 @@ const App: React.FC = () => {
                   <Route path="/admin/users/:userId" element={<AdminRoute><AdminLayout><UserProfilePage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/appointments" element={<AdminRoute><AdminLayout><AppointmentsAdminPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/content" element={<AdminRoute><AdminLayout><ContentDistributionPage /></AdminLayout></AdminRoute>} />
-                  <Route path="/admin/branding" element={<AdminRoute><AdminLayout><BrandingMediaPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/branding" element={<BrandingRoute><AdminLayout><BrandingMediaPage /></AdminLayout></BrandingRoute>} />
                   <Route path="/admin/imports" element={<AdminRoute><AdminLayout><ImportsPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/audit" element={<AdminRoute><AdminLayout><AuditLog /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/backups" element={<AdminRoute><AdminLayout><BackupsPage /></AdminLayout></AdminRoute>} />
@@ -179,7 +179,7 @@ const App: React.FC = () => {
                   
                   {/* Legacy Admin Routes - keep for backward compatibility */}
                   <Route path="/admin/ads-management" element={<AdminRoute><AdminLayout><AdminAdsManagement /></AdminLayout></AdminRoute>} />
-                  <Route path="/admin/branding-logo" element={<AdminRoute><AdminLayout><BrandingLogoSettings /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/branding-logo" element={<BrandingRoute><AdminLayout><BrandingLogoSettings /></AdminLayout></BrandingRoute>} />
                   <Route path="/admin/scheduled-ads" element={<AdminRoute><AdminLayout><ScheduledAds /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/audit-log" element={<AdminRoute><AdminLayout><AuditLog /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/categories" element={<AdminRoute><AdminLayout><CategoriesManager /></AdminLayout></AdminRoute>} />

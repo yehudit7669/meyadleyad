@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useEmailPermissions } from '../../hooks/useEmailPermissions';
 import {
   LayoutDashboard,
   FileText,
@@ -25,6 +26,7 @@ interface MenuItem {
   path?: string;
   icon: React.ReactNode;
   requiredRoles: ('ADMIN' | 'SUPER_ADMIN' | 'MODERATOR')[];
+  requiredPermission?: string; // Optional: requires email permission
   children?: SubMenuItem[];
 }
 
@@ -33,6 +35,7 @@ interface SubMenuItem {
   title: string;
   path: string;
   requiredRoles: ('ADMIN' | 'SUPER_ADMIN' | 'MODERATOR')[];
+  requiredPermission?: string; // Optional: requires email permission
 }
 
 const menuItems: MenuItem[] = [
@@ -96,7 +99,8 @@ const menuItems: MenuItem[] = [
     title: 'ניהול מדיה ומיתוג',
     path: '/admin/branding',
     icon: <ImageIcon className="w-5 h-5" />,
-    requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+    requiredPermission: 'manage_branding' // Allow via email permission
   },
   {
     id: 'imports',
@@ -173,7 +177,20 @@ function getUserRole(user: any): 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null {
   return null;
 }
 
-function hasAccess(userRole: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null, requiredRoles: MenuItem['requiredRoles']): boolean {
+function hasAccess(
+  userRole: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null, 
+  requiredRoles: MenuItem['requiredRoles'],
+  requiredPermission?: string,
+  hasPermission?: (permission: string) => boolean
+): boolean {
+  // If permission is required, check if user has it
+  if (requiredPermission && hasPermission) {
+    if (hasPermission(requiredPermission)) {
+      return true; // Permission grants access regardless of role
+    }
+  }
+  
+  // Otherwise check role
   if (!userRole) return false;
   return requiredRoles.includes(userRole);
 }
@@ -184,12 +201,15 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = useAuth();
+  const { hasPermission } = useEmailPermissions();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['ads-management']); // ניהול מודעות פתוח כברירת מחדל
 
   const userRole = getUserRole(user);
-  const allowedMenuItems = menuItems.filter(item => hasAccess(userRole, item.requiredRoles));
+  const allowedMenuItems = menuItems.filter(item => 
+    hasAccess(userRole, item.requiredRoles, item.requiredPermission, hasPermission)
+  );
 
   // Debug logging
   React.useEffect(() => {
@@ -232,9 +252,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <nav className="flex-1 overflow-y-auto p-4" aria-label="תפריט ניהול">
         <ul className="space-y-1">
           {allowedMenuItems.map((item) => {
-            const hasChildren = item.children && item.children.length > 0;
+            // Filter children by permissions
+            const allowedChildren = item.children?.filter(child => 
+              hasAccess(userRole, child.requiredRoles, child.requiredPermission, hasPermission)
+            );
+            const hasChildren = allowedChildren && allowedChildren.length > 0;
             const isExpanded = expandedCategories.includes(item.id);
-            const isItemActive = hasChildren ? isChildActive(item.children) : isActive(item.path);
+            const isItemActive = hasChildren ? isChildActive(allowedChildren) : isActive(item.path);
 
             return (
               <li key={item.id}>
@@ -268,7 +292,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {/* Sub-menu */}
                     {isExpanded && (
                       <ul className="mt-1 mr-6 space-y-1">
-                        {item.children?.map(child => (
+                        {allowedChildren?.map(child => (
                           <li key={child.id}>
                             <Link
                               to={child.path}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useEmailPermissions } from '../hooks/useEmailPermissions';
 import { FullPageLoading } from './LoadingSkeletons';
 
 interface ProtectedRouteProps {
@@ -65,6 +66,43 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
 // Alias for Broker-only routes
 export function BrokerRoute({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute requireBroker={true}>{children}</ProtectedRoute>;
+}
+
+// Route for Branding - allows ADMIN/SUPER_ADMIN or users with manage_branding permission
+export function BrandingRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const { hasPermission } = useEmailPermissions();
+
+  if (loading) {
+    return <FullPageLoading message="מאמת הרשאות..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check if user is ADMIN/SUPER_ADMIN or has manage_branding permission
+  const canAccess = 
+    user.role === 'ADMIN' || 
+    user.role === 'SUPER_ADMIN' || 
+    hasPermission('manage_branding');
+
+  if (!canAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50" dir="rtl">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🚫</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-2">אין הרשאת גישה</h2>
+          <p className="text-gray-600 mb-6">אין לך הרשאה לגשת לניהול מדיה ומיתוג</p>
+          <a href="/" className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+            חזרה לדף הבית
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 export default ProtectedRoute;
