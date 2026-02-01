@@ -449,9 +449,10 @@ export class AdsService {
 
   async updateAd(adId: string, userId: string, userRole: string, data: Partial<{
     title: string;
-    description: string;
+    description?: string;
     price?: number;
     categoryId: string;
+    adType?: string;
     cityId: string;
     streetId: string;
     houseNumber: number;

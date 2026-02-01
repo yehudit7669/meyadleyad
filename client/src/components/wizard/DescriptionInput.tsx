@@ -4,8 +4,8 @@ interface DescriptionInputProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
-  minLength?: number;
   maxLength?: number;
+  maxWords?: number;
 }
 
 const DescriptionInput: React.FC<DescriptionInputProps> = ({
@@ -13,11 +13,11 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
   onChange,
   error,
   maxLength = 1200,
+  maxWords = 16,
 }) => {
   const [localError, setLocalError] = useState<string>('');
   const charCount = value.length;
-  // const isMinLengthMet = charCount >= minLength;
-  const isMaxLengthExceeded = charCount > maxLength;
+  const wordCount = value.trim().length > 0 ? value.trim().split(/\s+/).length : 0;
 
   useEffect(() => {
     // Clear local error when external error changes
@@ -56,12 +56,18 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
       return;
     }
 
-    // Validate content
-    const contentError = validateContent(newValue);
-    if (contentError) {
-      setLocalError(contentError);
+    // Check word count
+    const newWordCount = newValue.trim().length > 0 ? newValue.trim().split(/\s+/).length : 0;
+    if (newWordCount > maxWords) {
+      setLocalError(`התיאור חייב להיות עד ${maxWords} מילים`);
     } else {
-      setLocalError('');
+      // Validate content
+      const contentError = validateContent(newValue);
+      if (contentError) {
+        setLocalError(contentError);
+      } else {
+        setLocalError('');
+      }
     }
 
     onChange(newValue);
@@ -90,11 +96,11 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
         dir="rtl"
       />
 
-      {/* Character counter and validation messages */}
+      {/* Word counter and validation messages */}
       <div className="flex items-center justify-between text-sm">
         <div className="flex flex-col gap-1">
-          {charCount > 0 && !displayError && (
-            <span className="text-green-600">✓ אורך תקין</span>
+          {wordCount > 0 && !displayError && wordCount <= maxWords && (
+            <span className="text-green-600">✓ {wordCount} מילים (מתוך {maxWords})</span>
           )}
           {displayError && (
             <span className="text-red-600">⚠ {displayError}</span>
@@ -103,14 +109,14 @@ const DescriptionInput: React.FC<DescriptionInputProps> = ({
         
         <span
           className={`font-medium ${
-            isMaxLengthExceeded
+            wordCount > maxWords
               ? 'text-red-600'
-              : charCount >= maxLength * 0.9
+              : wordCount >= maxWords * 0.8
               ? 'text-amber-600'
               : 'text-gray-500'
           }`}
         >
-          {charCount} / {maxLength}
+          {wordCount} / {maxWords} מילים
         </span>
       </div>
 

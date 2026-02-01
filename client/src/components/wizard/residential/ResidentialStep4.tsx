@@ -68,9 +68,10 @@ const ResidentialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
     const newErrors: Record<string, string> = {};
 
     // Validate description only if provided
-    if (formData.description && formData.description.length > 0) {
-      if (formData.description.length > 1200) {
-        newErrors.description = 'התיאור חייב להיות עד 1200 תווים';
+    if (formData.description && formData.description.trim().length > 0) {
+      const wordCount = formData.description.trim().split(/\s+/).length;
+      if (wordCount > 16) {
+        newErrors.description = 'התיאור חייב להיות עד 16 מילים';
       }
 
       // Validate description content
@@ -120,8 +121,8 @@ const ResidentialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
           value={formData.description}
           onChange={handleDescriptionChange}
           error={errors.description}
-          minLength={80}
           maxLength={1200}
+          maxWords={16}
         />
 
         {/* Property Images */}

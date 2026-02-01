@@ -25,8 +25,12 @@ const validateDescriptionContent = (description: string): boolean => {
 
 // Custom description validator for residential ads (for sale/rent)
 const residentialDescriptionSchema = z.string()
-  .min(80, 'התיאור חייב להכיל לפחות 80 תווים')
-  .max(1200, 'התיאור חייב להיות עד 1200 תווים')
+  .refine((val) => {
+    const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
+    return wordCount <= 16;
+  }, {
+    message: 'התיאור חייב להכיל עד 16 מילים',
+  })
   .refine(validateDescriptionContent, {
     message: 'התיאור מכיל תוכן אסור (קישורים, מספרי טלפון, או טקסט פרסומי)',
   });
@@ -95,9 +99,10 @@ export const updateAdSchema = z.object({
   }),
   body: z.object({
     title: z.string().min(5).max(200).optional(),
-    description: z.string().min(10).optional(),
+    description: z.string().optional().or(z.literal('')),
     price: z.number().positive().optional(),
     categoryId: z.string().min(1).optional(),
+    adType: z.string().optional(),
     cityId: z.string().min(1).optional(),
     streetId: z.string().min(1).optional(),
     houseNumber: z.number().int().positive().optional(),
@@ -108,6 +113,18 @@ export const updateAdSchema = z.object({
     contactName: z.string().optional(),
     contactPhone: z.string().min(9).max(15).optional(),
   }),
+}).superRefine((data, ctx) => {
+  // Apply strict description validation for FOR_SALE and FOR_RENT ads only if description is provided
+  if ((data.body.adType === 'FOR_SALE' || data.body.adType === 'FOR_RENT') && data.body.description) {
+    const result = residentialDescriptionSchema.safeParse(data.body.description);
+    if (!result.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: result.error.errors[0].message,
+        path: ['body', 'description'],
+      });
+    }
+  }
 });
 
 export const getAdsSchema = z.object({

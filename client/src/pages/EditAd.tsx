@@ -18,6 +18,7 @@ export default function EditAd() {
     description: '',
     price: '',
     categoryId: '',
+    adType: '',
     cityId: '',
     streetId: '',
     neighborhood: '',
@@ -138,6 +139,7 @@ export default function EditAd() {
         description: ad.description || '',
         price: ad.price ? String(ad.price) : '',
         categoryId: ad.category?.id || ad.categoryId || '',
+        adType: ad.adType || '',
         cityId: ad.city?.id || ad.cityId || '',
         streetId: ad.street?.id || ad.streetId || '',
         neighborhood: ad.neighborhood || '',
@@ -291,16 +293,16 @@ export default function EditAd() {
       return;
     }
     
-    if (!formData.description) {
-      alert('נא למלא תיאור');
-      return;
+    // ולידציה - תיאור אופציונלי, אם יש - מקסימום 16 מילים
+    if (formData.description && formData.description.trim()) {
+      const wordCount = formData.description.trim().split(/\s+/).length;
+      if (wordCount > 16) {
+        alert('התיאור חייב להיות עד 16 מילים');
+        return;
+      }
     }
     
-    // ולידציה - לפחות 3 תמונות
-    if (formData.images.length < 3) {
-      alert('חובה להעלות לפחות 3 תמונות');
-      return;
-    }
+    // תמונות אופציונליות - אין מינימום
     
     try {
       updateMutation.mutate({
@@ -308,6 +310,7 @@ export default function EditAd() {
         description: formData.description,
         price: formData.price ? parseFloat(formData.price) : undefined,
         categoryId: formData.categoryId,
+        adType: formData.adType,
         cityId: formData.cityId,
         streetId: formData.streetId,
         customFields: formData.customFields,
@@ -646,10 +649,9 @@ export default function EditAd() {
 
             {/* תיאור */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">תיאור *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">תיאור (אופציונלי, עד 16 מילים)</label>
               <textarea
                 name="description"
-                required
                 value={formData.description}
                 onChange={handleChange}
                 rows={8}
@@ -657,7 +659,9 @@ export default function EditAd() {
                 placeholder="תאר את הנכס בפירוט..."
               />
               <div className="text-sm text-gray-500 mt-1">
-                {formData.description.length} תווים
+                {formData.description.trim().length > 0 
+                  ? `${formData.description.trim().split(/\s+/).length} מילים (מתוך 16)` 
+                  : '0 מילים (מתוך 16)'}
               </div>
             </div>
 
