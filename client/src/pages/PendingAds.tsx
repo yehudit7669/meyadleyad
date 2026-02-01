@@ -33,6 +33,7 @@ export default function PendingAds() {
   const [rejectingAdId, setRejectingAdId] = useState<string | null>(null);
   const [previewAdId, setPreviewAdId] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [tableImageIndexes, setTableImageIndexes] = useState<{ [key: string]: number }>({});
   const [sortBy, setSortBy] = useState<'date' | 'views'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
@@ -245,6 +246,8 @@ export default function PendingAds() {
                         </th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">כתובת</th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">סוג נכס</th>
+                        <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">תיאור</th>
+                        <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">תמונות</th>
                         <th className="px-4 py-3 text-right text-sm font-bold text-gray-900">שם מפרסם</th>
                         <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">
                           <button 
@@ -257,12 +260,15 @@ export default function PendingAds() {
                             )}
                           </button>
                         </th>
-                        <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">תצוגה</th>
                         <th className="px-4 py-3 text-center text-sm font-bold text-gray-900">פעולה</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {filteredAds.map((ad: any) => (
+                      {filteredAds.map((ad: any) => {
+                        const currentImageIndex = tableImageIndexes[ad.id] || 0;
+                        const images = ad.AdImage?.sort((a: any, b: any) => a.order - b.order) || [];
+                        
+                        return (
                         <tr key={ad.id} className="hover:bg-gray-50">
                           {/* תאריך */}
                           <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900 font-medium">
@@ -282,6 +288,60 @@ export default function PendingAds() {
                             {getPropertyType(ad.Category?.nameHe || '')}
                           </td>
                           
+                          {/* תיאור */}
+                          <td className="px-4 py-4 text-sm">
+                            <div className="max-w-xs">
+                              <p className="text-gray-700 line-clamp-3" title={ad.description}>
+                                {ad.description || 'אין תיאור'}
+                              </p>
+                            </div>
+                          </td>
+                          
+                          {/* תמונות */}
+                          <td className="px-4 py-4">
+                            <div className="flex items-center justify-center">
+                              {images.length > 0 ? (
+                                <div className="relative group">
+                                  <img
+                                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`}
+                                    alt="תמונת נכס"
+                                    className="w-32 h-32 object-cover rounded-lg cursor-pointer"
+                                    onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`, '_blank')}
+                                  />
+                                  {images.length > 1 && (
+                                    <>
+                                      <button
+                                        onClick={() => setTableImageIndexes(prev => ({
+                                          ...prev,
+                                          [ad.id]: currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1
+                                        }))}
+                                        className="absolute left-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1 rounded-full text-xs opacity-0 group-hover:opacity-100 transition"
+                                      >
+                                        ←
+                                      </button>
+                                      <button
+                                        onClick={() => setTableImageIndexes(prev => ({
+                                          ...prev,
+                                          [ad.id]: currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1
+                                        }))}
+                                        className="absolute right-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-1 rounded-full text-xs opacity-0 group-hover:opacity-100 transition"
+                                      >
+                                        →
+                                      </button>
+                                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white px-2 py-0.5 rounded-full text-xs">
+                                        {currentImageIndex + 1}/{images.length}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                                  אין תמונות
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          
                           {/* שם מפרסם */}
                           <td className="px-4 py-4 text-sm">
                             <div className="max-w-xs">
@@ -299,19 +359,16 @@ export default function PendingAds() {
                             </span>
                           </td>
                           
-                          {/* תצוגה */}
-                          <td className="px-4 py-4 text-center">
-                            <button
-                              onClick={() => { setPreviewAdId(ad.id); setSelectedImageIndex(0); }}
-                              className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition"
-                            >
-                              👁️ תצוגה
-                            </button>
-                          </td>
-                          
                           {/* פעולה */}
                           <td className="px-4 py-4">
                             <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => { setPreviewAdId(ad.id); setSelectedImageIndex(0); }}
+                                title="תצוגה מקדימה"
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                              >
+                                👁️
+                              </button>
                               <button
                                 onClick={() => approveMutation.mutate(ad.id)}
                                 disabled={approveMutation.isPending}
@@ -364,7 +421,8 @@ export default function PendingAds() {
                             )}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
