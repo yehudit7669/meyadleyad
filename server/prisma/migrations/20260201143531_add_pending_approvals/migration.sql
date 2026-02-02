@@ -24,8 +24,8 @@
 -- CreateEnum
 CREATE TYPE "PendingApprovalType" AS ENUM ('OFFICE_ADDRESS_UPDATE', 'ABOUT_UPDATE', 'LOGO_UPLOAD', 'BUSINESS_DESCRIPTION', 'IMPORT_PERMISSION', 'ACCOUNT_DELETION', 'HIGHLIGHT_AD');
 
--- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+-- DropIndex (already dropped or doesn't exist, commented out to prevent error)
+-- DROP INDEX "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "EmailAuditLog" DROP COLUMN "commandType",
