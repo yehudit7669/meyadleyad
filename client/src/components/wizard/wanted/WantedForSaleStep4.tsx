@@ -12,7 +12,7 @@ interface Props {
 const WantedForSaleStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }) => {
   const [contactName, setContactName] = useState(data?.contactName || '');
   const [contactPhone, setContactPhone] = useState(data?.contactPhone || '');
-  const [sendCopyToEmail, setSendCopyToEmail] = useState(true);
+  const [sendCopyToEmail, setSendCopyToEmail] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {

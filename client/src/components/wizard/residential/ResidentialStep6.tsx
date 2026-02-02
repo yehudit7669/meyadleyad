@@ -9,7 +9,7 @@ interface Props {
 }
 
 const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoading }) => {
-  const [sendCopyToEmail, setSendCopyToEmail] = useState(true);
+  const [sendCopyToEmail, setSendCopyToEmail] = useState(false);
 
   const step1 = wizardData.step1;
   const step2 = wizardData.step2;

@@ -28,7 +28,7 @@ export default function AdForm({
   const [streetSearch, setStreetSearch] = useState('');
   const [showStreetDropdown, setShowStreetDropdown] = useState(false);
   const streetDropdownRef = useRef<HTMLDivElement>(null);
-  const [sendCopyToEmail, setSendCopyToEmail] = useState(true);
+  const [sendCopyToEmail, setSendCopyToEmail] = useState(false);
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',

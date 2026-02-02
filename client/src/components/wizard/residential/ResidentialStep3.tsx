@@ -151,6 +151,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                   handleChange('squareMeters', '');
                 }
               }}
+              onWheel={(e) => e.currentTarget.blur()}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.squareMeters ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -198,6 +199,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
               type="number"
               value={formData.floor}
               onChange={(e) => handleChange('floor', e.target.value ? Number(e.target.value) : 0)}
+              onWheel={(e) => e.currentTarget.blur()}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
               placeholder="לדוגמה: 2 (מספר שלילי למרתף)"
             />
@@ -280,6 +282,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                   handleChange('price', '');
                 }
               }}
+              onWheel={(e) => e.currentTarget.blur()}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.price ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -303,6 +306,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                     handleChange('arnona', '');
                   }
                 }}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 placeholder="לדוגמה: 500"
                 min="0"
@@ -322,6 +326,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                     handleChange('vaad', '');
                   }
                 }}
+                onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 placeholder="לדוגמה: 300"
                 min="0"

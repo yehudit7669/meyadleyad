@@ -309,6 +309,7 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
                 handleChange('houseNumber', '');
               }
             }}
+            onWheel={(e) => e.currentTarget.blur()}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
               errors.houseNumber ? 'border-red-500' : 'border-gray-300'
             }`}
