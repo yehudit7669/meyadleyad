@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useUpdateOfficeDetails, useUploadLogo } from '../../hooks/useBroker';
 import { BrokerProfile } from '../../services/brokerService';
+import api, { pendingApprovalsService } from '../../services/api';
 
 interface Props {
   profile: BrokerProfile;
@@ -12,12 +14,43 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
     publishOfficeAddress: profile.office?.publishOfficeAddress || false,
   });
   const [logoError, setLogoError] = useState('');
+  const [newLogoUrl, setNewLogoUrl] = useState<string | null>(null);
 
   const updateOffice = useUpdateOfficeDetails();
   const uploadLogo = useUploadLogo();
 
+  // Fetch user's approval requests
+  const { data: myApprovals } = useQuery({
+    queryKey: ['my-approvals'],
+    queryFn: pendingApprovalsService.getMyApprovals,
+    refetchInterval: 5000, // רענון כל 5 שניות
+  });
+
+  // Find relevant approvals - get the most recent one for each type
+  const getLatestRejection = (type: string) => {
+    const rejections = myApprovals?.filter((a: any) => a.type === type && a.status === 'REJECTED') || [];
+    if (rejections.length === 0) return null;
+    // Sort by reviewedAt (most recent first) and return the first one
+    return rejections.sort((a: any, b: any) => 
+      new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime()
+    )[0];
+  };
+
+  const logoApproval = getLatestRejection('LOGO_UPLOAD');
+  const aboutApproval = getLatestRejection('ABOUT_UPDATE');
+  const logoApproved = myApprovals?.find((a: any) => a.type === 'LOGO_UPLOAD' && a.status === 'APPROVED');
+  const aboutApproved = myApprovals?.find((a: any) => a.type === 'ABOUT_UPDATE' && a.status === 'APPROVED');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // אם יש לוגו חדש, שלח אותו קודם
+    if (newLogoUrl) {
+      await uploadLogo.mutateAsync(newLogoUrl);
+      setNewLogoUrl(null); // איפוס לאחר שליחה
+    }
+    
+    // שלח את שאר השדות
     await updateOffice.mutateAsync(formData);
   };
 
@@ -42,10 +75,28 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
       return;
     }
 
-    // In real implementation, upload to cloud storage
-    // For now, simulate upload
-    const mockUrl = URL.createObjectURL(file);
-    await uploadLogo.mutateAsync(mockUrl);
+    try {
+      // Upload file to server
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await api.post('/upload/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // The URL returned is /uploads/filename.ext
+      // We need to use the base server URL without /api
+      const baseUrl = import.meta.env.VITE_API_URL.replace('/api', '');
+      const imageUrl = `${baseUrl}${(response.data as any).url}`;
+      
+      // שמור ב-state בלבד, לא לשלוח עדיין
+      setNewLogoUrl(imageUrl);
+    } catch (error) {
+      setLogoError('שגיאה בהעלאת הלוגו. נסה שוב.');
+      e.target.value = '';
+    }
   };
 
   return (
@@ -55,9 +106,10 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
       {/* Logo Section */}
       <div className="border-t pt-6">
         <h3 className="text-lg font-semibold mb-4">לוגו עסק</h3>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          {/* לוגו מאושר */}
           <div>
-            <p className="text-sm text-gray-600 mb-2">לוגו מאושר</p>
+            <p className="text-sm text-gray-600 mb-2">לוגו נוכחי</p>
             {profile.office?.logoUrlApproved ? (
               <img
                 src={profile.office.logoUrlApproved}
@@ -71,6 +123,7 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
             )}
           </div>
 
+          {/* העלאת לוגו חדש */}
           <div>
             <p className="text-sm text-gray-600 mb-2">העלה לוגו חדש</p>
             <input
@@ -83,17 +136,48 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
             {logoError && (
               <p className="text-sm text-red-600 mt-2">{logoError}</p>
             )}
-            {profile.office?.logoUrlPending && profile.office?.logoUrlPending !== profile.office?.logoUrlApproved && (
-              <div className="mt-3">
-                <p className="text-sm text-orange-600 mb-2">⏳ לוגו ממתין לאישור:</p>
-                <img
-                  src={profile.office.logoUrlPending}
-                  alt="לוגו ממתין"
-                  className="w-40 h-40 object-contain border rounded-lg"
-                />
-              </div>
-            )}
           </div>
+
+          {/* הודעות סטטוס */}
+          {newLogoUrl && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-600 font-semibold mb-2">🔵 לוגו חדש - ישלח לאישור לאחר לחיצה על "שמור שינויים"</p>
+              <img
+                src={newLogoUrl}
+                alt="לוגו חדש"
+                className="w-40 h-40 object-contain border-2 border-blue-400 rounded-lg"
+              />
+            </div>
+          )}
+          
+          {profile.office?.logoUrlPending && profile.office?.logoUrlPending !== profile.office?.logoUrlApproved && (
+            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-600 font-semibold mb-2">⏳ לוגו ממתין לאישור</p>
+              <img
+                src={profile.office.logoUrlPending}
+                alt="לוגו ממתין"
+                className="w-40 h-40 object-contain border rounded-lg"
+              />
+            </div>
+          )}
+          
+          {logoApproved && !(profile.office?.logoUrlPending && profile.office?.logoUrlPending !== profile.office?.logoUrlApproved) && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm font-semibold text-green-800 mb-1">✅ לוגו חדש אושר!</p>
+              {logoApproved.adminNotes && (
+                <p className="text-sm text-green-700">הערת מנהל: {logoApproved.adminNotes}</p>
+              )}
+            </div>
+          )}
+          
+          {logoApproval && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה ללוגו נדחתה</p>
+              {logoApproval.adminNotes && (
+                <p className="text-sm text-red-700">הערת מנהל: {logoApproval.adminNotes}</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,6 +200,22 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
           </p>
           {profile.office?.aboutBusinessPending && profile.office?.aboutBusinessPending !== profile.office?.aboutBusinessApproved && (
             <p className="text-sm text-orange-600 mt-1">⏳ שינוי ממתין לאישור</p>
+          )}
+          {aboutApproved && !(profile.office?.aboutBusinessPending && profile.office?.aboutBusinessPending !== profile.office?.aboutBusinessApproved) && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון אודות העסק אושר!</p>
+              {aboutApproved.adminNotes && (
+                <p className="text-sm text-green-700">הערת מנהל: {aboutApproved.adminNotes}</p>
+              )}
+            </div>
+          )}
+          {aboutApproval && (
+            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה לעדכון אודות העסק נדחתה</p>
+              {aboutApproval.adminNotes && (
+                <p className="text-sm text-red-700">הערת מנהל: {aboutApproval.adminNotes}</p>
+              )}
+            </div>
           )}
         </div>
 

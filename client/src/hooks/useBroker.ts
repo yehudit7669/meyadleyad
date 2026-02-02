@@ -16,6 +16,7 @@ export const useUpdatePersonalDetails = () => {
     mutationFn: brokerService.updatePersonalDetails,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['broker', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
     },
   });
 };
@@ -27,6 +28,7 @@ export const useUpdateOfficeDetails = () => {
     mutationFn: brokerService.updateOfficeDetails,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['broker', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
     },
   });
 };
@@ -38,6 +40,7 @@ export const useUploadLogo = () => {
     mutationFn: brokerService.uploadLogo,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['broker', 'profile'] });
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
     },
   });
 };
@@ -171,8 +174,13 @@ export const useRequestEmailChange = () => {
 
 // Featured request hook
 export const useCreateFeaturedRequest = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: brokerService.createFeaturedRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
+    },
   });
 };
 
@@ -184,7 +192,12 @@ export const useCreateExportRequest = () => {
 };
 
 export const useCreateDeleteRequest = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation({
     mutationFn: brokerService.createDeleteRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
+    },
   });
 };

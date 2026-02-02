@@ -1,5 +1,7 @@
 import { brokerRepository } from './broker.repository';
 import { AuditService } from '../profile/audit.service';
+import { pendingApprovalsService } from '../admin/pending-approvals.service';
+import { PendingApprovalType } from '@prisma/client';
 import prisma from '../../config/database';
 import type {
   UpdatePersonalDetailsInput,
@@ -35,13 +37,70 @@ export class BrokerService {
 
   // Update office details
   async updateOfficeDetails(userId: string, data: UpdateOfficeDetailsInput, ip?: string) {
+    // Check which fields need approval
+    const needsApproval: { aboutBusiness?: boolean; address?: boolean } = {};
+    
+    // Get current office data for comparison
+    const currentOffice = await prisma.brokerOffice.findUnique({
+      where: { brokerOwnerUserId: userId },
+    });
+
+    // Create pending approvals for fields that require admin approval
+    // Only create approval if the value actually changed from both approved AND pending versions
+    if (
+      data.aboutBusinessPending !== undefined && 
+      data.aboutBusinessPending !== currentOffice?.aboutBusinessApproved &&
+      data.aboutBusinessPending !== currentOffice?.aboutBusinessPending
+    ) {
+      await pendingApprovalsService.createApproval({
+        userId,
+        type: PendingApprovalType.ABOUT_UPDATE,
+        requestData: { aboutBusiness: data.aboutBusinessPending },
+        oldData: { aboutBusiness: currentOffice?.aboutBusinessApproved },
+        reason: 'עדכון אודות העסק',
+      });
+      needsApproval.aboutBusiness = true;
+    }
+
+    if (
+      data.businessAddressPending !== undefined && 
+      data.businessAddressPending !== currentOffice?.businessAddressApproved &&
+      data.businessAddressPending !== currentOffice?.businessAddressPending
+    ) {
+      await pendingApprovalsService.createApproval({
+        userId,
+        type: PendingApprovalType.OFFICE_ADDRESS_UPDATE,
+        requestData: { address: data.businessAddressPending },
+        oldData: { address: currentOffice?.businessAddressApproved },
+        reason: 'עדכון כתובת משרד',
+      });
+      needsApproval.address = true;
+    }
+
+    // Update office with pending fields
     const result = await brokerRepository.updateOfficeDetails(userId, data);
-    await AuditService.log(userId, 'UPDATE_OFFICE', { officeId: result.id, fields: Object.keys(data) }, ip);
+    await AuditService.log(userId, 'UPDATE_OFFICE', { officeId: result.id, fields: Object.keys(data), needsApproval }, ip);
     return result;
   }
 
   // Upload office logo
   async uploadOfficeLogo(userId: string, logoUrl: string, ip?: string) {
+    // Get current logo for comparison
+    const currentOffice = await prisma.brokerOffice.findUnique({
+      where: { brokerOwnerUserId: userId },
+    });
+
+    // Only create pending approval if logo actually changed from both approved AND pending versions
+    if (logoUrl !== currentOffice?.logoUrlApproved && logoUrl !== currentOffice?.logoUrlPending) {
+      await pendingApprovalsService.createApproval({
+        userId,
+        type: PendingApprovalType.LOGO_UPLOAD,
+        requestData: { logoUrl },
+        oldData: { logoUrl: currentOffice?.logoUrlApproved },
+        reason: 'העלאת לוגו חדש',
+      });
+    }
+
     const result = await brokerRepository.updateOfficeLogo(userId, logoUrl);
     await AuditService.log(userId, 'UPDATE_BRANDING', { officeId: result.id, logoUrl }, ip);
     return result;
@@ -142,6 +201,15 @@ export class BrokerService {
 
   // Create featured request
   async createFeaturedRequest(userId: string, data: CreateFeaturedRequestInput, ip?: string) {
+    // Create pending approval for highlight request
+    await pendingApprovalsService.createApproval({
+      userId,
+      type: PendingApprovalType.HIGHLIGHT_AD,
+      requestData: { adId: data.adId, notes: data.notes },
+      oldData: {},
+      reason: data.notes || 'בקשה להדגשת מודעה',
+    });
+
     const result = await brokerRepository.createFeaturedRequest(userId, data);
     await AuditService.log(userId, 'CREATE_AD', { action: 'featured_request', requestId: result.id, adId: data.adId }, ip);
     return result;
@@ -156,6 +224,15 @@ export class BrokerService {
 
   // Create account deletion request
   async createAccountDeletionRequest(userId: string, data: CreateAccountDeletionRequestInput, ip?: string) {
+    // Create pending approval for account deletion
+    await pendingApprovalsService.createApproval({
+      userId,
+      type: PendingApprovalType.ACCOUNT_DELETION,
+      requestData: { reason: data.reason },
+      oldData: {},
+      reason: data.reason,
+    });
+
     const result = await brokerRepository.createAccountDeletionRequest(userId, data);
     await AuditService.log(userId, 'DELETE_REQ', { requestId: result.id, reason: data.reason }, ip);
     return result;

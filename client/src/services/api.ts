@@ -874,4 +874,67 @@ export const importHistoryService = {
   },
 };
 
+// =============== PENDING APPROVALS SERVICES ===============
+export const pendingApprovalsService = {
+  // Get all pending approvals (admin only)
+  getAll: async (filters?: {
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED';
+    type?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.type) params.append('type', filters.type);
+
+    const response = await api.get(`/admin/pending-approvals?${params.toString()}`);
+    return (response.data as any).data;
+  },
+
+  // Get approval by ID
+  getById: async (id: string) => {
+    const response = await api.get(`/admin/pending-approvals/${id}`);
+    return (response.data as any).data;
+  },
+
+  // Create approval request
+  create: async (data: {
+    type: string;
+    requestData: any;
+    oldData?: any;
+    reason?: string;
+  }) => {
+    const response = await api.post('/approvals', data);
+    return response.data as any;
+  },
+
+  // Approve approval
+  approve: async (id: string, adminNotes?: string) => {
+    const response = await api.patch(`/admin/pending-approvals/${id}/approve`, { adminNotes });
+    return response.data as any;
+  },
+
+  // Reject approval
+  reject: async (id: string, adminNotes?: string) => {
+    const response = await api.patch(`/admin/pending-approvals/${id}/reject`, { adminNotes });
+    return response.data as any;
+  },
+
+  // Get my approvals (user)
+  getMyApprovals: async () => {
+    const response = await api.get('/approvals/my/approvals');
+    return (response.data as any).data;
+  },
+
+  // Get stats
+  getStats: async () => {
+    const response = await api.get('/admin/pending-approvals/stats');
+    return (response.data as any).data;
+  },
+
+  // Get pending count
+  getPendingCount: async () => {
+    const response = await api.get('/admin/pending-approvals/pending-count');
+    return (response.data as any).data;
+  },
+};
+
 

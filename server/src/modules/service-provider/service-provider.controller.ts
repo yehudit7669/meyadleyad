@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/database';
 import { AuditService } from '../profile/audit.service';
+import { pendingApprovalsService } from '../admin/pending-approvals.service';
+import { PendingApprovalType } from '@prisma/client';
 import {
   updateServiceProviderProfileSchema,
   createOfficeAddressChangeSchema,
@@ -79,13 +81,40 @@ export class ServiceProviderController {
       if (input.businessHours !== undefined) updateData.businessHours = input.businessHours;
       if (input.weeklyDigestSubscribed !== undefined) updateData.weeklyDigestSubscribed = input.weeklyDigestSubscribed;
 
-      // Pending updates (require admin approval)
-      if (input.aboutBusinessPending !== undefined) {
+      // Get current user data for comparison
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      // Pending updates (require admin approval) - create PendingApproval records
+      // Only create approval if the value actually changed from both approved AND pending versions
+      if (
+        input.aboutBusinessPending !== undefined && 
+        input.aboutBusinessPending !== currentUser?.aboutBusiness &&
+        input.aboutBusinessPending !== currentUser?.aboutBusinessPending
+      ) {
+        await pendingApprovalsService.createApproval({
+          userId,
+          type: PendingApprovalType.BUSINESS_DESCRIPTION,
+          requestData: { aboutBusiness: input.aboutBusinessPending },
+          oldData: { aboutBusiness: currentUser?.aboutBusiness },
+          reason: 'עדכון אודות העסק',
+        });
         updateData.aboutBusinessPending = input.aboutBusinessPending;
         updateData.aboutBusinessStatus = 'PENDING';
       }
 
-      if (input.logoUrlPending !== undefined) {
+      if (
+        input.logoUrlPending !== undefined &&
+        input.logoUrlPending !== currentUser?.logoUrlPending
+      ) {
+        await pendingApprovalsService.createApproval({
+          userId,
+          type: PendingApprovalType.LOGO_UPLOAD,
+          requestData: { logoUrl: input.logoUrlPending },
+          oldData: { logoUrl: currentUser?.logoUrlPending },
+          reason: 'העלאת לוגו חדש',
+        });
         updateData.logoUrlPending = input.logoUrlPending;
         updateData.logoStatus = 'PENDING';
       }
@@ -112,6 +141,21 @@ export class ServiceProviderController {
     try {
       const userId = (req as any).user.id;
       const input = createOfficeAddressChangeSchema.parse(req.body);
+
+      // Get current address
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { officeAddress: true },
+      });
+
+      // Create pending approval
+      await pendingApprovalsService.createApproval({
+        userId,
+        type: PendingApprovalType.OFFICE_ADDRESS_UPDATE,
+        requestData: { address: input.newAddress },
+        oldData: { address: currentUser?.officeAddress },
+        reason: 'עדכון כתובת משרד',
+      });
 
       const request = await prisma.officeAddressChangeRequest.create({
         data: {
@@ -174,6 +218,15 @@ export class ServiceProviderController {
       const userId = (req as any).user.id;
       const input = createAccountDeletionRequestSchema.parse(req.body);
 
+      // Create pending approval
+      await pendingApprovalsService.createApproval({
+        userId,
+        type: PendingApprovalType.ACCOUNT_DELETION,
+        requestData: { reason: input.reason },
+        oldData: {},
+        reason: input.reason,
+      });
+
       const request = await prisma.accountDeletionRequest.create({
         data: {
           id: nanoid(),
@@ -200,6 +253,15 @@ export class ServiceProviderController {
     try {
       const userId = (req as any).user.id;
       const input = createHighlightRequestSchema.parse(req.body);
+
+      // Create pending approval
+      await pendingApprovalsService.createApproval({
+        userId,
+        type: PendingApprovalType.HIGHLIGHT_AD,
+        requestData: { requestType: input.requestType, reason: input.reason },
+        oldData: {},
+        reason: input.reason,
+      });
 
       const request = await prisma.highlightRequest.create({
         data: {

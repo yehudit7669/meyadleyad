@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { serviceProviderService } from '../../services/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { serviceProviderService, pendingApprovalsService } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 interface Props {
@@ -9,19 +9,55 @@ interface Props {
 }
 
 const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
+  const queryClient = useQueryClient();
   const [aboutText, setAboutText] = useState(profile.aboutBusinessPending || profile.aboutBusiness || '');
   const [publishAddress, setPublishAddress] = useState(profile.publishOfficeAddress || false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
+  // Fetch user's approval requests
+  const { data: myApprovals } = useQuery({
+    queryKey: ['my-approvals'],
+    queryFn: pendingApprovalsService.getMyApprovals,
+    refetchInterval: 5000, // רענון כל 5 שניות
+  });
+
+  // Find relevant rejections - get the most recent one for each type
+  const getLatestRejection = (type: string) => {
+    const rejections = myApprovals?.filter((a: any) => a.type === type && a.status === 'REJECTED') || [];
+    if (rejections.length === 0) return null;
+    // Sort by reviewedAt (most recent first) and return the first one
+    return rejections.sort((a: any, b: any) => 
+      new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime()
+    )[0];
+  };
+
+  const logoRejection = getLatestRejection('LOGO_UPLOAD');
+  const aboutRejection = getLatestRejection('ABOUT_UPDATE');
+  const logoApproved = myApprovals?.find((a: any) => a.type === 'LOGO_UPLOAD' && a.status === 'APPROVED');
+  const aboutApproved = myApprovals?.find((a: any) => a.type === 'ABOUT_UPDATE' && a.status === 'APPROVED');
+
   const updateMutation = useMutation({
     mutationFn: serviceProviderService.updateProfile,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
       toast.success('הגדרות מיתוג עודכנו בהצלחה');
       onUpdate();
     },
     onError: () => {
       toast.error('שגיאה בעדכון הגדרות מיתוג');
+    },
+  });
+
+  const createApprovalMutation = useMutation({
+    mutationFn: pendingApprovalsService.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
+      toast.success('הבקשה נשלחה לאישור מנהל');
+      onUpdate();
+    },
+    onError: () => {
+      toast.error('שגיאה בשליחת הבקשה');
     },
   });
 
@@ -50,27 +86,53 @@ const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
   };
 
   const handleSaveAbout = () => {
-    updateMutation.mutate({
-      aboutBusinessPending: aboutText,
-    });
+    let hasChanges = false;
+
+    // אם יש לוגו חדש, שלח אותו
+    if (logoFile && logoPreview) {
+      createApprovalMutation.mutate({
+        type: 'LOGO_UPLOAD',
+        requestData: {
+          logoUrl: logoPreview,
+        },
+        oldData: {
+          logoUrl: profile.avatar,
+        },
+        reason: 'העלאת לוגו חדש',
+      });
+      // אפס את הלוגו לאחר שליחה
+      setLogoFile(null);
+      setLogoPreview(null);
+      hasChanges = true;
+    }
+    
+    // שליחת בקשה לאישור רק אם יש שינוי משמעותי בטקסט
+    const currentAbout = profile.aboutBusiness || '';
+    const pendingAbout = profile.aboutBusinessPending || '';
+    const newAbout = aboutText || '';
+    
+    if (newAbout && newAbout !== currentAbout && newAbout !== pendingAbout) {
+      createApprovalMutation.mutate({
+        type: 'ABOUT_UPDATE',
+        requestData: {
+          aboutBusiness: aboutText,
+        },
+        oldData: {
+          aboutBusiness: profile.aboutBusiness,
+        },
+        reason: 'עדכון תיאור העסק',
+      });
+      hasChanges = true;
+    }
+
+    if (!hasChanges) {
+      toast('לא בוצעו שינויים');
+    }
   };
 
   const handleSavePublishAddress = () => {
     updateMutation.mutate({
       publishOfficeAddress: publishAddress,
-    });
-  };
-
-  const handleUploadLogo = () => {
-    if (!logoFile || !logoPreview) {
-      toast.error('לא נבחר קובץ');
-      return;
-    }
-
-    // In a real implementation, upload to server first, get URL
-    // For now, we'll just save the preview URL as pending
-    updateMutation.mutate({
-      logoUrlPending: logoPreview,
     });
   };
 
@@ -82,58 +144,69 @@ const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
       <div className="border-b pb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">העלאת לוגו</h3>
         
-        {profile.logoStatus === 'PENDING' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-yellow-800">
-              ⏳ לוגו ממתין לאישור מנהל
+        <div className="space-y-4">
+          {/* לוגו נוכחי */}
+          {profile.logoStatus === 'APPROVED' && profile.logoUrlPending && (
+            <div>
+              <p className="text-sm text-gray-600 mb-2">לוגו נוכחי</p>
+              <img 
+                src={profile.logoUrlPending} 
+                alt="Logo" 
+                className="w-40 h-40 object-contain border rounded-lg"
+              />
+            </div>
+          )}
+
+          {/* העלאת לוגו חדש */}
+          <div>
+            <p className="text-sm text-gray-600 mb-2">העלה לוגו חדש</p>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handleLogoChange}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              קבצים מותרים: PNG, JPG | גודל מקסימלי: 500KB
             </p>
           </div>
-        )}
 
-        {profile.logoStatus === 'APPROVED' && profile.logoUrlPending && (
-          <div className="mb-4">
-            <img 
-              src={profile.logoUrlPending} 
-              alt="Logo" 
-              className="h-24 w-auto object-contain border rounded-lg p-2"
-            />
-            <p className="text-sm text-green-600 mt-2">✓ לוגו מאושר</p>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/jpg"
-            onChange={handleLogoChange}
-            className="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-lg file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
-          />
-          <p className="text-xs text-gray-500">
-            קבצים מותרים: PNG, JPG | גודל מקסימלי: 500KB
-          </p>
-
-          {logoPreview && (
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">תצוגה מקדימה:</p>
+          {/* הודעות סטטוס - רק אחת בכל פעם */}
+          {profile.logoStatus === 'PENDING' ? (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800 font-semibold">
+                ⏳ לוגו ממתין לאישור מנהל
+              </p>
+            </div>
+          ) : logoPreview ? (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm font-semibold text-blue-700 mb-2">🔵 לוגו חדש - יישלח לאישור לאחר לחיצה על "שמור שינויים"</p>
               <img 
                 src={logoPreview} 
                 alt="Preview" 
-                className="h-24 w-auto object-contain border rounded-lg p-2 mb-2"
+                className="w-40 h-40 object-contain border-2 border-blue-400 rounded-lg"
               />
-              <button
-                onClick={handleUploadLogo}
-                disabled={updateMutation.isPending}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
-              >
-                {updateMutation.isPending ? 'שולח לאישור...' : 'העלה לוגו (לאישור)'}
-              </button>
             </div>
-          )}
+          ) : logoRejection ? (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה ללוגו נדחתה</p>
+              {logoRejection.adminNotes && (
+                <p className="text-sm text-red-700">הערת מנהל: {logoRejection.adminNotes}</p>
+              )}
+            </div>
+          ) : logoApproved ? (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm font-semibold text-green-800 mb-1">✅ לוגו חדש אושר!</p>
+              {logoApproved.adminNotes && (
+                <p className="text-sm text-green-700">הערת מנהל: {logoApproved.adminNotes}</p>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -141,21 +214,28 @@ const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
       <div className="border-b pb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">אודות העסק</h3>
         
-        {profile.aboutBusinessStatus === 'PENDING' && (
+        {/* הודעות סטטוס - רק אחת בכל פעם */}
+        {profile.aboutBusinessStatus === 'PENDING' ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <p className="text-sm text-yellow-800">
               ⏳ טקסט "אודות" ממתין לאישור מנהל
             </p>
           </div>
-        )}
-
-        {profile.aboutBusinessStatus === 'APPROVED' && profile.aboutBusiness && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-green-800">
-              ✓ טקסט מאושר ומוצג בעמוד הציבורי
-            </p>
+        ) : aboutRejection ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה לעדכון אודות העסק נדחתה</p>
+            {aboutRejection.adminNotes && (
+              <p className="text-sm text-red-700">הערת מנהל: {aboutRejection.adminNotes}</p>
+            )}
           </div>
-        )}
+        ) : aboutApproved ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון אודות העסק אושר!</p>
+            {aboutApproved.adminNotes && (
+              <p className="text-sm text-green-700">הערת מנהל: {aboutApproved.adminNotes}</p>
+            )}
+          </div>
+        ) : null}
 
         <textarea
           value={aboutText}
@@ -169,14 +249,14 @@ const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
           <p className="text-xs text-gray-500">{aboutText.length} / 2000 תווים</p>
           <button
             onClick={handleSaveAbout}
-            disabled={updateMutation.isPending}
+            disabled={createApprovalMutation.isPending}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {updateMutation.isPending ? 'שומר...' : 'שמור (לאישור)'}
+            {createApprovalMutation.isPending ? 'שומר...' : 'שמור שינויים (לאישור)'}
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          שינויים ב"אודות" דורשים אישור מנהל לפני פרסום
+          שינויים במיתוג (לוגו ואודות) דורשים אישור מנהל לפני פרסום
         </p>
       </div>
 

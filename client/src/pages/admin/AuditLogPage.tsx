@@ -71,11 +71,13 @@ const _mapActionToCategory = (action: string): string => {
     'approve': 'אישור',
     'approve_ad': 'אישור',
     'APPROVE_AD': 'אישור',
+    'APPROVE_PENDING_REQUEST': 'אישור בקשה',
     
     // דחיות
     'reject': 'דחייה',
     'reject_ad': 'דחייה',
     'REJECT_AD': 'דחייה',
+    'REJECT_PENDING_REQUEST': 'דחיית בקשה',
     
     // חסימות
     'block': 'חסימה',

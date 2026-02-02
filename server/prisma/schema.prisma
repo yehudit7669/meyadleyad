@@ -283,6 +283,8 @@ model User {
   UserAppointmentPolicy      UserAppointmentPolicy?
   UserAudit                  UserAudit[]
   UserPreference             UserPreference?
+  PendingApprovalsCreated    PendingApproval[]            @relation("UserApprovals")
+  PendingApprovalsReviewed   PendingApproval[]            @relation("ReviewedApprovals")
 
   @@index([email])
   @@index([googleId])
@@ -1084,4 +1086,42 @@ enum PendingIntentStatus {
 enum EmailMailingStatus {
   ACTIVE
   REMOVED
+}
+
+// ===============================================
+// PENDING APPROVALS - בקשות שזקוקות לאישור אדמין
+// ===============================================
+
+model PendingApproval {
+  id              String                @id @default(cuid())
+  userId          String
+  type            PendingApprovalType
+  status          ApprovalStatus        @default(PENDING)
+  requestData     Json                  // המידע שמבקשים לאשר
+  oldData         Json?                 // המידע הקודם (לעריכה)
+  reason          String?               // סיבת הבקשה (אופציונלי)
+  adminNotes      String?               // הערות אדמין
+  reviewedById    String?               // מי בדק את הבקשה
+  reviewedAt      DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  // Relations
+  user            User                  @relation("UserApprovals", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer        User?                 @relation("ReviewedApprovals", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum PendingApprovalType {
+  OFFICE_ADDRESS_UPDATE     // עריכת כתובת משרד
+  ABOUT_UPDATE              // עריכת אודות
+  LOGO_UPLOAD               // הוספת לוגו
+  BUSINESS_DESCRIPTION      // שדה אודות העסק
+  IMPORT_PERMISSION         // אישור להעלאת נכסים מקובץ
+  ACCOUNT_DELETION          // בקשה להסרה מלאה
+  HIGHLIGHT_AD              // בקשה להבליט מודעה
 }

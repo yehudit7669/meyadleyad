@@ -1,11 +1,33 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useBrokerAds, useCreateFeaturedRequest } from '../../hooks/useBroker';
+import { pendingApprovalsService } from '../../services/api';
 
 const FeaturedRequestTab: React.FC = () => {
   const { data: ads = [] } = useBrokerAds();
   const createRequest = useCreateFeaturedRequest();
   const [selectedAdId, setSelectedAdId] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Fetch user's approval requests
+  const { data: myApprovals } = useQuery({
+    queryKey: ['my-approvals'],
+    queryFn: pendingApprovalsService.getMyApprovals,
+    refetchInterval: 5000, // רענון כל 5 שניות
+  });
+
+  // Find highlight rejection and pending - get the most recent one
+  const getLatestRejection = (type: string) => {
+    const rejections = myApprovals?.filter((a: any) => a.type === type && a.status === 'REJECTED') || [];
+    if (rejections.length === 0) return null;
+    return rejections.sort((a: any, b: any) => 
+      new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime()
+    )[0];
+  };
+
+  const highlightRejection = getLatestRejection('HIGHLIGHT_AD');
+  const highlightPending = myApprovals?.find((a: any) => a.type === 'HIGHLIGHT_AD' && a.status === 'PENDING');
+  const highlightApproved = myApprovals?.find((a: any) => a.type === 'HIGHLIGHT_AD' && a.status === 'APPROVED');
 
   const activeAds = ads.filter((ad: any) => ad.status === 'ACTIVE');
 
@@ -31,6 +53,35 @@ const FeaturedRequestTab: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg border-2 border-yellow-200 space-y-4">
+        
+        {highlightApproved && !highlightPending && (
+          <div className="p-3 bg-green-100 border border-green-300 rounded-lg">
+            <p className="text-sm font-semibold text-green-800 mb-1">✅ בקשת ההדגשה אושרה!</p>
+            {highlightApproved.adminNotes && (
+              <p className="text-sm text-green-700">הערת מנהל: {highlightApproved.adminNotes}</p>
+            )}
+            <p className="text-xs text-green-600 mt-1">המודעה שלך מודגשת כעת באתר</p>
+          </div>
+        )}
+        
+        {highlightRejection && (
+          <div className="p-3 bg-red-100 border border-red-300 rounded-lg">
+            <p className="text-sm font-semibold text-red-800 mb-1">❌ בקשת ההדגשה נדחתה</p>
+            {highlightRejection.adminNotes && (
+              <p className="text-sm text-red-700">הערת מנהל: {highlightRejection.adminNotes}</p>
+            )}
+          </div>
+        )}
+        
+        {highlightPending && (
+          <div className="p-3 bg-orange-50 border border-orange-300 rounded-lg">
+            <p className="text-sm font-semibold text-orange-800">⏳ בקשת הדגשה ממתינה לאישור מנהל</p>
+            {highlightPending.reason && (
+              <p className="text-sm text-orange-700 mt-1">הערות: {highlightPending.reason}</p>
+            )}
+          </div>
+        )}
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             בחר מודעה להדגשה *

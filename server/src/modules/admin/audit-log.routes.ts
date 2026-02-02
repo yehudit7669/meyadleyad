@@ -16,8 +16,8 @@ router.use(requireAdminOrSuper);
 
 // מיפוי קטגוריות לפעולות ספציפיות
 const categoryToActionsMap: Record<string, string[]> = {
-  'approve': ['approve', 'approve_ad', 'APPROVE_AD'],
-  'reject': ['reject', 'reject_ad', 'REJECT_AD'],
+  'approve': ['approve', 'approve_ad', 'APPROVE_AD', 'APPROVE_PENDING_REQUEST'],
+  'reject': ['reject', 'reject_ad', 'REJECT_AD', 'REJECT_PENDING_REQUEST'],
   'block': [
     'block', 'block_user', 'unblock', 'BLOCK_USER', 'MEETINGS_BLOCK',
     'ADMIN_MEETINGS_BLOCK', 'ADMIN_MEETINGS_UNBLOCK'

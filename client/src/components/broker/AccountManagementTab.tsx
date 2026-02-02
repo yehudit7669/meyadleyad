@@ -1,11 +1,33 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useCreateExportRequest, useCreateDeleteRequest } from '../../hooks/useBroker';
+import { pendingApprovalsService } from '../../services/api';
 
 const AccountManagementTab: React.FC = () => {
   const createExportRequest = useCreateExportRequest();
   const createDeleteRequest = useCreateDeleteRequest();
   const [deleteReason, setDeleteReason] = useState('');
   const [showDeleteForm, setShowDeleteForm] = useState(false);
+
+  // Fetch user's approval requests
+  const { data: myApprovals } = useQuery({
+    queryKey: ['my-approvals'],
+    queryFn: pendingApprovalsService.getMyApprovals,
+    refetchInterval: 5000, // רענון כל 5 שניות
+  });
+
+  // Find account deletion rejection - get the most recent one
+  const getLatestRejection = (type: string) => {
+    const rejections = myApprovals?.filter((a: any) => a.type === type && a.status === 'REJECTED') || [];
+    if (rejections.length === 0) return null;
+    return rejections.sort((a: any, b: any) => 
+      new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime()
+    )[0];
+  };
+
+  const deleteRejection = getLatestRejection('ACCOUNT_DELETION');
+  const deletePending = myApprovals?.find((a: any) => a.type === 'ACCOUNT_DELETION' && a.status === 'PENDING');
+  const deleteApproved = myApprovals?.find((a: any) => a.type === 'ACCOUNT_DELETION' && a.status === 'APPROVED');
 
   const handleExportRequest = async () => {
     if (confirm('האם אתה בטוח שברצונך לבקש ייצוא של כל הנתונים שלך?')) {
@@ -49,6 +71,34 @@ const AccountManagementTab: React.FC = () => {
           <br />
           <strong className="text-red-700">שים לב:</strong> פעולה זו בלתי הפיכה ותמחק את כל המודעות, הפגישות והנתונים שלך.
         </p>
+        
+        {deleteRejection && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+            <p className="text-sm font-semibold text-red-800 mb-1">❌ בקשת המחיקה נדחתה</p>
+            {deleteRejection.adminNotes && (
+              <p className="text-sm text-red-700">הערת מנהל: {deleteRejection.adminNotes}</p>
+            )}
+          </div>
+        )}
+        
+        {deleteApproved && !deletePending && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+            <p className="text-sm font-semibold text-green-800 mb-1">✅ בקשת מחיקת החשבון אושרה</p>
+            {deleteApproved.adminNotes && (
+              <p className="text-sm text-green-700">הערת מנהל: {deleteApproved.adminNotes}</p>
+            )}
+            <p className="text-xs text-green-600 mt-1">החשבון יימחק בקרוב</p>
+          </div>
+        )}
+        
+        {deletePending && (
+          <div className="mb-4 p-3 bg-orange-50 border border-orange-300 rounded-lg">
+            <p className="text-sm font-semibold text-orange-800">⏳ בקשת מחיקת חשבון ממתינה לאישור מנהל</p>
+            {deletePending.reason && (
+              <p className="text-sm text-orange-700 mt-1">סיבה: {deletePending.reason}</p>
+            )}
+          </div>
+        )}
         
         {!showDeleteForm ? (
           <button

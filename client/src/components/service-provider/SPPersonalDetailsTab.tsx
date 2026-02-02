@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { serviceProviderService } from '../../services/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { serviceProviderService, pendingApprovalsService } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 }
 
 const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: profile.name || '',
@@ -17,9 +18,29 @@ const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
   });
   const [newOfficeAddress, setNewOfficeAddress] = useState('');
 
+  // Fetch user's approval requests
+  const { data: myApprovals } = useQuery({
+    queryKey: ['my-approvals'],
+    queryFn: pendingApprovalsService.getMyApprovals,
+    refetchInterval: 5000, // רענון כל 5 שניות
+  });
+
+  // Find address rejection - get the most recent one
+  const getLatestRejection = (type: string) => {
+    const rejections = myApprovals?.filter((a: any) => a.type === type && a.status === 'REJECTED') || [];
+    if (rejections.length === 0) return null;
+    return rejections.sort((a: any, b: any) => 
+      new Date(b.reviewedAt).getTime() - new Date(a.reviewedAt).getTime()
+    )[0];
+  };
+
+  const addressRejection = getLatestRejection('OFFICE_ADDRESS_UPDATE');
+  const addressApproved = myApprovals?.find((a: any) => a.type === 'OFFICE_ADDRESS_UPDATE' && a.status === 'APPROVED');
+
   const updateMutation = useMutation({
     mutationFn: serviceProviderService.updateProfile,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
       toast.success('הפרטים עודכנו בהצלחה');
       setIsEditing(false);
       onUpdate();
@@ -30,8 +51,18 @@ const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
   });
 
   const addressChangeMutation = useMutation({
-    mutationFn: serviceProviderService.requestOfficeAddressChange,
+    mutationFn: (address: string) => pendingApprovalsService.create({
+      type: 'OFFICE_ADDRESS_UPDATE',
+      requestData: {
+        officeAddress: address,
+      },
+      oldData: {
+        officeAddress: profile.officeAddress,
+      },
+      reason: 'עדכון כתובת משרד',
+    }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
       toast.success('בקשת שינוי כתובת נשלחה ומחכה לאישור מנהל');
       setNewOfficeAddress('');
       onUpdate();
@@ -152,16 +183,39 @@ const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
       <div className="border-t pt-6 mt-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">כתובת משרד</h3>
         
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p className="text-sm text-blue-800">
-            <strong>כתובת נוכחית:</strong> {profile.officeAddress || 'לא הוגדרה'}
-          </p>
-          {profile.officeAddressPending && profile.officeAddressStatus === 'PENDING' && (
-            <p className="text-sm text-orange-600 mt-2">
-              <strong>בקשת שינוי ממתינה:</strong> {profile.officeAddressPending}
+        {!addressApproved && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>כתובת נוכחית:</strong> {profile.officeAddress || 'לא הוגדרה'}
             </p>
-          )}
-        </div>
+            {profile.officeAddressPending && profile.officeAddressStatus === 'PENDING' && profile.officeAddressPending !== profile.officeAddress && (
+              <p className="text-sm text-orange-600 mt-2">
+                <strong>בקשת שינוי ממתינה:</strong> {profile.officeAddressPending}
+              </p>
+            )}
+          </div>
+        )}
+
+        {addressApproved && profile.officeAddressStatus !== 'PENDING' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון כתובת משרד אושר!</p>
+            <p className="text-sm text-green-700 mb-1">
+              <strong>הכתובת החדשה:</strong> {addressApproved.requestData?.officeAddress || profile.officeAddress || profile.officeAddressPending}
+            </p>
+            {addressApproved.adminNotes && (
+              <p className="text-sm text-green-700">הערת מנהל: {addressApproved.adminNotes}</p>
+            )}
+          </div>
+        )}
+
+        {addressRejection && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה לעדכון כתובת משרד נדחתה</p>
+            {addressRejection.adminNotes && (
+              <p className="text-sm text-red-700">הערת מנהל: {addressRejection.adminNotes}</p>
+            )}
+          </div>
+        )}
 
         <div className="space-y-4">
           <label className="block text-sm font-medium text-gray-700">בקשת שינוי כתובת משרד</label>

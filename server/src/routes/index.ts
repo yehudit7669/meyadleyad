@@ -34,6 +34,7 @@ import uploadRoutes from '../modules/upload/upload.routes';
 import emailPermissionsRoutes from '../modules/admin/email-permissions.routes';
 import emailOperationsRoutes from '../modules/email-operations/email-operations.routes';
 import emailTestingRoutes from '../modules/email/email-testing.routes';
+import pendingApprovalsRoutes from '../modules/admin/pending-approvals.routes';
 
 const router = Router();
 
@@ -43,6 +44,7 @@ router.use('/ads', adsRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/cities', citiesRoutes);
 router.use('/streets', streetsRoutes);
+router.use('/approvals', pendingApprovalsRoutes); // User-facing approvals (before /admin)
 router.use('/admin', adminRoutes);
 router.use('/admin/branding', brandingRoutes);
 router.use('/pdf', pdfRoutes);
@@ -72,5 +74,6 @@ router.use('/admin/email-permissions', emailPermissionsRoutes); // Email-based p
 router.use('/upload', uploadRoutes); // File upload
 router.use('/email-operations', emailOperationsRoutes); // Email operations system
 router.use('/email-testing', emailTestingRoutes); // ✅ Email testing (DEV ONLY)
+router.use('/admin/pending-approvals', pendingApprovalsRoutes); // Pending approvals system
 
 export default router;
