@@ -1,24 +1,33 @@
 export interface UserPreferences {
   weeklyDigest: boolean;
   notifyNewMatches: boolean;
-  filters?: NewsletterFilters | null;
+  filters?: NotificationFilters | null;
 }
 
-export interface NewsletterFilters {
+export interface NotificationFilters {
+  categoryIds?: string[];
+  cityIds?: string[];
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  propertyTypes?: string[];
+  publisherTypes?: ('OWNER' | 'BROKER')[];
+}
+
+// Legacy support - keep for backward compatibility
+export interface NewsletterFilters extends NotificationFilters {
   regions?: string[];
   categories?: string[];
   priceRange?: {
     min: number | null;
     max: number | null;
   };
-  propertyTypes?: string[];
   publisherType?: 'OWNER' | 'BROKER';
 }
 
 export interface UpdatePreferencesInput {
   weeklyDigest?: boolean;
   notifyNewMatches?: boolean;
-  filters?: Partial<NewsletterFilters>;
+  filters?: Partial<NotificationFilters>;
 }
 
 export interface MyAd {

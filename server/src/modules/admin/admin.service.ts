@@ -2,6 +2,7 @@ import prisma from '../../config/database';
 import { EmailService } from '../email/email.service';
 import { AdStatus } from '@prisma/client';
 import { emailOperationsFormController } from '../email-operations/email-operations-form.controller';
+import { notificationsService } from '../notifications/notifications.service';
 
 export class AdminService {
   private emailService: EmailService;
@@ -198,6 +199,14 @@ export class AdminService {
     } catch (error) {
       console.error('❌ Failed to send approval email:', error);
       // לא נעצור את התהליך בגלל שגיאת מייל
+    }
+
+    // ✅ NEW: שליחת התראות למשתמשים שביקשו התראות על נכסים חדשים
+    try {
+      await notificationsService.notifyNewAd(updatedAd.id);
+    } catch (error) {
+      console.error('❌ Failed to send notifications:', error);
+      // לא נעצור את התהליך בגלל שגיאת התראות
     }
 
     // ✅ NEW: הוספה אוטומטית לגיליון עיתון (קטגוריה + עיר)

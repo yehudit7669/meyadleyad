@@ -5,14 +5,12 @@ export const updatePreferencesSchema = z.object({
   weeklyDigest: z.boolean().optional(),
   notifyNewMatches: z.boolean().optional(),
   filters: z.object({
-    regions: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
-    priceRange: z.object({
-      min: z.number().nullable().optional(),
-      max: z.number().nullable().optional(),
-    }).optional(),
-    propertyTypes: z.array(z.string()).optional(),
-    publisherType: z.enum(['OWNER', 'BROKER']).optional(),
+    categoryIds: z.array(z.string()).optional(),  // Category IDs
+    cityIds: z.array(z.string()).optional(),       // City IDs
+    minPrice: z.number().nullable().optional(),    // Minimum price
+    maxPrice: z.number().nullable().optional(),    // Maximum price
+    propertyTypes: z.array(z.string()).optional(), // e.g., ['דירה', 'בית פרטי']
+    publisherTypes: z.array(z.enum(['OWNER', 'BROKER'])).optional(), // Publisher types
   }).partial().optional(),
 });
 

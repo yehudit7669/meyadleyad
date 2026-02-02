@@ -1,17 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService, categoriesService, citiesService } from '../../services/api';
-import { NewsletterFilters as FiltersType } from '../../types/profile';
+
+interface NotificationFilters {
+  categoryIds?: string[];
+  cityIds?: string[];
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  propertyTypes?: string[];
+  publisherTypes?: ('OWNER' | 'BROKER')[];
+}
 
 interface NewsletterFiltersProps {
   isOpen: boolean;
   onClose: () => void;
-  currentFilters: Partial<FiltersType>;
+  currentFilters: Partial<NotificationFilters>;
 }
 
 export default function NewsletterFilters({ isOpen, onClose, currentFilters }: NewsletterFiltersProps) {
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState<Partial<FiltersType>>(currentFilters);
+  const [filters, setFilters] = useState<Partial<NotificationFilters>>(currentFilters);
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -40,19 +48,19 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
   };
 
   const handleCategoryToggle = (categoryId: string) => {
-    const current = filters.categories || [];
+    const current = filters.categoryIds || [];
     const updated = current.includes(categoryId)
       ? current.filter(id => id !== categoryId)
       : [...current, categoryId];
-    setFilters({ ...filters, categories: updated });
+    setFilters({ ...filters, categoryIds: updated });
   };
 
-  const handleRegionToggle = (cityId: string) => {
-    const current = filters.regions || [];
+  const handleCityToggle = (cityId: string) => {
+    const current = filters.cityIds || [];
     const updated = current.includes(cityId)
       ? current.filter(id => id !== cityId)
       : [...current, cityId];
-    setFilters({ ...filters, regions: updated });
+    setFilters({ ...filters, cityIds: updated });
   };
 
   const handlePropertyTypeToggle = (type: string) => {
@@ -63,13 +71,21 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
     setFilters({ ...filters, propertyTypes: updated });
   };
 
+  const handlePublisherTypeToggle = (type: 'OWNER' | 'BROKER') => {
+    const current = filters.publisherTypes || [];
+    const updated = current.includes(type)
+      ? current.filter(t => t !== type)
+      : [...current, type];
+    setFilters({ ...filters, publisherTypes: updated });
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" dir="rtl">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">בחירת מסננים לקובץ השבועי</h2>
+          <h2 className="text-xl font-bold text-black">הגדרת מסננים להתראות</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -81,35 +97,37 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
         <div className="p-6 space-y-6">
           {/* Categories */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">קטגוריות</h3>
+            <h3 className="font-semibold text-black mb-3">קטגוריות</h3>
+            <div className="text-sm text-gray-800 mb-2">בחר את הקטגוריות שמעניינות אותך</div>
             <div className="grid grid-cols-2 gap-2">
               {categories?.map((category: any) => (
-                <label key={category.id} className="flex items-center gap-2 cursor-pointer">
+                <label key={category.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                   <input
                     type="checkbox"
-                    checked={filters.categories?.includes(category.id)}
+                    checked={filters.categoryIds?.includes(category.id)}
                     onChange={() => handleCategoryToggle(category.id)}
                     className="w-4 h-4 text-blue-600 rounded"
                   />
-                  <span className="text-sm">{category.nameHe}</span>
+                  <span className="text-sm text-gray-900">{category.nameHe}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Regions/Cities */}
+          {/* Cities */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">אזורים/ערים</h3>
+            <h3 className="font-semibold text-black mb-3">ערים</h3>
+            <div className="text-sm text-gray-800 mb-2">בחר את הערים שמעניינות אותך</div>
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded p-2">
               {cities?.map((city: any) => (
-                <label key={city.id} className="flex items-center gap-2 cursor-pointer">
+                <label key={city.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                   <input
                     type="checkbox"
-                    checked={filters.regions?.includes(city.id)}
-                    onChange={() => handleRegionToggle(city.id)}
+                    checked={filters.cityIds?.includes(city.id)}
+                    onChange={() => handleCityToggle(city.id)}
                     className="w-4 h-4 text-blue-600 rounded"
                   />
-                  <span className="text-sm">{city.nameHe}</span>
+                  <span className="text-sm text-gray-900">{city.nameHe || city.name}</span>
                 </label>
               ))}
             </div>
@@ -117,38 +135,33 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
 
           {/* Price Range */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">טווח מחירים</h3>
+            <h3 className="font-semibold text-black mb-3">טווח מחירים</h3>
+            <div className="text-sm text-gray-800 mb-2">הגדר את טווח המחירים המתאים לך</div>
             <div className="flex gap-4 items-center">
               <div className="flex-1">
-                <label className="block text-sm text-gray-600 mb-1">מחיר מינימלי</label>
+                <label className="block text-sm text-gray-900 mb-1 font-medium">מחיר מינימלי</label>
                 <input
                   type="number"
-                  value={filters.priceRange?.min ?? ''}
+                  value={filters.minPrice ?? ''}
                   onChange={(e) => setFilters({
                     ...filters,
-                    priceRange: {
-                      min: e.target.value ? Number(e.target.value) : null,
-                      max: filters.priceRange?.max ?? null,
-                    },
+                    minPrice: e.target.value ? Number(e.target.value) : null,
                   })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="מינימום"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="מינימום ₪"
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm text-gray-600 mb-1">מחיר מקסימלי</label>
+                <label className="block text-sm text-gray-900 mb-1 font-medium">מחיר מקסימלי</label>
                 <input
                   type="number"
-                  value={filters.priceRange?.max ?? ''}
+                  value={filters.maxPrice ?? ''}
                   onChange={(e) => setFilters({
                     ...filters,
-                    priceRange: {
-                      min: filters.priceRange?.min ?? null,
-                      max: e.target.value ? Number(e.target.value) : null,
-                    },
+                    maxPrice: e.target.value ? Number(e.target.value) : null,
                   })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder="מקסימום"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="מקסימום ₪"
                 />
               </div>
             </div>
@@ -156,17 +169,26 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
 
           {/* Property Types */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">סוג נכס</h3>
+            <h3 className="font-semibold text-black mb-3">סוג נכס</h3>
+            <div className="text-sm text-gray-800 mb-2">בחר את סוגי הנכסים שמעניינים אותך</div>
             <div className="grid grid-cols-2 gap-2">
-              {['דירה', 'בית', 'מגרש', 'משרד', 'חנות'].map((type) => (
-                <label key={type} className="flex items-center gap-2 cursor-pointer">
+              {[
+                { value: 'APARTMENT', label: 'דירה' },
+                { value: 'HOUSE', label: 'בית פרטי' },
+                { value: 'GARDEN_APARTMENT', label: 'דירת גן' },
+                { value: 'PENTHOUSE', label: 'פנטהאוז' },
+                { value: 'DUPLEX', label: 'דופלקס' },
+                { value: 'STUDIO', label: 'סטודיו' },
+                { value: 'LAND', label: 'מגרש' },
+              ].map((type) => (
+                <label key={type.value} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                   <input
                     type="checkbox"
-                    checked={filters.propertyTypes?.includes(type)}
-                    onChange={() => handlePropertyTypeToggle(type)}
+                    checked={filters.propertyTypes?.includes(type.value)}
+                    onChange={() => handlePropertyTypeToggle(type.value)}
                     className="w-4 h-4 text-blue-600 rounded"
                   />
-                  <span className="text-sm">{type}</span>
+                  <span className="text-sm text-gray-900">{type.label}</span>
                 </label>
               ))}
             </div>
@@ -174,61 +196,77 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
 
           {/* Publisher Type */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">סוג מפרסם</h3>
+            <h3 className="font-semibold text-black mb-3">סוג מפרסם</h3>
+            <div className="text-sm text-gray-800 mb-2">בחר מי רשאי לפרסם מודעות שתקבל</div>
             <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded flex-1">
                 <input
-                  type="radio"
-                  name="publisherType"
-                  checked={!filters.publisherType}
-                  onChange={() => setFilters({ ...filters, publisherType: undefined })}
-                  className="w-4 h-4 text-blue-600"
+                  type="checkbox"
+                  checked={filters.publisherTypes?.includes('OWNER')}
+                  onChange={() => handlePublisherTypeToggle('OWNER')}
+                  className="w-4 h-4 text-blue-600 rounded"
                 />
-                <span className="text-sm">הכל</span>
+                <span className="text-sm text-gray-900">בעלים בלבד</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded flex-1">
                 <input
-                  type="radio"
-                  name="publisherType"
-                  checked={filters.publisherType === 'OWNER'}
-                  onChange={() => setFilters({ ...filters, publisherType: 'OWNER' })}
-                  className="w-4 h-4 text-blue-600"
+                  type="checkbox"
+                  checked={filters.publisherTypes?.includes('BROKER')}
+                  onChange={() => handlePublisherTypeToggle('BROKER')}
+                  className="w-4 h-4 text-blue-600 rounded"
                 />
-                <span className="text-sm">בעלים בלבד</span>
+                <span className="text-sm text-gray-900">מתווכים</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="publisherType"
-                  checked={filters.publisherType === 'BROKER'}
-                  onChange={() => setFilters({ ...filters, publisherType: 'BROKER' })}
-                  className="w-4 h-4 text-blue-600"
-                />
-                <span className="text-sm">מתווכים בלבד</span>
-              </label>
+            </div>
+            <div className="text-xs text-gray-700 mt-1">
+              {!filters.publisherTypes || filters.publisherTypes.length === 0 
+                ? 'לא נבחר סוג מפרסם - תקבל מודעות מכולם'
+                : 'תקבל מודעות רק מהסוגים שנבחרו'}
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-medium text-gray-900 mb-2">📋 סיכום הבחירות שלך:</h4>
+            <div className="text-sm text-gray-900 space-y-1">
+              <div>• קטגוריות: {filters.categoryIds?.length || 0} נבחרו</div>
+              <div>• ערים: {filters.cityIds?.length || 0} נבחרו</div>
+              <div>• מחיר: {filters.minPrice ? `מ-₪${filters.minPrice.toLocaleString()}` : 'ללא מינימום'} {filters.maxPrice ? `עד ₪${filters.maxPrice.toLocaleString()}` : 'ללא מקסימום'}</div>
+              <div>• סוגי נכס: {filters.propertyTypes?.length || 0} נבחרו</div>
+              <div>• מפרסמים: {
+                !filters.publisherTypes || filters.publisherTypes.length === 0 
+                  ? 'הכל'
+                  : filters.publisherTypes.map(t => t === 'OWNER' ? 'בעלים' : 'מתווכים').join(', ')
+              }</div>
             </div>
           </div>
         </div>
 
-        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex gap-3 justify-end border-t">
+        <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
             ביטול
           </button>
           <button
             onClick={handleSave}
             disabled={updatePreferencesMutation.isPending}
-            className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            {updatePreferencesMutation.isPending ? 'שומר...' : 'שמור מסננים'}
+            {updatePreferencesMutation.isPending ? 'שומר...' : 'שמירה'}
           </button>
         </div>
 
+        {updatePreferencesMutation.isSuccess && (
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg">
+            ✓ המסננים נשמרו בהצלחה!
+          </div>
+        )}
+
         {updatePreferencesMutation.isError && (
-          <div className="px-6 pb-4 text-sm text-red-600">
-            שגיאה בשמירת המסננים. אנא נסה שוב.
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg">
+            ✗ שגיאה בשמירת המסננים
           </div>
         )}
       </div>

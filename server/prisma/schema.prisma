@@ -49,6 +49,7 @@ model Ad {
   Favorite              Favorite[]
   NewspaperAd           NewspaperAd[]
   NewspaperSheetListing NewspaperSheetListing[]
+  NotificationQueue     NotificationQueue[]
 
   @@index([adNumber])
   @@index([categoryId])
@@ -285,6 +286,8 @@ model User {
   UserPreference             UserPreference?
   PendingApprovalsCreated    PendingApproval[]            @relation("UserApprovals")
   PendingApprovalsReviewed   PendingApproval[]            @relation("ReviewedApprovals")
+  NotificationOverride       UserNotificationOverride?
+  NotificationQueue          NotificationQueue[]
 
   @@index([email])
   @@index([googleId])
@@ -360,12 +363,60 @@ model UserPreference {
   userId           String   @unique
   weeklyDigest     Boolean  @default(false)
   notifyNewMatches Boolean  @default(false)
-  filters          Json?
+  filters          Json?    // Structure: { categoryIds?, cityIds?, minPrice?, maxPrice?, propertyTypes?, publisherTypes? }
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ===============================================
+// NOTIFICATION SYSTEM - התראות על נכסים חדשים
+// ===============================================
+
+// Global notification settings (admin control)
+model NotificationSettings {
+  id        String   @id @default(cuid())
+  enabled   Boolean  @default(true)  // Global enable/disable for all users
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+// Per-user notification overrides (temporary allow/block)
+model UserNotificationOverride {
+  id        String                      @id @default(cuid())
+  userId    String                      @unique
+  mode      UserNotificationOverrideMode
+  expiresAt DateTime                    // When this override expires
+  reason    String?                     // Admin notes
+  createdAt DateTime                    @default(now())
+  updatedAt DateTime                    @updatedAt
+  user      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Queue for notification delivery (idempotency + retry support)
+model NotificationQueue {
+  id           String                 @id @default(cuid())
+  userId       String
+  adId         String
+  status       NotificationQueueStatus @default(PENDING)
+  sentAt       DateTime?
+  errorMessage String?
+  retryCount   Int                    @default(0)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ad           Ad                     @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, adId])  // Prevent duplicate notifications
+  @@index([userId])
+  @@index([adId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Appointment {
@@ -1124,4 +1175,19 @@ enum PendingApprovalType {
   IMPORT_PERMISSION         // אישור להעלאת נכסים מקובץ
   ACCOUNT_DELETION          // בקשה להסרה מלאה
   HIGHLIGHT_AD              // בקשה להבליט מודעה
+}
+
+// ===============================================
+// NOTIFICATION SYSTEM ENUMS
+// ===============================================
+
+enum UserNotificationOverrideMode {
+  ALLOW  // Temporarily allow when global is disabled
+  BLOCK  // Temporarily block when global is enabled
+}
+
+enum NotificationQueueStatus {
+  PENDING
+  SENT
+  FAILED
 }

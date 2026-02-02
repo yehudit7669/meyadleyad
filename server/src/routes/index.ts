@@ -35,6 +35,7 @@ import emailPermissionsRoutes from '../modules/admin/email-permissions.routes';
 import emailOperationsRoutes from '../modules/email-operations/email-operations.routes';
 import emailTestingRoutes from '../modules/email/email-testing.routes';
 import pendingApprovalsRoutes from '../modules/admin/pending-approvals.routes';
+import notificationsRoutes from '../modules/notifications/notifications.routes';
 
 const router = Router();
 
@@ -75,5 +76,6 @@ router.use('/upload', uploadRoutes); // File upload
 router.use('/email-operations', emailOperationsRoutes); // Email operations system
 router.use('/email-testing', emailTestingRoutes); // ✅ Email testing (DEV ONLY)
 router.use('/admin/pending-approvals', pendingApprovalsRoutes); // Pending approvals system
+router.use('/notifications', notificationsRoutes); // Notifications system
 
 export default router;

@@ -7,6 +7,7 @@ import { PDFService } from '../pdf/pdf.service';
 import { config } from '../../config';
 import { v4 as uuidv4 } from 'uuid';
 import { emailPermissionsService } from '../admin/email-permissions.service';
+import { notificationsService } from '../notifications/notifications.service';
 
 export class AdsService {
   private emailService: EmailService;
@@ -149,6 +150,19 @@ export class AdsService {
         adNumber: ad.adNumber,
       });
 
+      // If auto-approved, trigger notifications
+      if (ad.status === AdStatus.ACTIVE) {
+        try {
+          await notificationsService.notifyNewAd(ad.id);
+          console.log('ADS SERVICE - Notifications sent for new ACTIVE wanted ad', { adId: ad.id });
+        } catch (notifError) {
+          console.error('ADS SERVICE - Failed to send notifications for wanted ad', {
+            adId: ad.id,
+            error: notifError instanceof Error ? notifError.message : String(notifError)
+          });
+        }
+      }
+
       // Note: Email will be sent after images are uploaded
       // Wanted ads can have optional images
 
@@ -279,6 +293,19 @@ export class AdsService {
         adNumber: ad.adNumber,
         neighborhood: ad.neighborhood 
       });
+      
+      // If auto-approved, trigger notifications
+      if (ad.status === AdStatus.ACTIVE) {
+        try {
+          await notificationsService.notifyNewAd(ad.id);
+          console.log('ADS SERVICE - Notifications sent for new ACTIVE regular ad', { adId: ad.id });
+        } catch (notifError) {
+          console.error('ADS SERVICE - Failed to send notifications for regular ad', {
+            adId: ad.id,
+            error: notifError instanceof Error ? notifError.message : String(notifError)
+          });
+        }
+      }
       
       // Note: Do NOT send email here - images haven't been uploaded yet
       // Email will be sent after images are uploaded via uploadImages endpoint

@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Bell
 } from 'lucide-react';
 
 interface MenuItem {
@@ -141,6 +142,13 @@ const menuItems: MenuItem[] = [
     path: '/admin/backups',
     icon: <HardDrive className="w-5 h-5" />,
     requiredRoles: ['SUPER_ADMIN']
+  },
+  {
+    id: 'notifications',
+    title: 'ניהול התראות',
+    path: '/admin/notifications',
+    icon: <Bell className="w-5 h-5" />,
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN']
   },
   {
     id: 'settings',

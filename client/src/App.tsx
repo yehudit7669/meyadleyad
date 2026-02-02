@@ -70,6 +70,7 @@ import BrandingMediaPage from './pages/admin/BrandingMediaPage';
 import ImportsPage from './pages/admin/ImportsPage';
 import BackupsPage from './pages/admin/BackupsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import NotificationsAdminPage from './pages/admin/NotificationsAdminPage';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -176,6 +177,7 @@ const App: React.FC = () => {
                   <Route path="/admin/audit" element={<AdminRoute><AdminLayout><AuditLog /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/backups" element={<AdminRoute><AdminLayout><BackupsPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettingsPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/notifications" element={<AdminRoute><AdminLayout><NotificationsAdminPage /></AdminLayout></AdminRoute>} />
                   
                   {/* Legacy Admin Routes - keep for backward compatibility */}
                   <Route path="/admin/ads-management" element={<AdminRoute><AdminLayout><AdminAdsManagement /></AdminLayout></AdminRoute>} />
