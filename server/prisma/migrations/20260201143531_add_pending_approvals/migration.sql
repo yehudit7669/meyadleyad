@@ -12,14 +12,14 @@
 -- CreateEnum (already exists, commented out to prevent duplicate)
 -- CREATE TYPE "EmailCommandType" AS ENUM ('PUBLISH_SALE', 'PUBLISH_RENT', 'PUBLISH_SHABBAT', 'PUBLISH_COMMERCIAL', 'PUBLISH_SHARED_OWNERSHIP', 'WANTED_BUY', 'WANTED_RENT', 'WANTED_SHABBAT', 'UPDATE_AD', 'REMOVE_AD', 'MAILING_LIST_SUBSCRIBE', 'MAILING_LIST_UNSUBSCRIBE', 'REGISTRATION', 'UNKNOWN');
 
--- CreateEnum
-CREATE TYPE "EmailRequestStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+-- CreateEnum (already exists, commented out to prevent duplicate)
+-- CREATE TYPE "EmailRequestStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
 
--- CreateEnum
-CREATE TYPE "PendingIntentStatus" AS ENUM ('PENDING', 'EXPIRED', 'COMPLETED');
+-- CreateEnum (already exists, commented out to prevent duplicate)
+-- CREATE TYPE "PendingIntentStatus" AS ENUM ('PENDING', 'EXPIRED', 'COMPLETED');
 
--- CreateEnum
-CREATE TYPE "EmailMailingStatus" AS ENUM ('ACTIVE', 'REMOVED');
+-- CreateEnum (already exists, commented out to prevent duplicate)
+-- CREATE TYPE "EmailMailingStatus" AS ENUM ('ACTIVE', 'REMOVED');
 
 -- CreateEnum
 CREATE TYPE "PendingApprovalType" AS ENUM ('OFFICE_ADDRESS_UPDATE', 'ABOUT_UPDATE', 'LOGO_UPLOAD', 'BUSINESS_DESCRIPTION', 'IMPORT_PERMISSION', 'ACCOUNT_DELETION', 'HIGHLIGHT_AD');
