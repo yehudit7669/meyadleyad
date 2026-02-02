@@ -43,8 +43,8 @@ CREATE TYPE "UserNotificationOverrideMode" AS ENUM ('ALLOW', 'BLOCK');
 -- CreateEnum
 CREATE TYPE "NotificationQueueStatus" AS ENUM ('PENDING', 'SENT', 'FAILED');
 
--- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+-- DropIndex (skip if doesn't exist)
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "EmailAuditLog" DROP COLUMN "commandType",
