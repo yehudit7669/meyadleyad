@@ -9,8 +9,12 @@
   - Changed the type of `commandType` on the `PendingIntent` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
 
 */
--- CreateEnum
-CREATE TYPE "EmailCommandType" AS ENUM ('PUBLISH_SALE', 'PUBLISH_RENT', 'PUBLISH_SHABBAT', 'PUBLISH_COMMERCIAL', 'PUBLISH_SHARED_OWNERSHIP', 'WANTED_BUY', 'WANTED_RENT', 'WANTED_SHABBAT', 'UPDATE_AD', 'REMOVE_AD', 'MAILING_LIST_SUBSCRIBE', 'MAILING_LIST_UNSUBSCRIBE', 'REGISTRATION', 'UNKNOWN');
+-- CreateEnum (skip if already exists)
+DO $$ BEGIN
+  CREATE TYPE "EmailCommandType" AS ENUM ('PUBLISH_SALE', 'PUBLISH_RENT', 'PUBLISH_SHABBAT', 'PUBLISH_COMMERCIAL', 'PUBLISH_SHARED_OWNERSHIP', 'WANTED_BUY', 'WANTED_RENT', 'WANTED_SHABBAT', 'UPDATE_AD', 'REMOVE_AD', 'MAILING_LIST_SUBSCRIBE', 'MAILING_LIST_UNSUBSCRIBE', 'REGISTRATION', 'UNKNOWN');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateEnum
 CREATE TYPE "EmailRequestStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
