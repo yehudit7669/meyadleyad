@@ -80,20 +80,20 @@ CREATE INDEX "PendingApproval_status_idx" ON "PendingApproval"("status");
 -- CreateIndex
 CREATE INDEX "PendingApproval_createdAt_idx" ON "PendingApproval"("createdAt");
 
--- CreateIndex
-CREATE INDEX "EmailAuditLog_commandType_idx" ON "EmailAuditLog"("commandType");
+-- CreateIndex (already exists, commented out to prevent duplicate)
+-- CREATE INDEX "EmailAuditLog_commandType_idx" ON "EmailAuditLog"("commandType");
 
--- CreateIndex
-CREATE INDEX "EmailOperationsMailingList_status_idx" ON "EmailOperationsMailingList"("status");
+-- CreateIndex (already exists, commented out to prevent duplicate)
+-- CREATE INDEX "EmailOperationsMailingList_status_idx" ON "EmailOperationsMailingList"("status");
 
--- CreateIndex
-CREATE INDEX "EmailRequest_commandType_idx" ON "EmailRequest"("commandType");
+-- CreateIndex (already exists, commented out to prevent duplicate)
+-- CREATE INDEX "EmailRequest_commandType_idx" ON "EmailRequest"("commandType");
 
--- CreateIndex
-CREATE INDEX "EmailRequest_status_idx" ON "EmailRequest"("status");
+-- CreateIndex (already exists, commented out to prevent duplicate)
+-- CREATE INDEX "EmailRequest_status_idx" ON "EmailRequest"("status");
 
--- CreateIndex
-CREATE INDEX "PendingIntent_status_idx" ON "PendingIntent"("status");
+-- CreateIndex (already exists, commented out to prevent duplicate)
+-- CREATE INDEX "PendingIntent_status_idx" ON "PendingIntent"("status");
 
 -- AddForeignKey
 ALTER TABLE "PendingApproval" ADD CONSTRAINT "PendingApproval_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
