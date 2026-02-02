@@ -27,25 +27,25 @@ CREATE TYPE "PendingApprovalType" AS ENUM ('OFFICE_ADDRESS_UPDATE', 'ABOUT_UPDAT
 -- DropIndex (already dropped or doesn't exist, commented out to prevent error)
 -- DROP INDEX "Ad_isWanted_idx";
 
--- AlterTable
-ALTER TABLE "EmailAuditLog" DROP COLUMN "commandType",
-ADD COLUMN     "commandType" "EmailCommandType" NOT NULL;
+-- AlterTable (already updated, commented out to prevent duplicate changes)
+-- ALTER TABLE "EmailAuditLog" DROP COLUMN "commandType",
+-- ADD COLUMN     "commandType" "EmailCommandType" NOT NULL;
 
--- AlterTable
-ALTER TABLE "EmailOperationsMailingList" DROP COLUMN "status",
-ADD COLUMN     "status" "EmailMailingStatus" NOT NULL DEFAULT 'ACTIVE';
+-- AlterTable (already updated, commented out to prevent duplicate changes)
+-- ALTER TABLE "EmailOperationsMailingList" DROP COLUMN "status",
+-- ADD COLUMN     "status" "EmailMailingStatus" NOT NULL DEFAULT 'ACTIVE';
 
--- AlterTable
-ALTER TABLE "EmailRequest" DROP COLUMN "commandType",
-ADD COLUMN     "commandType" "EmailCommandType" NOT NULL,
-DROP COLUMN "status",
-ADD COLUMN     "status" "EmailRequestStatus" NOT NULL DEFAULT 'PENDING';
+-- AlterTable (already updated, commented out to prevent duplicate changes)
+-- ALTER TABLE "EmailRequest" DROP COLUMN "commandType",
+-- ADD COLUMN     "commandType" "EmailCommandType" NOT NULL,
+-- DROP COLUMN "status",
+-- ADD COLUMN     "status" "EmailRequestStatus" NOT NULL DEFAULT 'PENDING';
 
--- AlterTable
-ALTER TABLE "PendingIntent" DROP COLUMN "commandType",
-ADD COLUMN     "commandType" "EmailCommandType" NOT NULL,
-DROP COLUMN "status",
-ADD COLUMN     "status" "PendingIntentStatus" NOT NULL DEFAULT 'PENDING';
+-- AlterTable (already updated, commented out to prevent duplicate changes)
+-- ALTER TABLE "PendingIntent" DROP COLUMN "commandType",
+-- ADD COLUMN     "commandType" "EmailCommandType" NOT NULL,
+-- DROP COLUMN "status",
+-- ADD COLUMN     "status" "PendingIntentStatus" NOT NULL DEFAULT 'PENDING';
 
 -- AlterTable
 ALTER TABLE "RefreshToken" ALTER COLUMN "id" DROP DEFAULT;
