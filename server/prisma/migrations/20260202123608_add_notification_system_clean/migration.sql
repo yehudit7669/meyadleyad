@@ -46,9 +46,14 @@ CREATE TYPE "NotificationQueueStatus" AS ENUM ('PENDING', 'SENT', 'FAILED');
 -- DropIndex (skip if doesn't exist)
 DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
+-- Update NULL values before altering tables
+UPDATE "EmailAuditLog" SET "commandType" = 'UNKNOWN' WHERE "commandType" IS NULL;
+UPDATE "EmailRequest" SET "commandType" = 'UNKNOWN' WHERE "commandType" IS NULL;
+UPDATE "PendingIntent" SET "commandType" = 'UNKNOWN' WHERE "commandType" IS NULL;
+
 -- AlterTable
 ALTER TABLE "EmailAuditLog" DROP COLUMN "commandType",
-ADD COLUMN     "commandType" "EmailCommandType" NOT NULL;
+ADD COLUMN     "commandType" "EmailCommandType" NOT NULL DEFAULT 'UNKNOWN';
 
 -- AlterTable
 ALTER TABLE "EmailOperationsMailingList" DROP COLUMN "status",
@@ -56,13 +61,13 @@ ADD COLUMN     "status" "EmailMailingStatus" NOT NULL DEFAULT 'ACTIVE';
 
 -- AlterTable
 ALTER TABLE "EmailRequest" DROP COLUMN "commandType",
-ADD COLUMN     "commandType" "EmailCommandType" NOT NULL,
+ADD COLUMN     "commandType" "EmailCommandType" NOT NULL DEFAULT 'UNKNOWN',
 DROP COLUMN "status",
 ADD COLUMN     "status" "EmailRequestStatus" NOT NULL DEFAULT 'PENDING';
 
 -- AlterTable
 ALTER TABLE "PendingIntent" DROP COLUMN "commandType",
-ADD COLUMN     "commandType" "EmailCommandType" NOT NULL,
+ADD COLUMN     "commandType" "EmailCommandType" NOT NULL DEFAULT 'UNKNOWN',
 DROP COLUMN "status",
 ADD COLUMN     "status" "PendingIntentStatus" NOT NULL DEFAULT 'PENDING';
 
