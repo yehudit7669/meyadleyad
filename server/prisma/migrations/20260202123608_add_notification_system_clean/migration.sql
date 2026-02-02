@@ -16,14 +16,26 @@ EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
 
--- CreateEnum
-CREATE TYPE "EmailRequestStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+-- CreateEnum (skip if already exists)
+DO $$ BEGIN
+  CREATE TYPE "EmailRequestStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "PendingIntentStatus" AS ENUM ('PENDING', 'EXPIRED', 'COMPLETED');
+-- CreateEnum (skip if already exists)
+DO $$ BEGIN
+  CREATE TYPE "PendingIntentStatus" AS ENUM ('PENDING', 'EXPIRED', 'COMPLETED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "EmailMailingStatus" AS ENUM ('ACTIVE', 'REMOVED');
+-- CreateEnum (skip if already exists)
+DO $$ BEGIN
+  CREATE TYPE "EmailMailingStatus" AS ENUM ('ACTIVE', 'REMOVED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateEnum
 CREATE TYPE "UserNotificationOverrideMode" AS ENUM ('ALLOW', 'BLOCK');
