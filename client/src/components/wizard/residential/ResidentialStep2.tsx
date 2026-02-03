@@ -242,7 +242,7 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
                           onClick={() => handleStreetSelect(street)}
                           className="px-4 py-3 hover:bg-[#C9A24D] hover:bg-opacity-10 cursor-pointer border-b last:border-b-0 transition-colors"
                         >
-                          <div className="font-medium">{street.name}</div>
+                          <div className="font-medium text-black">{street.name}</div>
                           {street.neighborhoodName && (
                             <div className="text-sm text-gray-600">שכונה: {street.neighborhoodName}</div>
                           )}
@@ -268,7 +268,7 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
                           onClick={() => handleStreetSelect(street)}
                           className="px-4 py-3 hover:bg-[#C9A24D] hover:bg-opacity-10 cursor-pointer border-b last:border-b-0 transition-colors"
                         >
-                          <div className="font-medium">{street.name}</div>
+                          <div className="font-medium text-black">{street.name}</div>
                           {street.neighborhoodName && (
                             <div className="text-sm text-gray-600">שכונה: {street.neighborhoodName}</div>
                           )}

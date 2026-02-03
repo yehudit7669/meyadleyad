@@ -25,6 +25,11 @@ const Header: React.FC = () => {
     navigate('/');
   };
 
+  // Close mobile menu when clicking on a link
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
   // Close profile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -223,26 +228,34 @@ const Header: React.FC = () => {
               {/* Categories */}
               <div className="border-b border-[#C9A24D]/30 pb-4">
                 <p className="text-xs text-[#C9A24D] mb-3 font-semibold px-2">קטגוריות</p>
-                <CategoryWithCities 
-                  categorySlug="apartments-for-sale"
-                  categoryName="🏠 דירות למכירה"
-                  isMobile={true}
-                />
-                <CategoryWithCities 
-                  categorySlug="apartments-for-rent"
-                  categoryName="🔑 דירות להשכרה"
-                  isMobile={true}
-                />
-                <CategoryWithCities 
-                  categorySlug="commercial-real-estate"
-                  categoryName='🏢 נדל״ן מסחרי'
-                  isMobile={true}
-                />
-                <CategoryWithCities 
-                  categorySlug="second-hand-board"
-                  categoryName="🛍️ לוח יד שניה"
-                  isMobile={true}
-                />
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
+                    categorySlug="apartments-for-sale"
+                    categoryName="🏠 דירות למכירה"
+                    isMobile={true}
+                  />
+                </div>
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
+                    categorySlug="apartments-for-rent"
+                    categoryName="🔑 דירות להשכרה"
+                    isMobile={true}
+                  />
+                </div>
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
+                    categorySlug="commercial-real-estate"
+                    categoryName='🏢 נדל״ן מסחרי'
+                    isMobile={true}
+                  />
+                </div>
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
+                    categorySlug="second-hand-board"
+                    categoryName="🛍️ לוח יד שניה"
+                    isMobile={true}
+                  />
+                </div>
               </div>
               
               {user ? (
@@ -250,22 +263,38 @@ const Header: React.FC = () => {
                   <Link 
                     to="/publish" 
                     className="bg-[#C9A24D] text-[#1F3F3A] py-3 px-4 rounded-lg font-semibold hover:bg-[#B08C3C] transition text-center"
+                    onClick={closeMobileMenu}
                   >
                     פרסום חדש
                   </Link>
-                  <Link to="/profile/ads" className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition">
+                  <Link 
+                    to="/profile/ads" 
+                    className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                    onClick={closeMobileMenu}
+                  >
                     המודעות שלי
                   </Link>
-                  <Link to="/profile" className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition">
+                  <Link 
+                    to="/profile" 
+                    className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                    onClick={closeMobileMenu}
+                  >
                     הפרופיל שלי
                   </Link>
                   {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR') && (
-                    <Link to="/admin" className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition">
+                    <Link 
+                      to="/admin" 
+                      className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                      onClick={closeMobileMenu}
+                    >
                       ניהול
                     </Link>
                   )}
                   <button
-                    onClick={handleLogout}
+                    onClick={() => {
+                      closeMobileMenu();
+                      handleLogout();
+                    }}
                     aria-label="התנתק מהמערכת"
                     className="text-right text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
                   >
@@ -274,12 +303,17 @@ const Header: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition">
+                  <Link 
+                    to="/login" 
+                    className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                    onClick={closeMobileMenu}
+                  >
                     התחבר
                   </Link>
                   <Link 
                     to="/register" 
                     className="bg-[#C9A24D] text-[#1F3F3A] py-3 px-4 rounded-lg font-semibold hover:bg-[#B08C3C] transition text-center"
+                    onClick={closeMobileMenu}
                   >
                     הירשם
                   </Link>

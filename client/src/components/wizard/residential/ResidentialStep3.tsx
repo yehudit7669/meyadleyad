@@ -106,11 +106,11 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                 onClick={() => handleChange('propertyType', option.value as PropertyType)}
                 className={`p-4 rounded-lg border-2 transition-all text-center ${
                   formData.propertyType === option.value
-                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 ring-2 ring-[#C9A24D] ring-opacity-30'
-                    : 'border-gray-300 hover:border-[#C9A24D]'
+                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'
+                    : 'border-gray-300 hover:border-[#C9A24D] text-gray-700'
                 }`}
               >
-                <div className="font-medium">{option.label}</div>
+                <div>{option.label}</div>
               </button>
             ))}
           </div>
@@ -177,13 +177,13 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                 onClick={() =>
                   handleChange('condition', option.value as PropertyCondition)
                 }
-                className={`p-4 rounded-lg border-2 transition-all text-center ${
+                className={`p-4 rounded-lg border-2 transition-all text-center text-sm ${
                   formData.condition === option.value
-                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 ring-2 ring-[#C9A24D] ring-opacity-30'
-                    : 'border-gray-300 hover:border-[#C9A24D]'
+                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'
+                    : 'border-gray-300 hover:border-[#C9A24D] text-gray-700'
                 }`}
               >
-                <div className="font-medium text-sm">{option.label}</div>
+                <div>{option.label}</div>
               </button>
             ))}
           </div>
@@ -235,11 +235,11 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
                 onClick={() => handleChange('furniture', option.value as FurnitureStatus)}
                 className={`p-4 rounded-lg border-2 transition-all text-center ${
                   formData.furniture === option.value
-                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 ring-2 ring-[#C9A24D] ring-opacity-30'
-                    : 'border-gray-300 hover:border-[#C9A24D]'
+                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'
+                    : 'border-gray-300 hover:border-[#C9A24D] text-gray-700'
                 }`}
               >
-                <div className="font-medium">{option.label}</div>
+                <div>{option.label}</div>
               </button>
             ))}
           </div>

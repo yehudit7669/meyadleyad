@@ -74,7 +74,11 @@ const CategoryWithCities: React.FC<CategoryWithCitiesProps> = ({
 
   if (isMobile) {
     return (
-      <div className="relative">
+      <div 
+        className="relative"
+        onMouseEnter={() => setDropdownOpen(true)}
+        onMouseLeave={() => setDropdownOpen(false)}
+      >
         <div
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="block text-[#E6D3A3] hover:text-[#C9A24D] py-2 px-2 transition cursor-pointer"

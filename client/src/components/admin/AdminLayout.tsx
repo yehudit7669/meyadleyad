@@ -392,7 +392,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           aria-label={isMobileMenuOpen ? 'סגור תפריט' : 'פתח תפריט'}
           aria-expanded={isMobileMenuOpen}
         >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {isMobileMenuOpen ? <X className="w-6 h-6 text-black" /> : <Menu className="w-6 h-6 text-black" />}
         </button>
       </div>
 
