@@ -1,14 +1,30 @@
 -- CreateEnum
-CREATE TYPE "ConversationStatus" AS ENUM ('OPEN', 'CLOSED');
+DO $$ BEGIN
+  CREATE TYPE "ConversationStatus" AS ENUM ('OPEN', 'CLOSED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "SenderType" AS ENUM ('USER', 'ADMIN', 'GUEST');
+DO $$ BEGIN
+  CREATE TYPE "SenderType" AS ENUM ('USER', 'ADMIN', 'GUEST');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "EmailDeliveryStatus" AS ENUM ('PENDING', 'SENT', 'FAILED', 'NOT_REQUIRED');
+DO $$ BEGIN
+  CREATE TYPE "EmailDeliveryStatus" AS ENUM ('PENDING', 'SENT', 'FAILED', 'NOT_REQUIRED');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- CreateEnum
-CREATE TYPE "SupportNotificationType" AS ENUM ('ADMIN_REPLY', 'NEW_MESSAGE');
+DO $$ BEGIN
+  CREATE TYPE "SupportNotificationType" AS ENUM ('ADMIN_REPLY', 'NEW_MESSAGE');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- DropIndex
 DROP INDEX IF EXISTS "Ad_isWanted_idx";
@@ -26,7 +42,7 @@ ALTER TABLE "PendingIntent" ALTER COLUMN "commandType" DROP DEFAULT;
 ALTER TABLE "RefreshToken" ALTER COLUMN "id" DROP DEFAULT;
 
 -- CreateTable
-CREATE TABLE "Conversation" (
+CREATE TABLE IF NOT EXISTS "Conversation" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
     "guestEmail" TEXT,
@@ -42,7 +58,7 @@ CREATE TABLE "Conversation" (
 );
 
 -- CreateTable
-CREATE TABLE "Message" (
+CREATE TABLE IF NOT EXISTS "Message" (
     "id" TEXT NOT NULL,
     "conversationId" TEXT NOT NULL,
     "senderType" "SenderType" NOT NULL,
@@ -56,7 +72,7 @@ CREATE TABLE "Message" (
 );
 
 -- CreateTable
-CREATE TABLE "SupportNotification" (
+CREATE TABLE IF NOT EXISTS "SupportNotification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "conversationId" TEXT NOT NULL,
@@ -68,37 +84,37 @@ CREATE TABLE "SupportNotification" (
 );
 
 -- CreateIndex
-CREATE INDEX "Conversation_userId_idx" ON "Conversation"("userId");
+CREATE INDEX IF NOT EXISTS "Conversation_userId_idx" ON "Conversation"("userId");
 
 -- CreateIndex
-CREATE INDEX "Conversation_guestEmail_idx" ON "Conversation"("guestEmail");
+CREATE INDEX IF NOT EXISTS "Conversation_guestEmail_idx" ON "Conversation"("guestEmail");
 
 -- CreateIndex
-CREATE INDEX "Conversation_lastMessageAt_idx" ON "Conversation"("lastMessageAt");
+CREATE INDEX IF NOT EXISTS "Conversation_lastMessageAt_idx" ON "Conversation"("lastMessageAt");
 
 -- CreateIndex
-CREATE INDEX "Conversation_status_idx" ON "Conversation"("status");
+CREATE INDEX IF NOT EXISTS "Conversation_status_idx" ON "Conversation"("status");
 
 -- CreateIndex
-CREATE INDEX "Conversation_createdAt_idx" ON "Conversation"("createdAt");
+CREATE INDEX IF NOT EXISTS "Conversation_createdAt_idx" ON "Conversation"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Message_conversationId_idx" ON "Message"("conversationId");
+CREATE INDEX IF NOT EXISTS "Message_conversationId_idx" ON "Message"("conversationId");
 
 -- CreateIndex
-CREATE INDEX "Message_createdAt_idx" ON "Message"("createdAt");
+CREATE INDEX IF NOT EXISTS "Message_createdAt_idx" ON "Message"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Message_emailDeliveryStatus_idx" ON "Message"("emailDeliveryStatus");
+CREATE INDEX IF NOT EXISTS "Message_emailDeliveryStatus_idx" ON "Message"("emailDeliveryStatus");
 
 -- CreateIndex
-CREATE INDEX "SupportNotification_userId_idx" ON "SupportNotification"("userId");
+CREATE INDEX IF NOT EXISTS "SupportNotification_userId_idx" ON "SupportNotification"("userId");
 
 -- CreateIndex
-CREATE INDEX "SupportNotification_conversationId_idx" ON "SupportNotification"("conversationId");
+CREATE INDEX IF NOT EXISTS "SupportNotification_conversationId_idx" ON "SupportNotification"("conversationId");
 
 -- CreateIndex
-CREATE INDEX "SupportNotification_isRead_idx" ON "SupportNotification"("isRead");
+CREATE INDEX IF NOT EXISTS "SupportNotification_isRead_idx" ON "SupportNotification"("isRead");
 
 -- CreateIndex
 CREATE INDEX "SupportNotification_createdAt_idx" ON "SupportNotification"("createdAt");
