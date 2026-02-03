@@ -142,3 +142,50 @@ export const authorizeWithPermission = (roles: string[], permission?: string) =>
     return next(new UnauthorizedError('Insufficient permissions'));
   };
 };
+
+/**
+ * Optional authentication - sets user if token is valid, but doesn't require it
+ */
+export const optionalAuth = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token = (req as any).headers?.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      // No token, continue as guest
+      return next();
+    }
+
+    const decoded = jwt.verify(token, config.jwt.secret) as {
+      userId: string;
+      email: string;
+      role: string;
+    };
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, email: true, role: true, status: true },
+    });
+
+    if (user && user.status === 'ACTIVE') {
+      req.user = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isAdmin: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR',
+        isBroker: user.role === 'BROKER',
+      };
+    }
+
+    next();
+  } catch (error) {
+    // Invalid token, continue as guest
+    next();
+  }
+};
+
+// Alias for consistency
+export const auth = authenticate;

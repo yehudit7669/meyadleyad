@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Ad {
-  id                    String             @id
+  id                    String                  @id
   title                 String
   description           String
   price                 Float?
@@ -19,28 +19,28 @@ model Ad {
   latitude              Float?
   longitude             Float?
   customFields          Json?
-  status                AdStatus           @default(PENDING)
+  status                AdStatus                @default(PENDING)
   rejectionReason       String?
-  views                 Int                @default(0)
-  contactClicks         Int                @default(0)
-  whatsappSent          Boolean            @default(false)
+  views                 Int                     @default(0)
+  contactClicks         Int                     @default(0)
+  whatsappSent          Boolean                 @default(false)
   whatsappSentAt        DateTime?
   expiresAt             DateTime?
   publishedAt           DateTime?
-  createdAt             DateTime           @default(now())
+  createdAt             DateTime                @default(now())
   updatedAt             DateTime
-  adNumber              Int                @unique @default(autoincrement())
+  adNumber              Int                     @unique @default(autoincrement())
   adType                String?
   neighborhood          String?
   rejectedReason        String?
   removedAt             DateTime?
   streetId              String?
-  isWanted              Boolean            @default(false)
+  isWanted              Boolean                 @default(false)
   requestedLocationText String?
-  Category              Category           @relation(fields: [categoryId], references: [id])
-  City                  City?              @relation(fields: [cityId], references: [id])
-  Street                Street?            @relation(fields: [streetId], references: [id])
-  User                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Category              Category                @relation(fields: [categoryId], references: [id])
+  City                  City?                   @relation(fields: [cityId], references: [id])
+  Street                Street?                 @relation(fields: [streetId], references: [id])
+  User                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   AdImage               AdImage[]
   AdminAdLog            AdminAdLog[]
   Appointment           Appointment[]
@@ -94,22 +94,22 @@ model BannerAd {
 }
 
 model Category {
-  id             String          @id
+  id             String           @id
   name           String
   nameHe         String
-  slug           String          @unique
+  slug           String           @unique
   description    String?
   icon           String?
   parentId       String?
-  order          Int             @default(0)
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
+  order          Int              @default(0)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
   updatedAt      DateTime
   Ad             Ad[]
-  NewspaperSheet NewspaperSheet[]
-  Category       Category?       @relation("CategoryToCategory", fields: [parentId], references: [id])
-  other_Category Category[]      @relation("CategoryToCategory")
+  Category       Category?        @relation("CategoryToCategory", fields: [parentId], references: [id])
+  other_Category Category[]       @relation("CategoryToCategory")
   CategoryField  CategoryField[]
+  NewspaperSheet NewspaperSheet[]
 
   @@index([parentId])
   @@index([slug])
@@ -132,21 +132,21 @@ model CategoryField {
 }
 
 model City {
-  id           String         @id
-  name         String         @unique
-  nameHe       String
-  slug         String         @unique
-  region       String?
-  latitude     Float?
-  longitude    Float?
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime
-  Ad           Ad[]
-  Neighborhood Neighborhood[]
-  Street       Street[]
-  BrokerUsers  User[]             @relation("BrokerCity")
+  id             String           @id
+  name           String           @unique
+  nameHe         String
+  slug           String           @unique
+  region         String?
+  latitude       Float?
+  longitude      Float?
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  Ad             Ad[]
+  Neighborhood   Neighborhood[]
   NewspaperSheet NewspaperSheet[]
+  Street         Street[]
+  BrokerUsers    User[]           @relation("BrokerCity")
 
   @@index([name])
   @@index([slug])
@@ -271,6 +271,7 @@ model User {
   AppointmentOwner           Appointment[]                @relation("AppointmentOwner")
   AppointmentRequester       Appointment[]                @relation("AppointmentRequester")
   BrandingConfig             BrandingConfig[]
+  Conversations              Conversation[]
   DataExportRequest          DataExportRequest[]
   EmailLog                   EmailLog[]
   Favorite                   Favorite[]
@@ -278,16 +279,17 @@ model User {
   NewspaperAdCreated         NewspaperAd[]                @relation("NewspaperAdCreator")
   NewspaperSheetCreated      NewspaperSheet[]             @relation("NewspaperSheetCreator")
   NewspaperVersionGenerated  NewspaperSheetVersion[]      @relation("NewspaperVersionGenerator")
+  NotificationQueue          NotificationQueue[]
   OfficeAddressChangeRequest OfficeAddressChangeRequest[]
+  PendingApprovalsReviewed   PendingApproval[]            @relation("ReviewedApprovals")
+  PendingApprovalsCreated    PendingApproval[]            @relation("UserApprovals")
   RefreshToken               RefreshToken[]
+  SupportNotifications       SupportNotification[]
   BrokerCity                 City?                        @relation("BrokerCity", fields: [brokerCityId], references: [id])
   UserAppointmentPolicy      UserAppointmentPolicy?
   UserAudit                  UserAudit[]
-  UserPreference             UserPreference?
-  PendingApprovalsCreated    PendingApproval[]            @relation("UserApprovals")
-  PendingApprovalsReviewed   PendingApproval[]            @relation("ReviewedApprovals")
   NotificationOverride       UserNotificationOverride?
-  NotificationQueue          NotificationQueue[]
+  UserPreference             UserPreference?
 
   @@index([email])
   @@index([googleId])
@@ -363,7 +365,7 @@ model UserPreference {
   userId           String   @unique
   weeklyDigest     Boolean  @default(false)
   notifyNewMatches Boolean  @default(false)
-  filters          Json?    // Structure: { categoryIds?, cityIds?, minPrice?, maxPrice?, propertyTypes?, publisherTypes? }
+  filters          Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -371,48 +373,41 @@ model UserPreference {
   @@index([userId])
 }
 
-// ===============================================
-// NOTIFICATION SYSTEM - התראות על נכסים חדשים
-// ===============================================
-
-// Global notification settings (admin control)
 model NotificationSettings {
   id        String   @id @default(cuid())
-  enabled   Boolean  @default(true)  // Global enable/disable for all users
+  enabled   Boolean  @default(true)
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 }
 
-// Per-user notification overrides (temporary allow/block)
 model UserNotificationOverride {
-  id        String                      @id @default(cuid())
-  userId    String                      @unique
+  id        String                       @id @default(cuid())
+  userId    String                       @unique
   mode      UserNotificationOverrideMode
-  expiresAt DateTime                    // When this override expires
-  reason    String?                     // Admin notes
-  createdAt DateTime                    @default(now())
-  updatedAt DateTime                    @updatedAt
-  user      User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  reason    String?
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime                     @updatedAt
+  user      User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
 }
 
-// Queue for notification delivery (idempotency + retry support)
 model NotificationQueue {
-  id           String                 @id @default(cuid())
+  id           String                  @id @default(cuid())
   userId       String
   adId         String
   status       NotificationQueueStatus @default(PENDING)
   sentAt       DateTime?
   errorMessage String?
-  retryCount   Int                    @default(0)
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ad           Ad                     @relation(fields: [adId], references: [id], onDelete: Cascade)
+  retryCount   Int                     @default(0)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  ad           Ad                      @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user         User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, adId])  // Prevent duplicate notifications
+  @@unique([userId, adId])
   @@index([userId])
   @@index([adId])
   @@index([status])
@@ -544,35 +539,35 @@ model PageView {
 }
 
 model MailingListSubscriber {
-  id                        String    @id @default(cuid())
-  email                     String    @unique
-  name                      String?
-  status                    MailingListStatus @default(ACTIVE)
-  unsubscribedAt            DateTime?
-  blockedAt                 DateTime?
-  blockedBy                 String?
-  unsubscribeToken          String?   @unique
-  emailUpdatesEnabled       Boolean   @default(true)
-  emailUpdatesCategories    Json?
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
+  id                     String            @id @default(cuid())
+  email                  String            @unique
+  name                   String?
+  unsubscribedAt         DateTime?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  blockedAt              DateTime?
+  blockedBy              String?
+  emailUpdatesCategories Json?
+  emailUpdatesEnabled    Boolean           @default(true)
+  status                 MailingListStatus @default(ACTIVE)
+  unsubscribeToken       String?           @unique
 
   @@index([email])
   @@index([status])
 }
 
 model ContentItem {
-  id                  String              @id @default(cuid())
+  id                  String                @id @default(cuid())
   title               String
   type                ContentItemType
   url                 String
   thumbnailUrl        String?
-  status              ContentItemStatus   @default(NOT_DISTRIBUTED)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  status              ContentItemStatus     @default(NOT_DISTRIBUTED)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
   createdBy           String
   lastDistributedAt   DateTime?
-  distributionCount   Int                 @default(0)
+  distributionCount   Int                   @default(0)
   ContentDistribution ContentDistribution[]
 
   @@index([type])
@@ -582,16 +577,16 @@ model ContentItem {
 }
 
 model ContentDistribution {
-  id              String   @id @default(cuid())
-  contentItemId   String
-  mode            DistributionMode
-  recipientsCount Int      @default(0)
-  successCount    Int      @default(0)
-  failedCount     Int      @default(0)
-  distributedAt   DateTime @default(now())
-  distributedBy   String
-  contentItem     ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  id                 String               @id @default(cuid())
+  contentItemId      String
+  mode               DistributionMode
+  recipientsCount    Int                  @default(0)
+  successCount       Int                  @default(0)
+  failedCount        Int                  @default(0)
+  distributedAt      DateTime             @default(now())
+  distributedBy      String
   ContentDispatchLog ContentDispatchLog[]
+  contentItem        ContentItem          @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
 
   @@index([contentItemId])
   @@index([distributedAt])
@@ -600,14 +595,14 @@ model ContentDistribution {
 
 model ContentDispatchLog {
   id                    String               @id @default(cuid())
-  contentDistributionId String?
   fileName              String
   fileUrl               String?
   recipientEmail        String
   sentAt                DateTime             @default(now())
-  status                DispatchStatus       @default(SENT)
   errorMessage          String?
-  contentDistribution   ContentDistribution? @relation(fields: [contentDistributionId], references: [id], onDelete: SetNull)
+  contentDistributionId String?
+  status                DispatchStatus       @default(SENT)
+  contentDistribution   ContentDistribution? @relation(fields: [contentDistributionId], references: [id])
 
   @@index([contentDistributionId])
   @@index([recipientEmail])
@@ -624,9 +619,9 @@ model ImportLog {
   successRows     Int      @default(0)
   failedRows      Int      @default(0)
   errors          Json?
-  importedItemIds Json?    // Array of IDs that were imported
-  metadata        Json?    // Additional metadata (cities, streets, etc.)
   createdAt       DateTime @default(now())
+  importedItemIds Json?
+  metadata        Json?
 
   @@index([adminId])
   @@index([importType])
@@ -755,32 +750,26 @@ model HighlightRequest {
   @@index([status])
 }
 
-// ===============================================
-// NEWSPAPER SHEET SYSTEM - עיתון קטגוריה+עיר
-// ===============================================
-
 model NewspaperSheet {
-  id            String                   @id @default(cuid())
-  categoryId    String
-  cityId        String
-  title         String                   // כותרת הגיליון - לדוגמה: "דירות למכירה בית שמש"
-  headerImage   String?                  // תמונת כותרת (banner)
-  layoutConfig  Json?                    // הגדרות סידור - positions של כרטיסים
-  version       Int                      @default(1)
-  pdfPath       String?                  // נתיב ל-PDF הנוכחי
-  status        NewspaperSheetStatus     @default(DRAFT)
-  issueNumber   String?                  // מספר גיליון (ניתן לעריכה)
-  issueDate     String?                  // תאריך גיליון (ניתן לעריכה)
-  createdBy     String
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  
-  // Relations
-  category      Category                 @relation(fields: [categoryId], references: [id])
-  city          City                     @relation(fields: [cityId], references: [id])
-  creator       User                     @relation("NewspaperSheetCreator", fields: [createdBy], references: [id])
-  listings      NewspaperSheetListing[]
-  versions      NewspaperSheetVersion[]
+  id           String                  @id @default(cuid())
+  categoryId   String
+  cityId       String
+  title        String
+  headerImage  String?
+  layoutConfig Json?
+  version      Int                     @default(1)
+  pdfPath      String?
+  status       NewspaperSheetStatus    @default(DRAFT)
+  createdBy    String
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  issueNumber  String?
+  issueDate    String?
+  category     Category                @relation(fields: [categoryId], references: [id])
+  city         City                    @relation(fields: [cityId], references: [id])
+  creator      User                    @relation("NewspaperSheetCreator", fields: [createdBy], references: [id])
+  listings     NewspaperSheetListing[]
+  versions     NewspaperSheetVersion[]
 
   @@unique([categoryId, cityId, status])
   @@index([categoryId])
@@ -791,15 +780,13 @@ model NewspaperSheet {
 }
 
 model NewspaperSheetListing {
-  id            String          @id @default(cuid())
+  id            String         @id @default(cuid())
   sheetId       String
   listingId     String
-  positionIndex Int             @default(0) // מיקום בגריד (לצורך drag & drop)
-  addedAt       DateTime        @default(now())
-  
-  // Relations
-  sheet         NewspaperSheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
-  listing       Ad              @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  positionIndex Int            @default(0)
+  addedAt       DateTime       @default(now())
+  listing       Ad             @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sheet         NewspaperSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
 
   @@unique([sheetId, listingId])
   @@index([sheetId])
@@ -808,25 +795,20 @@ model NewspaperSheetListing {
 }
 
 model NewspaperSheetVersion {
-  id          String          @id @default(cuid())
+  id          String         @id @default(cuid())
   sheetId     String
   version     Int
   pdfPath     String
   generatedBy String
-  createdAt   DateTime        @default(now())
-  
-  // Relations
-  sheet       NewspaperSheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
-  generator   User            @relation("NewspaperVersionGenerator", fields: [generatedBy], references: [id])
+  createdAt   DateTime       @default(now())
+  generator   User           @relation("NewspaperVersionGenerator", fields: [generatedBy], references: [id])
+  sheet       NewspaperSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
 
   @@unique([sheetId, version])
   @@index([sheetId])
   @@index([createdAt])
 }
 
-// ===============================================
-// DEPRECATED - מודל ישן (נשאר לצורך תאימות)
-// ===============================================
 model NewspaperAd {
   id        String   @id @default(cuid())
   adId      String
@@ -839,6 +821,208 @@ model NewspaperAd {
 
   @@index([adId])
   @@index([createdBy])
+  @@index([createdAt])
+}
+
+model EmailInboundMessage {
+  id             String          @id @default(cuid())
+  messageId      String
+  from           String
+  to             String
+  subject        String
+  bodyText       String?
+  bodyHtml       String?
+  headers        Json?
+  attachments    Json?
+  inReplyTo      String?
+  references     String?
+  receivedAt     DateTime        @default(now())
+  processed      Boolean         @default(false)
+  processedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  auditLogs      EmailAuditLog[]
+  emailRequests  EmailRequest[]
+  pendingIntents PendingIntent[]
+
+  @@index([messageId])
+  @@index([from])
+  @@index([subject])
+  @@index([processed])
+  @@index([receivedAt])
+}
+
+model EmailRequest {
+  id                String              @id @default(cuid())
+  inboundMessageId  String
+  senderEmail       String
+  adId              String?
+  payload           Json?
+  failReason        String?
+  publicFailMessage String?
+  retryCount        Int                 @default(0)
+  processedAt       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  commandType       EmailCommandType
+  status            EmailRequestStatus  @default(PENDING)
+  inboundMessage    EmailInboundMessage @relation(fields: [inboundMessageId], references: [id], onDelete: Cascade)
+
+  @@index([senderEmail])
+  @@index([commandType])
+  @@index([status])
+  @@index([adId])
+  @@index([createdAt])
+}
+
+model PendingIntent {
+  id                 String              @id @default(cuid())
+  email              String
+  inboundMessageId   String
+  payload            Json?
+  registrationSent   Boolean             @default(false)
+  registrationSentAt DateTime?
+  completedAt        DateTime?
+  expiresAt          DateTime
+  createdAt          DateTime            @default(now())
+  commandType        EmailCommandType
+  status             PendingIntentStatus @default(PENDING)
+  inboundMessage     EmailInboundMessage @relation(fields: [inboundMessageId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model EmailOperationsMailingList {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  name             String?
+  source           String             @default("email")
+  subscriptionDate DateTime           @default(now())
+  unsubscribeToken String?            @unique
+  removedAt        DateTime?
+  lastCommandAt    DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  status           EmailMailingStatus @default(ACTIVE)
+
+  @@index([email])
+  @@index([status])
+}
+
+model EmailRateLimit {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  requestCount    Int       @default(0)
+  errorCount      Int       @default(0)
+  windowStartedAt DateTime  @default(now())
+  lastRequestAt   DateTime  @default(now())
+  inCooldown      Boolean   @default(false)
+  cooldownUntil   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([inCooldown])
+  @@index([windowStartedAt])
+}
+
+model EmailAuditLog {
+  id               String               @id @default(cuid())
+  email            String
+  action           String
+  adId             String?
+  success          Boolean
+  failReason       String?
+  publicMessage    String?
+  metadata         Json?
+  ip               String?
+  userAgent        String?
+  inboundMessageId String?
+  createdAt        DateTime             @default(now())
+  commandType      EmailCommandType
+  inboundMessage   EmailInboundMessage? @relation(fields: [inboundMessageId], references: [id])
+
+  @@index([email])
+  @@index([action])
+  @@index([commandType])
+  @@index([adId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+model PendingApproval {
+  id           String              @id @default(cuid())
+  userId       String
+  type         PendingApprovalType
+  status       ApprovalStatus      @default(PENDING)
+  requestData  Json
+  oldData      Json?
+  reason       String?
+  adminNotes   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  reviewer     User?               @relation("ReviewedApprovals", fields: [reviewedById], references: [id])
+  user         User                @relation("UserApprovals", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Conversation {
+  id                 String                @id @default(cuid())
+  userId             String?
+  guestEmail         String?
+  status             ConversationStatus    @default(OPEN)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  lastMessageAt      DateTime              @default(now())
+  lastMessagePreview String?
+  adminLastReadAt    DateTime?
+  userLastReadAt     DateTime?
+  user               User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages           Message[]
+  notifications      SupportNotification[]
+
+  @@index([userId])
+  @@index([guestEmail])
+  @@index([lastMessageAt])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Message {
+  id                  String              @id @default(cuid())
+  conversationId      String
+  senderType          SenderType
+  senderUserId        String?
+  body                String
+  createdAt           DateTime            @default(now())
+  deliveredToEmailAt  DateTime?
+  emailDeliveryStatus EmailDeliveryStatus @default(PENDING)
+  conversation        Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@index([emailDeliveryStatus])
+}
+
+model SupportNotification {
+  id             String                  @id @default(cuid())
+  userId         String
+  conversationId String
+  type           SupportNotificationType @default(ADMIN_REPLY)
+  isRead         Boolean                 @default(false)
+  createdAt      DateTime                @default(now())
+  conversation   Conversation            @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([conversationId])
+  @@index([isRead])
   @@index([createdAt])
 }
 
@@ -956,169 +1140,21 @@ enum DispatchStatus {
   PENDING
 }
 
-// ===============================================
-// EMAIL OPERATIONS SYSTEM - מערכת דיוור דרך אימייל
-// ===============================================
-
-// Email Inbound Messages: שמירת כל הודעות האימייל הנכנסות כפי שהתקבלו
-model EmailInboundMessage {
-  id                String               @id @default(cuid())
-  messageId         String               // Message-ID header
-  from              String               // כתובת השולח
-  to                String               // כתובת היעד
-  subject           String               // שורת הנושא
-  bodyText          String?              // גוף ההודעה (text/plain)
-  bodyHtml          String?              // גוף ההודעה (text/html)
-  headers           Json?                // כל ה-headers (Message-ID, In-Reply-To, References, וכו')
-  attachments       Json?                // מטא-דאטה על קבצים מצורפים
-  inReplyTo         String?              // In-Reply-To header
-  references        String?              // References header
-  receivedAt        DateTime             @default(now())
-  processed         Boolean              @default(false)
-  processedAt       DateTime?
-  createdAt         DateTime             @default(now())
-
-  // Relations
-  emailRequests     EmailRequest[]
-  pendingIntents    PendingIntent[]
-  auditLogs         EmailAuditLog[]
-
-  @@index([messageId])
-  @@index([from])
-  @@index([subject])
-  @@index([processed])
-  @@index([receivedAt])
-}
-
-// Email Requests: פעולות/בקשות שנוצרו מאימיילים נכנסים
-model EmailRequest {
-  id                 String               @id @default(cuid())
-  inboundMessageId   String               // קישור להודעה המקורית
-  senderEmail        String               // כתובת השולח
-  commandType        EmailCommandType     // סוג הפקודה
-  adId               String?              // מזהה מודעה (לעדכון/הסרה)
-  status             EmailRequestStatus   @default(PENDING)
-  payload            Json?                // נתונים נוספים (פרטי הבקשה)
-  failReason         String?              // סיבת כשל (פנימית)
-  publicFailMessage  String?              // הודעת שגיאה כללית למשתמש
-  retryCount         Int                  @default(0)
-  processedAt        DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-
-  // Relations
-  inboundMessage     EmailInboundMessage  @relation(fields: [inboundMessageId], references: [id], onDelete: Cascade)
-
-  @@index([senderEmail])
-  @@index([commandType])
-  @@index([status])
-  @@index([adId])
-  @@index([createdAt])
-}
-
-// Pending Intents: שמירת כוונות משתמשים לא רשומים
-model PendingIntent {
-  id                 String               @id @default(cuid())
-  email              String               // כתובת האימייל
-  commandType        EmailCommandType     // סוג הבקשה המקורית
-  inboundMessageId   String               // הודעה מקורית
-  payload            Json?                // נתוני הבקשה
-  status             PendingIntentStatus  @default(PENDING)
-  registrationSent   Boolean              @default(false)
-  registrationSentAt DateTime?
-  completedAt        DateTime?
-  expiresAt          DateTime
-  createdAt          DateTime             @default(now())
-
-  // Relations
-  inboundMessage     EmailInboundMessage  @relation(fields: [inboundMessageId], references: [id], onDelete: Cascade)
-
-  @@index([email])
-  @@index([status])
-  @@index([expiresAt])
-}
-
-// Email Operations Mailing List: רשימת תפוצה עבור "קובץ הדירות השבועי"
-model EmailOperationsMailingList {
-  id                 String               @id @default(cuid())
-  email              String               @unique
-  name               String?
-  status             EmailMailingStatus   @default(ACTIVE)
-  source             String               @default("email") // email, web, admin
-  subscriptionDate   DateTime             @default(now())
-  unsubscribeToken   String?              @unique
-  removedAt          DateTime?
-  lastCommandAt      DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-
-  @@index([email])
-  @@index([status])
-}
-
-// Email Rate Limit: ניטור ו-rate limiting לפי כתובת
-model EmailRateLimit {
-  id                 String               @id @default(cuid())
-  email              String               @unique
-  requestCount       Int                  @default(0)
-  errorCount         Int                  @default(0)
-  windowStartedAt    DateTime             @default(now())
-  lastRequestAt      DateTime             @default(now())
-  inCooldown         Boolean              @default(false)
-  cooldownUntil      DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-
-  @@index([inCooldown])
-  @@index([windowStartedAt])
-}
-
-// Email Audit Trail: תיעוד כל פעולה/ניסיון פעולה דרך אימייל
-model EmailAuditLog {
-  id                 String               @id @default(cuid())
-  email              String
-  action             String               // הפעולה שביקש
-  commandType        EmailCommandType
-  adId               String?
-  success            Boolean
-  failReason         String?              // סיבת כשל פנימית
-  publicMessage      String?              // הודעה שנשלחה למשתמש
-  metadata           Json?                // מטא-דאטה נוסף
-  ip                 String?
-  userAgent          String?
-  inboundMessageId   String?
-  createdAt          DateTime             @default(now())
-
-  // Relations
-  inboundMessage     EmailInboundMessage? @relation(fields: [inboundMessageId], references: [id], onDelete: SetNull)
-
-  @@index([email])
-  @@index([action])
-  @@index([commandType])
-  @@index([adId])
-  @@index([createdAt])
-  @@index([success])
-}
-
-// ===============================================
-// EMAIL OPERATIONS ENUMS
-// ===============================================
-
 enum EmailCommandType {
-  PUBLISH_SALE              // פרסום דירה למכירה
-  PUBLISH_RENT              // פרסום דירה להשכרה
-  PUBLISH_SHABBAT           // פרסום דירה לשבת
-  PUBLISH_COMMERCIAL        // פרסום שטח מסחרי
-  PUBLISH_SHARED_OWNERSHIP  // פרסום טאבו משותף
-  WANTED_BUY                // דרושה דירה לקנייה
-  WANTED_RENT               // דרושה דירה להשכרה
-  WANTED_SHABBAT            // דרושה דירה לשבת
-  UPDATE_AD                 // עדכון#<adId>
-  REMOVE_AD                 // הסרה#<adId>
-  MAILING_LIST_SUBSCRIBE    // הצטרפות
-  MAILING_LIST_UNSUBSCRIBE  // הסרה-תפוצה
-  REGISTRATION              // הרשמה
-  UNKNOWN                   // לא זוהה
+  PUBLISH_SALE
+  PUBLISH_RENT
+  PUBLISH_SHABBAT
+  PUBLISH_COMMERCIAL
+  PUBLISH_SHARED_OWNERSHIP
+  WANTED_BUY
+  WANTED_RENT
+  WANTED_SHABBAT
+  UPDATE_AD
+  REMOVE_AD
+  MAILING_LIST_SUBSCRIBE
+  MAILING_LIST_UNSUBSCRIBE
+  REGISTRATION
+  UNKNOWN
 }
 
 enum EmailRequestStatus {
@@ -1139,55 +1175,46 @@ enum EmailMailingStatus {
   REMOVED
 }
 
-// ===============================================
-// PENDING APPROVALS - בקשות שזקוקות לאישור אדמין
-// ===============================================
-
-model PendingApproval {
-  id              String                @id @default(cuid())
-  userId          String
-  type            PendingApprovalType
-  status          ApprovalStatus        @default(PENDING)
-  requestData     Json                  // המידע שמבקשים לאשר
-  oldData         Json?                 // המידע הקודם (לעריכה)
-  reason          String?               // סיבת הבקשה (אופציונלי)
-  adminNotes      String?               // הערות אדמין
-  reviewedById    String?               // מי בדק את הבקשה
-  reviewedAt      DateTime?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-
-  // Relations
-  user            User                  @relation("UserApprovals", fields: [userId], references: [id], onDelete: Cascade)
-  reviewer        User?                 @relation("ReviewedApprovals", fields: [reviewedById], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([type])
-  @@index([status])
-  @@index([createdAt])
-}
-
 enum PendingApprovalType {
-  OFFICE_ADDRESS_UPDATE     // עריכת כתובת משרד
-  ABOUT_UPDATE              // עריכת אודות
-  LOGO_UPLOAD               // הוספת לוגו
-  BUSINESS_DESCRIPTION      // שדה אודות העסק
-  IMPORT_PERMISSION         // אישור להעלאת נכסים מקובץ
-  ACCOUNT_DELETION          // בקשה להסרה מלאה
-  HIGHLIGHT_AD              // בקשה להבליט מודעה
+  OFFICE_ADDRESS_UPDATE
+  ABOUT_UPDATE
+  LOGO_UPLOAD
+  BUSINESS_DESCRIPTION
+  IMPORT_PERMISSION
+  ACCOUNT_DELETION
+  HIGHLIGHT_AD
 }
-
-// ===============================================
-// NOTIFICATION SYSTEM ENUMS
-// ===============================================
 
 enum UserNotificationOverrideMode {
-  ALLOW  // Temporarily allow when global is disabled
-  BLOCK  // Temporarily block when global is enabled
+  ALLOW
+  BLOCK
 }
 
 enum NotificationQueueStatus {
   PENDING
   SENT
   FAILED
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
+enum SenderType {
+  USER
+  ADMIN
+  GUEST
+}
+
+enum EmailDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  NOT_REQUIRED
+}
+
+enum SupportNotificationType {
+  ADMIN_REPLY
+  NEW_MESSAGE
 }

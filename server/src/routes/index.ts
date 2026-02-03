@@ -36,6 +36,8 @@ import emailOperationsRoutes from '../modules/email-operations/email-operations.
 import emailTestingRoutes from '../modules/email/email-testing.routes';
 import pendingApprovalsRoutes from '../modules/admin/pending-approvals.routes';
 import notificationsRoutes from '../modules/notifications/notifications.routes';
+import supportRoutes from '../modules/support/support.routes';
+import adminSupportRoutes from '../modules/support/admin-support.routes';
 
 const router = Router();
 
@@ -77,5 +79,7 @@ router.use('/email-operations', emailOperationsRoutes); // Email operations syst
 router.use('/email-testing', emailTestingRoutes); // ✅ Email testing (DEV ONLY)
 router.use('/admin/pending-approvals', pendingApprovalsRoutes); // Pending approvals system
 router.use('/notifications', notificationsRoutes); // Notifications system
+router.use('/', supportRoutes); // Support/Contact system (user-facing)
+router.use('/admin/conversations', adminSupportRoutes); // Support admin panel
 
 export default router;

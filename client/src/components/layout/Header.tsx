@@ -1,14 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useUserNotifications } from '../../contexts/UserNotificationsContext';
+import { useAdminNotifications } from '../../contexts/AdminNotificationsContext';
 import CategoryWithCities from './CategoryWithCities';
+import ContactModal from '../ContactModal';
+import { MessageCircle, Bell } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { unreadCount: userUnreadCount } = useUserNotifications();
+  const { unreadCount: adminUnreadCount } = useAdminNotifications();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Use admin count for admins, user count for regular users
+  const unreadCount = user?.isAdmin ? adminUnreadCount : userUnreadCount;
 
   const handleLogout = async () => {
     await logout();
@@ -67,8 +77,32 @@ const Header: React.FC = () => {
 
           {/* Right Side (RTL) - Actions */}
           <div className="hidden md:flex items-center space-x-4 space-x-reverse">
+            {/* Contact Button */}
+            <button
+              onClick={() => setContactModalOpen(true)}
+              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium flex items-center space-x-1 space-x-reverse"
+              aria-label="יצירת קשר"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>יצירת קשר</span>
+            </button>
+
             {user ? (
               <>
+                {/* Support Notifications Bell */}
+                <Link
+                  to={user.isAdmin ? '/admin/conversations' : '/my-conversations'}
+                  className="relative text-[#E6D3A3] hover:text-[#C9A24D] transition"
+                  aria-label="הודעות תמיכה"
+                >
+                  <Bell className="w-6 h-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
                 <Link 
                   to="/publish" 
                   className="bg-[#C9A24D] text-[#1F3F3A] px-6 py-2 rounded-lg font-semibold hover:bg-[#B08C3C] transition focus-visible:ring-2 focus-visible:ring-[#C9A24D] focus-visible:ring-offset-2"
@@ -255,6 +289,12 @@ const Header: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+      />
     </header>
   );
 };

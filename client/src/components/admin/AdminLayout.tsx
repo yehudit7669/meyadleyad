@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useEmailPermissions } from '../../hooks/useEmailPermissions';
+import { useAdminNotifications } from '../../contexts/AdminNotificationsContext';
 import {
   LayoutDashboard,
   FileText,
@@ -18,7 +19,8 @@ import {
   X,
   ChevronDown,
   ChevronUp,
-  Bell
+  Bell,
+  MessageCircle
 } from 'lucide-react';
 
 interface MenuItem {
@@ -151,6 +153,13 @@ const menuItems: MenuItem[] = [
     requiredRoles: ['ADMIN', 'SUPER_ADMIN']
   },
   {
+    id: 'support-messages',
+    title: 'הודעות משתמשים',
+    path: '/admin/conversations',
+    icon: <MessageCircle className="w-5 h-5" />,
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
+  },
+  {
     id: 'settings',
     title: 'הגדרות מערכת / אבטחה',
     path: '/admin/settings',
@@ -210,7 +219,9 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user } = useAuth();
   const { hasPermission } = useEmailPermissions();
+  const { unreadCount } = useAdminNotifications();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['ads-management']); // ניהול מודעות פתוח כברירת מחדל
 
@@ -253,7 +264,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const SidebarContent = () => (
     <>
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-bold text-[#1F3F3A]">פאנל ניהול</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl font-bold text-[#1F3F3A]">פאנל ניהול</h2>
+          {/* Admin notification bell */}
+          <button
+            onClick={() => navigate('/admin/conversations')}
+            className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="הודעות משתמשים"
+          >
+            <Bell className="w-5 h-5 text-gray-600" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
         <p className="text-sm text-gray-600 mt-1">מערכת ניהול מתקדמת</p>
       </div>
 

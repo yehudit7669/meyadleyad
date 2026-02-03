@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import ContactModal from '../ContactModal';
+import { MessageCircle } from 'lucide-react';
 
 const Footer: React.FC = () => {
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+
   return (
-    <footer className="bg-gray-900 text-white mt-auto">
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <>
+      <footer className="bg-gray-900 text-white mt-auto">
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div className="text-center">
             <h3 className="text-lg font-bold mb-4">אודות מיעד ליעד</h3>
@@ -85,6 +90,15 @@ const Footer: React.FC = () => {
               <li>📧 info@meyadleyad.com</li>
               <li>📱 050-123-4567</li>
               <li>📍 תל אביב, ישראל</li>
+              <li className="pt-2">
+                <button
+                  onClick={() => setContactModalOpen(true)}
+                  className="text-[#C9A24D] hover:text-[#E6D3A3] transition font-medium inline-flex items-center space-x-1 space-x-reverse"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>שלח לנו הודעה</span>
+                </button>
+              </li>
             </ul>
           </div>
         </div>
@@ -94,6 +108,13 @@ const Footer: React.FC = () => {
         </div>
       </div>
     </footer>
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+      />
+    </>
   );
 };
 

@@ -7,6 +7,8 @@ import { HelmetProvider } from 'react-helmet-async';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './hooks/useAuth';
+import { AdminNotificationsProvider } from './contexts/AdminNotificationsContext';
+import { UserNotificationsProvider } from './contexts/UserNotificationsContext';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ProtectedRoute, AdminRoute, BrandingRoute } from './components/ProtectedRoute';
@@ -71,6 +73,9 @@ import ImportsPage from './pages/admin/ImportsPage';
 import BackupsPage from './pages/admin/BackupsPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import NotificationsAdminPage from './pages/admin/NotificationsAdminPage';
+import AdminConversations from './components/admin/AdminConversations';
+import AdminConversationDetail from './components/admin/AdminConversationDetail';
+import UserConversations from './pages/UserConversations';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -96,12 +101,14 @@ const App: React.FC = () => {
           <QueryClientProvider client={queryClient}>
             <BrowserRouter>
               <AuthProvider>
-                <Toaster position="top-center" />
-                {/* Skip to Content Link for Accessibility */}
-                <a href="#main-content" className="skip-link">
-                  דלג לתוכן הראשי
-                </a>
-                <Layout>
+                <AdminNotificationsProvider>
+                  <UserNotificationsProvider>
+                    <Toaster position="top-center" />
+                    {/* Skip to Content Link for Accessibility */}
+                    <a href="#main-content" className="skip-link">
+                      דלג לתוכן הראשי
+                    </a>
+                    <Layout>
                   <main id="main-content">
                     <Routes>
                     <Route path="/" element={<Home />} />
@@ -143,6 +150,7 @@ const App: React.FC = () => {
                   <Route path="/profile/ads" element={<ProtectedRoute><MyAds /></ProtectedRoute>} />
                   <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
                   <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+                  <Route path="/my-conversations" element={<ProtectedRoute><UserConversations /></ProtectedRoute>} />
                   <Route path="/appointments/me" element={<ProtectedRoute><MyAppointments /></ProtectedRoute>} />
                   <Route path="/appointments/owner" element={<ProtectedRoute><OwnerAppointments /></ProtectedRoute>} />
                   
@@ -178,6 +186,10 @@ const App: React.FC = () => {
                   <Route path="/admin/backups" element={<AdminRoute><AdminLayout><BackupsPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettingsPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/notifications" element={<AdminRoute><AdminLayout><NotificationsAdminPage /></AdminLayout></AdminRoute>} />
+                  
+                  {/* Support/Messages Routes */}
+                  <Route path="/admin/conversations" element={<AdminRoute><AdminLayout><AdminConversations /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/conversations/:id" element={<AdminRoute><AdminLayout><AdminConversationDetail /></AdminLayout></AdminRoute>} />
                   
                   {/* Legacy Admin Routes - keep for backward compatibility */}
                   <Route path="/admin/ads-management" element={<AdminRoute><AdminLayout><AdminAdsManagement /></AdminLayout></AdminRoute>} />
@@ -215,8 +227,10 @@ const App: React.FC = () => {
                 </Routes>
                 </main>
               </Layout>
-            </AuthProvider>
-          </BrowserRouter>
+            </UserNotificationsProvider>
+          </AdminNotificationsProvider>
+        </AuthProvider>
+      </BrowserRouter>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
         </GoogleOAuthProvider>
