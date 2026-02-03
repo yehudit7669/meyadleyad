@@ -11,7 +11,7 @@ CREATE TYPE "EmailDeliveryStatus" AS ENUM ('PENDING', 'SENT', 'FAILED', 'NOT_REQ
 CREATE TYPE "SupportNotificationType" AS ENUM ('ADMIN_REPLY', 'NEW_MESSAGE');
 
 -- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "EmailAuditLog" ALTER COLUMN "commandType" DROP DEFAULT;
