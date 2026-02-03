@@ -161,6 +161,11 @@ export class AdsService {
             error: notifError instanceof Error ? notifError.message : String(notifError)
           });
         }
+
+        // ✅ הוספה ללוח מודעות עבור מודעות מבוקש שאושרו אוטומטית
+        // Note: WANTED ads don't have a specific city, so we can't add them to newspaper sheets
+        // Only regular ads with cityId can be added to newspaper sheets
+        console.log('ADS SERVICE - WANTED ads are not added to newspaper sheets (no specific cityId)');
       }
 
       // Note: Email will be sent after images are uploaded
@@ -304,6 +309,41 @@ export class AdsService {
             adId: ad.id,
             error: notifError instanceof Error ? notifError.message : String(notifError)
           });
+        }
+
+        // ✅ הוספה ללוח מודעות עבור נכסים שאושרו אוטומטית
+        try {
+          if (ad.cityId) {
+            console.log(`📰 Adding auto-approved ad ${ad.id} to newspaper sheet...`);
+            
+            const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service.js');
+            
+            // קבלת או יצירת גיליון פעיל
+            const sheet = await newspaperSheetService.getOrCreateActiveSheet(
+              ad.categoryId,
+              ad.cityId,
+              userId
+            );
+
+            console.log(`📋 Sheet found/created:`, { sheetId: sheet.id, title: sheet.title });
+
+            // הוספת המודעה לגיליון
+            await newspaperSheetService.addListingToSheet(
+              sheet.id,
+              ad.id,
+              userId
+            );
+
+            console.log(`✅ Ad ${ad.id} added to newspaper sheet ${sheet.id}`);
+
+            // יצירת PDF לגיליון
+            console.log(`📄 Generating PDF for sheet ${sheet.id}...`);
+            const pdfResult = await newspaperSheetService.generateSheetPDF(sheet.id, userId);
+            console.log(`✅ PDF generated: ${pdfResult.pdfPath} (version ${pdfResult.version})`);
+          }
+        } catch (newspaperError) {
+          console.error('❌ Failed to add ad to newspaper sheet:', newspaperError);
+          // לא לזרוק שגיאה - כשלון בהוספה לגיליון לא צריך לחסום את היצירה
         }
       }
       
@@ -562,9 +602,79 @@ export class AdsService {
       throw new ForbiddenError('You do not have permission to delete this ad');
     }
 
-    await prisma.ad.delete({
-      where: { id: adId },
-    });
+    // ✅ הסרה מגיליונות עיתון ועדכון/מחיקת גיליונות
+    const sheetsToUpdate: string[] = [];
+    const sheetsToDelete: string[] = [];
+    
+    try {
+      // מציאת כל הגיליונות שמכילים את הנכס הזה
+      const sheetListings = await prisma.newspaperSheetListing.findMany({
+        where: { listingId: adId },
+        select: { 
+          sheetId: true,
+          sheet: {
+            select: {
+              id: true,
+              _count: {
+                select: { listings: true }
+              }
+            }
+          }
+        }
+      });
+
+      console.log(`🗑️ Processing ad ${adId} removal from ${sheetListings.length} newspaper sheet(s)...`);
+
+      // בדיקה לכל גיליון: האם יש עוד נכסים או שזה הנכס היחיד
+      for (const sheetListing of sheetListings) {
+        const listingsCount = sheetListing.sheet._count.listings;
+        
+        if (listingsCount === 1) {
+          // זה הנכס היחיד - נמחק את הגיליון כולו
+          sheetsToDelete.push(sheetListing.sheetId);
+          console.log(`📋 Sheet ${sheetListing.sheetId} will be deleted (last listing)`);
+        } else {
+          // יש עוד נכסים - רק נעדכן PDF
+          sheetsToUpdate.push(sheetListing.sheetId);
+          console.log(`📋 Sheet ${sheetListing.sheetId} will be updated (${listingsCount - 1} listings remaining)`);
+        }
+      }
+
+      // מחיקת הנכס עצמו - ה-Cascade ידאג למחיקה מ-NewspaperSheetListing
+      await prisma.ad.delete({
+        where: { id: adId },
+      });
+
+      console.log(`✅ Ad ${adId} deleted successfully`);
+
+      // מחיקת גיליונות שנשארו ריקים
+      if (sheetsToDelete.length > 0) {
+        await prisma.newspaperSheet.deleteMany({
+          where: { id: { in: sheetsToDelete } }
+        });
+        console.log(`✅ Deleted ${sheetsToDelete.length} empty newspaper sheet(s)`);
+      }
+
+      // עדכון PDF לגיליונות שנשארו עם נכסים
+      if (sheetsToUpdate.length > 0) {
+        const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service.js');
+        
+        for (const sheetId of sheetsToUpdate) {
+          try {
+            console.log(`📄 Regenerating PDF for sheet ${sheetId}...`);
+            await newspaperSheetService.generateSheetPDF(sheetId, userId, true);
+            console.log(`✅ PDF regenerated for sheet ${sheetId}`);
+          } catch (pdfError) {
+            console.error(`❌ Failed to regenerate PDF for sheet ${sheetId}:`, pdfError);
+            // ממשיכים לגיליון הבא
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to process newspaper sheets:', error);
+      throw error; // זורקים את השגיאה כדי שהמחיקה לא תצליח אם יש בעיה
+    }
   }
 
   async getAd(adId: string, incrementView: boolean = true) {

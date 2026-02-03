@@ -444,6 +444,10 @@ export class AdminService {
   ) {
     const ad = await prisma.ad.findUnique({
       where: { id: adId },
+      include: {
+        Category: true,
+        City: true,
+      }
     });
 
     if (!ad) {
@@ -452,9 +456,13 @@ export class AdminService {
 
     const oldStatus = ad.status;
 
+    // עדכון הסטטוס
     const updatedAd = await prisma.ad.update({
       where: { id: adId },
-      data: { status },
+      data: { 
+        status,
+        publishedAt: status === 'ACTIVE' ? new Date() : ad.publishedAt,
+      },
       include: {
         User: true,
         Category: true,
@@ -471,16 +479,103 @@ export class AdminService {
       status
     );
 
-    // Auto-generate newspaper PDF when ad becomes ACTIVE
-    if (status === 'ACTIVE' && oldStatus !== 'ACTIVE') {
-      try {
-        const { newspaperService } = await import('../newspaper/newspaper.service.js');
-        await newspaperService.generateNewspaperPDF(adId, adminId);
-        console.log(`✅ Newspaper PDF auto-generated for ad ${adId}`);
-      } catch (error) {
-        console.error(`❌ Failed to auto-generate newspaper PDF for ad ${adId}:`, error);
-        // Don't throw - PDF generation failure shouldn't block ad status update
+    // ✅ טיפול בלוח מודעות לפי שינוי הסטטוס
+    try {
+      const { newspaperSheetService } = await import('../newspaper-sheets/newspaper-sheet.service.js');
+
+      // אם השתנה ל-ACTIVE - הוסף ללוח מודעות
+      if (status === 'ACTIVE' && oldStatus !== 'ACTIVE') {
+        if (ad.cityId) {
+          console.log(`📰 Adding ad ${adId} to newspaper sheet (status changed to ACTIVE)...`);
+          
+          // קבלת או יצירת גיליון פעיל
+          const sheet = await newspaperSheetService.getOrCreateActiveSheet(
+            ad.categoryId,
+            ad.cityId,
+            adminId
+          );
+
+          // הוספת המודעה לגיליון
+          await newspaperSheetService.addListingToSheet(
+            sheet.id,
+            adId,
+            adminId
+          );
+
+          console.log(`✅ Ad ${adId} added to newspaper sheet ${sheet.id}`);
+
+          // יצירת PDF לגיליון
+          const pdfResult = await newspaperSheetService.generateSheetPDF(sheet.id, adminId);
+          console.log(`✅ PDF generated: ${pdfResult.pdfPath}`);
+        }
       }
+      
+      // אם השתנה מ-ACTIVE לסטטוס אחר - הסר מלוח מודעות
+      if (oldStatus === 'ACTIVE' && status !== 'ACTIVE') {
+        console.log(`🗑️ Removing ad ${adId} from newspaper sheets (status changed from ACTIVE)...`);
+        
+        // מציאת כל הגיליונות שמכילים את הנכס
+        const sheetListings = await prisma.newspaperSheetListing.findMany({
+          where: { listingId: adId },
+          select: { 
+            sheetId: true,
+            sheet: {
+              select: {
+                id: true,
+                _count: {
+                  select: { listings: true }
+                }
+              }
+            }
+          }
+        });
+
+        const sheetsToUpdate: string[] = [];
+        const sheetsToDelete: string[] = [];
+
+        // בדיקה לכל גיליון
+        for (const sheetListing of sheetListings) {
+          const listingsCount = sheetListing.sheet._count.listings;
+          
+          if (listingsCount === 1) {
+            // זה הנכס היחיד - נמחק את הגיליון
+            sheetsToDelete.push(sheetListing.sheetId);
+          } else {
+            // יש עוד נכסים - נעדכן PDF
+            sheetsToUpdate.push(sheetListing.sheetId);
+          }
+        }
+
+        // מחיקת הקישור לנכס (אוטומטית ע"י Cascade או ידנית)
+        await prisma.newspaperSheetListing.deleteMany({
+          where: { listingId: adId }
+        });
+
+        // מחיקת גיליונות ריקים
+        if (sheetsToDelete.length > 0) {
+          await prisma.newspaperSheet.deleteMany({
+            where: { id: { in: sheetsToDelete } }
+          });
+          console.log(`✅ Deleted ${sheetsToDelete.length} empty newspaper sheet(s)`);
+        }
+
+        // עדכון PDF לגיליונות שנותרו
+        if (sheetsToUpdate.length > 0) {
+          for (const sheetId of sheetsToUpdate) {
+            try {
+              await newspaperSheetService.generateSheetPDF(sheetId, adminId, true);
+              console.log(`✅ PDF regenerated for sheet ${sheetId}`);
+            } catch (pdfError) {
+              console.error(`❌ Failed to regenerate PDF:`, pdfError);
+            }
+          }
+        }
+
+        console.log(`✅ Ad ${adId} removed from newspaper sheets`);
+      }
+    } catch (error) {
+      console.error(`❌ Failed to update newspaper sheets for ad ${adId}:`, error);
+      // לא זורקים שגיאה - כשלון בעדכון לוח מודעות לא צריך לחסום את שינוי הסטטוס
     }
 
     return updatedAd;

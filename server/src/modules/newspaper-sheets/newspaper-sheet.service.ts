@@ -85,7 +85,7 @@ export class NewspaperSheetService {
         throw new Error('Category or City not found');
       }
 
-      const title = `${category.nameHe} - ${city.nameHe}`;
+      const title = 'לוח מודעות'; // כותרת קבועה לכל הגיליונות
 
       sheet = await prisma.newspaperSheet.create({
         data: {

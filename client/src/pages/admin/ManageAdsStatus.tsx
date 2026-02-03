@@ -4,11 +4,19 @@ import { adminService } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { useEmailPermissions } from '../../hooks/useEmailPermissions';
 
-// Status mapping
+// Status mapping - only show: DRAFT, PENDING, ACTIVE (מאושרת), REMOVED
 const AD_STATUSES = {
   DRAFT: { label: 'טיוטה', color: 'bg-gray-100 text-gray-800' },
   PENDING: { label: 'ממתינה', color: 'bg-yellow-100 text-yellow-800' },
-  ACTIVE: { label: 'פעילה', color: 'bg-green-100 text-green-800' },
+  ACTIVE: { label: 'מאושרת', color: 'bg-green-100 text-green-800' },
+  REMOVED: { label: 'הוסרה', color: 'bg-gray-100 text-gray-800' },
+};
+
+// All statuses for display (internal use)
+const ALL_STATUSES_DISPLAY = {
+  DRAFT: { label: 'טיוטה', color: 'bg-gray-100 text-gray-800' },
+  PENDING: { label: 'ממתינה', color: 'bg-yellow-100 text-yellow-800' },
+  ACTIVE: { label: 'מאושרת', color: 'bg-green-100 text-green-800' },
   APPROVED: { label: 'מאושרת', color: 'bg-green-100 text-green-800' },
   REJECTED: { label: 'נדחתה', color: 'bg-red-100 text-red-800' },
   EXPIRED: { label: 'פגה תוקף', color: 'bg-orange-100 text-orange-800' },
@@ -235,7 +243,7 @@ export default function ManageAdsStatus() {
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2 text-black">סינון לפי סטטוס</label>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(AD_STATUSES).map(([status, { label, color }]) => (
+              {Object.entries(ALL_STATUSES_DISPLAY).map(([status, { label, color }]) => (
                 <button
                   key={status}
                   onClick={() => toggleStatusFilter(status)}
@@ -311,7 +319,7 @@ export default function ManageAdsStatus() {
                     filterSummary += `\n📅 טווח תאריכים: ${dateFrom || 'התחלה'} - ${dateTo || 'סיום'}`;
                   }
                   if (statusFilter.length > 0) {
-                    const statusLabels = statusFilter.map(s => AD_STATUSES[s as keyof typeof AD_STATUSES]?.label || s).join(', ');
+                    const statusLabels = statusFilter.map(s => ALL_STATUSES_DISPLAY[s as keyof typeof ALL_STATUSES_DISPLAY]?.label || s).join(', ');
                     filterSummary += `\n📊 סטטוסים: ${statusLabels}`;
                   }
                   if (!dateFrom && !dateTo && statusFilter.length === 0) {
@@ -440,9 +448,9 @@ export default function ManageAdsStatus() {
                       </td>
                       <td className="px-4 py-4 text-center">
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                          AD_STATUSES[ad.status as keyof typeof AD_STATUSES]?.color || 'bg-gray-100 text-gray-800'
+                          ALL_STATUSES_DISPLAY[ad.status as keyof typeof ALL_STATUSES_DISPLAY]?.color || 'bg-gray-100 text-gray-800'
                         }`}>
-                          {AD_STATUSES[ad.status as keyof typeof AD_STATUSES]?.label || ad.status}
+                          {ALL_STATUSES_DISPLAY[ad.status as keyof typeof ALL_STATUSES_DISPLAY]?.label || ad.status}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-center">
@@ -542,9 +550,9 @@ export default function ManageAdsStatus() {
                     <div>
                       <h4 className="font-bold text-black mb-1">סטטוס נוכחי</h4>
                       <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                        AD_STATUSES[fullAdData.status as keyof typeof AD_STATUSES]?.color || 'bg-gray-100 text-gray-800'
+                        ALL_STATUSES_DISPLAY[fullAdData.status as keyof typeof ALL_STATUSES_DISPLAY]?.color || 'bg-gray-100 text-gray-800'
                       }`}>
-                        {AD_STATUSES[fullAdData.status as keyof typeof AD_STATUSES]?.label || fullAdData.status}
+                        {ALL_STATUSES_DISPLAY[fullAdData.status as keyof typeof ALL_STATUSES_DISPLAY]?.label || fullAdData.status}
                       </span>
                     </div>
                     <div>

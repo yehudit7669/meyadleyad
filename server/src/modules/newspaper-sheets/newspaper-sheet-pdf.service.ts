@@ -4,6 +4,7 @@ import { brandingService } from '../branding/branding.service';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
+import { config } from '../../config/index.js';
 
 /**
  * PDF Service for Newspaper Sheets
@@ -233,6 +234,18 @@ export class NewspaperSheetPDFService {
       margin-top: 3.17mm;
     }
 
+    /* ====== Property Card Link ====== */
+    .newspaper-property-card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+
+    .newspaper-property-card-link:hover {
+      transform: translateY(-0.53mm);
+    }
+
     /* ====== Property Card ====== */
     .newspaper-property-card {
       position: relative;
@@ -244,6 +257,11 @@ export class NewspaperSheetPDFService {
       height: 100%;
       overflow: visible;
       box-shadow: 0 0.53mm 1.06mm rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .newspaper-property-card-link:hover .newspaper-property-card {
+      box-shadow: 0 1.06mm 2.12mm rgba(0, 0, 0, 0.1);
     }
 
     /* Brokerage Badge */
@@ -493,56 +511,61 @@ export class NewspaperSheetPDFService {
           return parts[0].trim();
         };
 
+        // 🔗 יצירת URL לנכס באתר
+        const adUrl = `${config.clientUrl}/ads/${listing.id}`;
+
         return `
-          <div class="newspaper-property-card">
-            ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
-            
-            <div class="property-card-header">
-              <div class="property-title">${this.escapeHtml(formatAddress(address))}</div>
-            </div>
-
-            <div class="property-card-body">
-              <div class="property-meta">
-                ${size ? `
-                  <div class="meta-item">
-                    <span class="meta-icon">📐</span>
-                    <span class="meta-value">${size}</span>
-                  </div>
-                ` : ''}
-                ${floor ? `
-                  <div class="meta-item">
-                    <span class="meta-icon">🏢</span>
-                    <span class="meta-value">${floor}</span>
-                  </div>
-                ` : ''}
-                ${rooms ? `
-                  <div class="meta-item">
-                    <span class="meta-icon">🚪</span>
-                    <span class="meta-value">${rooms}</span>
-                  </div>
-                ` : ''}
+          <a href="${adUrl}" class="newspaper-property-card-link" style="text-decoration: none; color: inherit; display: block;">
+            <div class="newspaper-property-card">
+              ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
+              
+              <div class="property-card-header">
+                <div class="property-title">${this.escapeHtml(formatAddress(address))}</div>
               </div>
 
-              <div class="property-description">
-                ${this.escapeHtml(description)}
-              </div>
-
-              ${features.length > 0 ? `
-                <div class="property-features">
-                  ${features.join(' · ')}
+              <div class="property-card-body">
+                <div class="property-meta">
+                  ${size ? `
+                    <div class="meta-item">
+                      <span class="meta-icon">📐</span>
+                      <span class="meta-value">${size}</span>
+                    </div>
+                  ` : ''}
+                  ${floor ? `
+                    <div class="meta-item">
+                      <span class="meta-icon">🏢</span>
+                      <span class="meta-value">${floor}</span>
+                    </div>
+                  ` : ''}
+                  ${rooms ? `
+                    <div class="meta-item">
+                      <span class="meta-icon">🚪</span>
+                      <span class="meta-value">${rooms}</span>
+                    </div>
+                  ` : ''}
                 </div>
-              ` : ''}
 
-              ${priceDisplay && listing.price ? `
-                <div class="property-price">₪${listing.price.toLocaleString('he-IL')}</div>
-              ` : ''}
-            </div>
+                <div class="property-description">
+                  ${this.escapeHtml(description)}
+                </div>
 
-            <div class="property-contact">
-              <div class="contact-name">${this.escapeHtml(contactName)}</div>
-              <div class="contact-phone">${this.escapeHtml(contactPhone)}</div>
+                ${features.length > 0 ? `
+                  <div class="property-features">
+                    ${features.join(' · ')}
+                  </div>
+                ` : ''}
+
+                ${priceDisplay && listing.price ? `
+                  <div class="property-price">₪${listing.price.toLocaleString('he-IL')}</div>
+                ` : ''}
+              </div>
+
+              <div class="property-contact">
+                <div class="contact-name">${this.escapeHtml(contactName)}</div>
+                <div class="contact-phone">${this.escapeHtml(contactPhone)}</div>
+              </div>
             </div>
-          </div>
+          </a>
         `;
       })
       .join('');
