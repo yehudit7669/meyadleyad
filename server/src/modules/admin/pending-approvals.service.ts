@@ -266,7 +266,7 @@ export class PendingApprovalsService {
           await prisma.brokerOffice.update({
             where: { id: brokerOffice.id },
             data: {
-              businessAddressApproved: requestData.address,
+              businessAddressApproved: requestData.address || requestData.officeAddress,
               businessAddressPending: null,
             },
           });
@@ -275,7 +275,7 @@ export class PendingApprovalsService {
           await prisma.user.update({
             where: { id: userId },
             data: {
-              officeAddress: requestData.address,
+              officeAddress: requestData.address || requestData.officeAddress,
               officeAddressStatus: ApprovalStatus.APPROVED,
               officeAddressPending: null,
             },

@@ -305,6 +305,8 @@ export class ServiceProviderController {
           aboutBusiness: true,
           aboutBusinessStatus: true,
           officeAddress: true,
+          officeAddressPending: true,
+          officeAddressStatus: true,
           publishOfficeAddress: true,
           businessHours: true,
           phoneBusinessOffice: true,
@@ -320,6 +322,15 @@ export class ServiceProviderController {
         });
       }
 
+      // Debug log for office address
+      console.log('🔍 Service Provider Office Address Debug:', {
+        userId: user.id,
+        officeAddress: user.officeAddress,
+        officeAddressPending: user.officeAddressPending,
+        officeAddressStatus: user.officeAddressStatus,
+        publishOfficeAddress: user.publishOfficeAddress,
+      });
+
       // Build public data (only approved content)
       const publicData: any = {
         id: user.id,
@@ -328,6 +339,7 @@ export class ServiceProviderController {
         businessHours: user.businessHours,
         phoneBusinessOffice: user.phoneBusinessOffice,
         email: user.email,
+        publishOfficeAddress: user.publishOfficeAddress,
         createdAt: user.createdAt,
       };
 

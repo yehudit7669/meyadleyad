@@ -37,6 +37,13 @@ const ProviderPublicPage: React.FC = () => {
     );
   }
 
+  // Debug logs for office address
+  console.log('🔍 Provider Data:', {
+    publishOfficeAddress: provider.publishOfficeAddress,
+    officeAddress: provider.officeAddress,
+    shouldShowAddress: provider.publishOfficeAddress && provider.officeAddress,
+  });
+
   const renderBusinessHours = () => {
     if (!provider.businessHours) return null;
 
@@ -163,14 +170,6 @@ const ProviderPublicPage: React.FC = () => {
             </div>
           )}
 
-          {/* Office Address */}
-          {provider.officeAddress && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">כתובת המשרד</h2>
-              <p className="text-gray-700">{provider.officeAddress}</p>
-            </div>
-          )}
-
           {/* Contact Info */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">יצירת קשר</h2>
@@ -189,6 +188,12 @@ const ProviderPublicPage: React.FC = () => {
                   <a href={`mailto:${provider.email}`} className="text-blue-600 hover:underline">
                     {provider.email}
                   </a>
+                </div>
+              )}
+              {provider.publishOfficeAddress && provider.officeAddress && (
+                <div className="flex items-start gap-2">
+                  <span className="text-gray-600">📍 כתובת:</span>
+                  <span className="text-gray-900">{provider.officeAddress}</span>
                 </div>
               )}
             </div>

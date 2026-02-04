@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { serviceProviderService, pendingApprovalsService } from '../../services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersService, pendingApprovalsService } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 const SPHighlightRequestTab: React.FC = () => {
-  const [requestType, setRequestType] = useState<'SERVICE_CARD' | 'BUSINESS_PAGE'>('SERVICE_CARD');
-  const [reason, setReason] = useState('');
   const queryClient = useQueryClient();
+  const [selectedAdId, setSelectedAdId] = useState('');
+  const [notes, setNotes] = useState('');
+
+  // Fetch user's ads
+  const { data: ads = [] } = useQuery({
+    queryKey: ['my-ads'],
+    queryFn: () => usersService.getMyAds(),
+  });
 
   // Fetch user's approval requests
   const { data: myApprovals } = useQuery({
@@ -28,33 +34,61 @@ const SPHighlightRequestTab: React.FC = () => {
   const highlightPending = myApprovals?.find((a: any) => a.type === 'HIGHLIGHT_AD' && a.status === 'PENDING');
   const highlightApproved = myApprovals?.find((a: any) => a.type === 'HIGHLIGHT_AD' && a.status === 'APPROVED');
 
-  const requestMutation = useMutation({
-    mutationFn: serviceProviderService.requestHighlight,
+  const activeAds = ads.filter((ad: any) => ad.status === 'ACTIVE');
+
+  const createRequest = useMutation({
+    mutationFn: async (data: { adId: string; notes: string }) => {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/pending-approvals/request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({
+          type: 'HIGHLIGHT_AD',
+          adId: data.adId,
+          reason: data.notes,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'שגיאה בשליחת הבקשה');
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-approvals'] });
       toast.success('בקשת הדגשה נשלחה בהצלחה');
-      setReason('');
+      setSelectedAdId('');
+      setNotes('');
     },
-    onError: () => {
-      toast.error('שגיאה בשליחת בקשת הדגשה');
+    onError: (error: any) => {
+      toast.error(error.message || 'שגיאה בשליחת בקשת הדגשה');
     },
   });
 
-  const handleSubmit = () => {
-    requestMutation.mutate({ requestType, reason });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAdId) {
+      alert('נא לבחור מודעה');
+      return;
+    }
+
+    await createRequest.mutateAsync({ adId: selectedAdId, notes });
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">בקשת הדגשה / מודעה מומלצת</h2>
-
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p className="text-sm text-yellow-800">
-          ⭐ הדגשת העמוד העסקי שלך תגדיל את החשיפה שלך ותעזור ללקוחות פוטנציאליים למצוא אותך בקלות.
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">בקשת הדגשה</h2>
+        <p className="text-gray-600">
+          בקש להדגיש אחת מהמודעות שלך. הבקשה תטופל על ידי מנהל.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg border-2 border-yellow-200 space-y-4">
         
         {highlightApproved && !highlightPending && (
           <div className="p-3 bg-green-100 border border-green-300 rounded-lg">
@@ -84,85 +118,69 @@ const SPHighlightRequestTab: React.FC = () => {
           </div>
         )}
         
-        {/* Request Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">סוג ההדגשה</label>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <input
-                type="radio"
-                id="serviceCard"
-                name="requestType"
-                value="SERVICE_CARD"
-                checked={requestType === 'SERVICE_CARD'}
-                onChange={() => setRequestType('SERVICE_CARD')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-              <div className="flex-1">
-                <label htmlFor="serviceCard" className="font-medium text-gray-900 cursor-pointer">
-                  כרטיס שירות מודגש
-                </label>
-                <p className="text-sm text-gray-600">
-                  הכרטיס שלך יוצג במקום בולט ברשימת נותני השירות
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <input
-                type="radio"
-                id="businessPage"
-                name="requestType"
-                value="BUSINESS_PAGE"
-                checked={requestType === 'BUSINESS_PAGE'}
-                onChange={() => setRequestType('BUSINESS_PAGE')}
-                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-              <div className="flex-1">
-                <label htmlFor="businessPage" className="font-medium text-gray-900 cursor-pointer">
-                  עמוד עסקי מומלץ
-                </label>
-                <p className="text-sm text-gray-600">
-                  העמוד העסקי שלך יסומן כ"מומלץ" ויקבל מיקום מועדף
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reason */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            למה אתה מעוניין בהדגשה? (אופציונלי)
+            בחר מודעה להדגשה *
           </label>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={4}
-            maxLength={500}
-            placeholder="ספר לנו על השירותים שלך, מה מייחד אותך..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">{reason.length} / 500 תווים</p>
+          <select
+            value={selectedAdId}
+            onChange={(e) => setSelectedAdId(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          >
+            <option value="">-- בחר מודעה --</option>
+            {activeAds.map((ad: any) => (
+              <option key={ad.id} value={ad.id}>
+                #{ad.adNumber} - {ad.title}
+              </option>
+            ))}
+          </select>
+          {activeAds.length === 0 && (
+            <p className="text-sm text-red-600 mt-1">
+              אין לך מודעות פעילות כרגע. פרסם מודעה תחילה.
+            </p>
+          )}
         </div>
 
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={requestMutation.isPending}
-          className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 font-medium"
-        >
-          {requestMutation.isPending ? 'שולח בקשה...' : 'שלח בקשת הדגשה'}
-        </button>
-      </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            הערות (אופציונלי)
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={4}
+            maxLength={500}
+            placeholder="ספר למנהל מדוע מודעה זו ראויה להדגשה..."
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            {notes.length}/500 תווים
+          </p>
+        </div>
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">מה קורה אחרי שליחת הבקשה?</h4>
-        <ul className="text-sm text-gray-700 space-y-1">
-          <li>• הבקשה נשלחת למנהלי המערכת לבדיקה</li>
-          <li>• תקבל עדכון במייל לאחר טיפול בבקשה</li>
-          <li>• בקשות מאושרות יופעלו תוך 24-48 שעות</li>
-          <li>• ניתן לשלוח בקשה חדשה כל עת</li>
+        <div className="bg-yellow-100 p-4 rounded-lg">
+          <p className="text-sm text-gray-700">
+            ⭐ <strong>שים לב:</strong> ניתן להדגיש מודעה אחת בלבד בכל פעם. המודעה המודגשת תקבל חשיפה מיוחדת בדף הבית ובתוצאות החיפוש.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          disabled={createRequest.isPending || activeAds.length === 0}
+          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 rounded-lg hover:from-yellow-600 hover:to-orange-600 disabled:from-gray-400 disabled:to-gray-400 font-semibold"
+        >
+          {createRequest.isPending ? 'שולח בקשה...' : '⭐ שלח בקשה להדגשה'}
+        </button>
+      </form>
+
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <h3 className="font-semibold mb-3">מה כולל הדגשה?</h3>
+        <ul className="list-disc list-inside space-y-2 text-gray-700">
+          <li>הצגה בולטת בדף הבית</li>
+          <li>סימון מיוחד בתוצאות החיפוש</li>
+          <li>חשיפה מוגברת למעוניינים</li>
+          <li>עדיפות בהודעות שבועיות</li>
         </ul>
       </div>
     </div>

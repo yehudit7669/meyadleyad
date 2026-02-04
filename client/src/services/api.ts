@@ -381,6 +381,11 @@ export const usersService = {
     const response = await api.get(`/users/${id}`);
     return (response.data as any).data;
   },
+
+  getMyAds: async () => {
+    const response = await api.get('/users/my-ads');
+    return (response.data as any).data || [];
+  },
 };
 
 // =============== ADMIN SERVICES ===============
