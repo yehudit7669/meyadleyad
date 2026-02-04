@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResidentialStep5Data } from '../../../types/wizard';
 import { residentialStep5Schema } from '../../../types/wizard';
 import { WizardStepProps } from '../../../types/wizard';
+import { useAuth } from '../../../hooks/useAuth';
+import { useBrokerTeam } from '../../../hooks/useBroker';
 
 const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) => {
+  const { user } = useAuth();
+  const isBroker = user?.role === 'BROKER' || user?.isBroker === true;
+  
+  // Fetch team members only if user is a broker
+  const { data: teamMembers } = useBrokerTeam();
+  const brokerTeam = isBroker && teamMembers ? teamMembers : [];
+
   const [formData, setFormData] = useState<ResidentialStep5Data>(
     data || {
       contactName: '',
@@ -12,6 +21,21 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
     }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedBrokerId, setSelectedBrokerId] = useState<string>('');
+
+  // Auto-fill phone when broker is selected
+  useEffect(() => {
+    if (selectedBrokerId && brokerTeam.length > 0) {
+      const selectedBroker = brokerTeam.find((member: any) => member.id === selectedBrokerId);
+      if (selectedBroker) {
+        setFormData((prev) => ({
+          ...prev,
+          contactName: selectedBroker.fullName || '',
+          contactPhone: selectedBroker.phone || '',
+        }));
+      }
+    }
+  }, [selectedBrokerId, brokerTeam]);
 
   const handleChange = (field: keyof ResidentialStep5Data, value: any) => {
     setFormData((prev) => ({
@@ -51,10 +75,48 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
       </div>
 
       <div className="space-y-6">
+        {/* Broker Selection - Only for brokers */}
+        {isBroker && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              בחר מתווך מהצוות
+            </label>
+            {brokerTeam.length > 0 ? (
+              <>
+                <select
+                  value={selectedBrokerId}
+                  onChange={(e) => setSelectedBrokerId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
+                >
+                  <option value="">בחר מתווך או הזן באופן ידני</option>
+                  {brokerTeam.map((member: any) => (
+                    <option key={member.id} value={member.id}>
+                      {member.fullName} - {member.phone}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  בחר מתווך מהצוות שלך והפרטים יועלו אוטומטית
+                </p>
+              </>
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  💡 אין חברי צוות במערכת. 
+                  <a href="/broker/my-profile?tab=team" className="font-medium underline mr-1">
+                    לחץ כאן להוסיף חברי צוות
+                  </a>
+                  או המשך למלא באופן ידני.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Contact Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            שם (אופציונלי)
+            שם {!isBroker && '(אופציונלי)'}
           </label>
           <input
             type="text"
@@ -64,6 +126,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
               errors.contactName ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="לדוגמה: יוסי כהן"
+            disabled={!!selectedBrokerId}
           />
           {errors.contactName && (
             <p className="mt-1 text-sm text-red-500">{errors.contactName}</p>
@@ -84,6 +147,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
             }`}
             placeholder="לדוגמה: 0501234567"
             dir="ltr"
+            disabled={!!selectedBrokerId}
           />
           {errors.contactPhone && (
             <p className="mt-1 text-sm text-red-500">{errors.contactPhone}</p>

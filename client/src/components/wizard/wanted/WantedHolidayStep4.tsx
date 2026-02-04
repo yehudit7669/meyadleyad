@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WantedHolidayStep4Data, wantedHolidayStep4Schema } from '../../../types/wizard';
+import { useAuth } from '../../../hooks/useAuth';
+import { useBrokerTeam } from '../../../hooks/useBroker';
 
 interface Props {
   data?: WantedHolidayStep4Data;
@@ -10,9 +12,25 @@ interface Props {
 }
 
 const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }) => {
+  const { user } = useAuth();
+  const isBroker = user?.role === 'BROKER' || user?.isBroker === true;
+  const { data: teamMembers } = useBrokerTeam();
+  const brokerTeam = isBroker && teamMembers ? teamMembers : [];
+
   const [contactName, setContactName] = useState(data?.contactName || '');
   const [contactPhone, setContactPhone] = useState(data?.contactPhone || '');
+  const [selectedBrokerId, setSelectedBrokerId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (selectedBrokerId && brokerTeam.length > 0) {
+      const selectedBroker = brokerTeam.find((member: any) => member.id === selectedBrokerId);
+      if (selectedBroker) {
+        setContactName(selectedBroker.fullName || '');
+        setContactPhone(selectedBroker.phone || '');
+      }
+    }
+  }, [selectedBrokerId, brokerTeam]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +64,44 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
       </div>
 
       <div className="space-y-4">
+        {/* Broker Selection - Only for brokers */}
+        {isBroker && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              בחר מתווך מהצוות
+            </label>
+            {brokerTeam.length > 0 ? (
+              <>
+                <select
+                  value={selectedBrokerId}
+                  onChange={(e) => setSelectedBrokerId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
+                >
+                  <option value="">בחר מתווך או הזן באופן ידני</option>
+                  {brokerTeam.map((member: any) => (
+                    <option key={member.id} value={member.id}>
+                      {member.fullName} - {member.phone}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  בחר מתווך מהצוות שלך והפרטים יועלו אוטומטית
+                </p>
+              </>
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  💡 אין חברי צוות במערכת. 
+                  <a href="/broker/my-profile?tab=team" className="font-medium underline mr-1">
+                    לחץ כאן להוסיף חברי צוות
+                  </a>
+                  או המשך למלא באופן ידני.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Contact Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -57,6 +113,7 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
             onChange={(e) => setContactName(e.target.value)}
             placeholder="השם שלך"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
+            disabled={!!selectedBrokerId}
           />
           <p className="text-sm text-gray-500 mt-1">
             אם תשאיר ריק, המודעה תוצג כ"אנונימי"
@@ -77,6 +134,7 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
               errors.contactPhone ? 'border-red-500' : 'border-gray-300'
             }`}
             dir="ltr"
+            disabled={!!selectedBrokerId}
           />
           {errors.contactPhone && (
             <p className="text-sm text-red-500 mt-1">{errors.contactPhone}</p>

@@ -105,7 +105,7 @@ const BrandingTab: React.FC<Props> = ({ profile }) => {
 
       {/* Logo Section */}
       <div className="border-t pt-6">
-        <h3 className="text-lg font-semibold mb-4">לוגו עסק</h3>
+        <h3 className="text-lg font-semibold mb-4 text-gray-900">לוגו עסק</h3>
         <div className="space-y-4">
           {/* לוגו מאושר */}
           <div>

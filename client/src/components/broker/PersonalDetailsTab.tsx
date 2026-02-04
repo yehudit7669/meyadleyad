@@ -39,213 +39,185 @@ const PersonalDetailsTab: React.FC<Props> = ({ profile }) => {
   const addressRejection = getLatestRejection('OFFICE_ADDRESS_UPDATE');
   const addressApproved = myApprovals?.find((a: any) => a.type === 'OFFICE_ADDRESS_UPDATE' && a.status === 'APPROVED');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      // Update personal details
-      await updatePersonal.mutateAsync({
-        fullName: formData.fullName,
-        phonePersonal: formData.phonePersonal,
-        businessPhone: formData.businessPhone,
-      });
-
-      // Update office address only if it actually changed
-      const currentOfficeAddress = profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '';
-      if (formData.businessAddressPending && formData.businessAddressPending !== currentOfficeAddress) {
-        await updateOffice.mutateAsync({
-          businessAddressPending: formData.businessAddressPending,
-        });
-      }
-
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating details:', error);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">פרטים אישיים</h2>
         {!isEditing && (
           <button
             onClick={() => setIsEditing(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             ערוך פרטים
           </button>
         )}
       </div>
 
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-              שם מלא *
-            </label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
+          {isEditing ? (
             <input
               type="text"
-              id="fullName"
-              name="fullName"
               value={formData.fullName}
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          ) : (
+            <p className="text-gray-900 py-2">{profile.user.name || 'לא צוין'}</p>
+          )}
+        </div>
 
-          <div>
-            <label htmlFor="phonePersonal" className="block text-sm font-medium text-gray-700 mb-1">
-              טלפון אישי *
-            </label>
+        {/* Email (Read-only) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">אימייל</label>
+          <p className="text-gray-900 py-2">{profile.user.email}</p>
+          <p className="text-xs text-gray-500 mt-1">לשינוי אימייל, השתמש בתהליך האימות</p>
+        </div>
+
+        {/* Personal Phone */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">טלפון אישי</label>
+          {isEditing ? (
             <input
               type="tel"
-              id="phonePersonal"
-              name="phonePersonal"
               value={formData.phonePersonal}
-              onChange={handleChange}
-              pattern="05[0-9]{8}"
-              placeholder="0501234567"
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setFormData({ ...formData, phonePersonal: e.target.value })}
+              placeholder="05XXXXXXXX"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          ) : (
+            <p className="text-gray-900 py-2">{profile.user.phonePersonal || 'לא צוין'}</p>
+          )}
+        </div>
 
-          <div>
-            <label htmlFor="businessPhone" className="block text-sm font-medium text-gray-700 mb-1">
-              טלפון עסק
-            </label>
+        {/* Business Phone */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">טלפון העסק</label>
+          {isEditing ? (
             <input
               type="tel"
-              id="businessPhone"
-              name="businessPhone"
               value={formData.businessPhone}
-              onChange={handleChange}
-              pattern="0[2-9][0-9]{7,8}"
-              placeholder="021234567"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setFormData({ ...formData, businessPhone: e.target.value })}
+              placeholder="05XXXXXXXX או טלפון קווי"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
+          ) : (
+            <p className="text-gray-900 py-2">{profile.user.businessPhone || 'לא צוין'}</p>
+          )}
+        </div>
+      </div>
 
-          <div>
-            <label htmlFor="businessAddressPending" className="block text-sm font-medium text-gray-700 mb-1">
-              כתובת משרד
-            </label>
-            <input
-              type="text"
-              id="businessAddressPending"
-              name="businessAddressPending"
-              value={formData.businessAddressPending}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            {profile.office?.businessAddressPending && profile.office?.businessAddressPending !== profile.office?.businessAddressApproved && (
-              <p className="text-sm text-orange-600 mt-1">
-                ⏳ שינוי כתובת ממתין לאישור
-              </p>
-            )}
-            {addressApproved && !(profile.office?.businessAddressPending && profile.office?.businessAddressPending !== profile.office?.businessAddressApproved) && (
-              <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון כתובת משרד אושר!</p>
-                {addressApproved.adminNotes && (
-                  <p className="text-sm text-green-700">הערת מנהל: {addressApproved.adminNotes}</p>
-                )}
-              </div>
-            )}
-            {addressRejection && (
-              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm font-semibold text-red-800 mb-1">❌ עדכון כתובת המשרד נדחה</p>
-                {addressRejection.adminNotes && (
-                  <p className="text-sm text-red-700">הערת מנהל: {addressRejection.adminNotes}</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={updatePersonal.isPending || updateOffice.isPending}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {updatePersonal.isPending || updateOffice.isPending ? 'שומר...' : 'שמור שינויים'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setFormData({
-                  fullName: profile.user.name || '',
-                  phonePersonal: profile.user.phonePersonal || '',
-                  businessPhone: profile.user.businessPhone || '',
-                  businessAddressPending: profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '',
+      {isEditing && (
+        <div className="flex gap-4">
+          <button
+            onClick={async () => {
+              try {
+                await updatePersonal.mutateAsync({
+                  fullName: formData.fullName,
+                  phonePersonal: formData.phonePersonal,
+                  businessPhone: formData.businessPhone,
                 });
-              }}
-              className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400"
-            >
-              ביטול
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">שם מלא</p>
-            <p className="text-lg font-semibold">{profile.user.name || 'לא הוגדר'}</p>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">אימייל</p>
-            <p className="text-lg font-semibold">{profile.user.email}</p>
-            {profile.user.pendingEmail && (
-              <p className="text-sm text-orange-600 mt-1">
-                ⏳ שינוי ל-{profile.user.pendingEmail} ממתין לאישור
-              </p>
-            )}
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">טלפון אישי</p>
-            <p className="text-lg font-semibold">{profile.user.phonePersonal || 'לא הוגדר'}</p>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">טלפון עסק</p>
-            <p className="text-lg font-semibold">{profile.user.businessPhone || 'לא הוגדר'}</p>
-          </div>
-
-          <div className="bg-gray-50 p-4 rounded-lg md:col-span-2">
-            <p className="text-sm text-gray-600 mb-1">כתובת משרד (מאושרת)</p>
-            <p className="text-lg font-semibold">{profile.office?.businessAddressApproved || 'לא הוגדרה'}</p>
-            {profile.office?.businessAddressPending && profile.office?.businessAddressPending !== profile.office?.businessAddressApproved && (
-              <p className="text-sm text-orange-600 mt-2">
-                ⏳ שינוי ל-{profile.office?.businessAddressPending} ממתין לאישור
-              </p>
-            )}
-            {addressApproved && !(profile.office?.businessAddressPending && profile.office?.businessAddressPending !== profile.office?.businessAddressApproved) && (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון כתובת משרד אושר!</p>
-                {addressApproved.adminNotes && (
-                  <p className="text-sm text-green-700">הערת מנהל: {addressApproved.adminNotes}</p>
-                )}
-              </div>
-            )}
-            {addressRejection && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה לעדכון כתובת משרד נדחתה</p>
-                {addressRejection.adminNotes && (
-                  <p className="text-sm text-red-700">הערת מנהל: {addressRejection.adminNotes}</p>
-                )}
-              </div>
-            )}
-          </div>
+                setIsEditing(false);
+              } catch (error) {
+                console.error('Error updating details:', error);
+              }
+            }}
+            disabled={updatePersonal.isPending}
+            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+          >
+            {updatePersonal.isPending ? 'שומר...' : 'שמור שינויים'}
+          </button>
+          <button
+            onClick={() => {
+              setIsEditing(false);
+              setFormData({
+                fullName: profile.user.name || '',
+                phonePersonal: profile.user.phonePersonal || '',
+                businessPhone: profile.user.businessPhone || '',
+                businessAddressPending: profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '',
+              });
+            }}
+            className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+          >
+            ביטול
+          </button>
         </div>
       )}
+
+      {/* Office Address Section */}
+      <div className="border-t pt-6 mt-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">כתובת משרד</h3>
+        
+        {!addressApproved && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>כתובת נוכחית:</strong> {profile.office?.businessAddressApproved || 'לא הוגדרה'}
+            </p>
+            {profile.office?.businessAddressPending && profile.office?.businessAddressPending !== profile.office?.businessAddressApproved && (
+              <p className="text-sm text-orange-600 mt-2">
+                <strong>בקשת שינוי ממתינה:</strong> {profile.office?.businessAddressPending}
+              </p>
+            )}
+          </div>
+        )}
+
+        {addressApproved && !(profile.office?.businessAddressPending && profile.office?.businessAddressPending !== profile.office?.businessAddressApproved) && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון כתובת משרד אושר!</p>
+            <p className="text-sm text-green-700 mb-1">
+              <strong>הכתובת החדשה:</strong> {profile.office?.businessAddressApproved}
+            </p>
+            {addressApproved.adminNotes && (
+              <p className="text-sm text-green-700">הערת מנהל: {addressApproved.adminNotes}</p>
+            )}
+          </div>
+        )}
+
+        {addressRejection && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה לעדכון כתובת משרד נדחתה</p>
+            {addressRejection.adminNotes && (
+              <p className="text-sm text-red-700">הערת מנהל: {addressRejection.adminNotes}</p>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-gray-700">בקשת שינוי כתובת משרד</label>
+          <p className="text-xs text-gray-500 mb-2">
+            שינוי כתובת המשרד דורש אישור מנהל. הכתובת תעודכן רק לאחר אישור.
+          </p>
+          <div className="flex gap-4">
+            <input
+              type="text"
+              value={formData.businessAddressPending}
+              onChange={(e) => setFormData({ ...formData, businessAddressPending: e.target.value })}
+              placeholder="הזן כתובת משרד חדשה"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={async () => {
+                const currentOfficeAddress = profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '';
+                if (formData.businessAddressPending && formData.businessAddressPending !== currentOfficeAddress) {
+                  try {
+                    await updateOffice.mutateAsync({
+                      businessAddressPending: formData.businessAddressPending,
+                    });
+                  } catch (error) {
+                    console.error('Error updating office address:', error);
+                  }
+                }
+              }}
+              disabled={updateOffice.isPending}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {updateOffice.isPending ? 'שולח...' : 'שלח בקשה'}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

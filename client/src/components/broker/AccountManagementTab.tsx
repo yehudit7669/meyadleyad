@@ -4,10 +4,12 @@ import { useCreateExportRequest, useCreateDeleteRequest } from '../../hooks/useB
 import { pendingApprovalsService } from '../../services/api';
 
 const AccountManagementTab: React.FC = () => {
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  
   const createExportRequest = useCreateExportRequest();
   const createDeleteRequest = useCreateDeleteRequest();
-  const [deleteReason, setDeleteReason] = useState('');
-  const [showDeleteForm, setShowDeleteForm] = useState(false);
 
   // Fetch user's approval requests
   const { data: myApprovals } = useQuery({
@@ -29,88 +31,117 @@ const AccountManagementTab: React.FC = () => {
   const deletePending = myApprovals?.find((a: any) => a.type === 'ACCOUNT_DELETION' && a.status === 'PENDING');
   const deleteApproved = myApprovals?.find((a: any) => a.type === 'ACCOUNT_DELETION' && a.status === 'APPROVED');
 
-  const handleExportRequest = async () => {
-    if (confirm('האם אתה בטוח שברצונך לבקש ייצוא של כל הנתונים שלך?')) {
-      await createExportRequest.mutateAsync();
-    }
+  const handleExport = async () => {
+    await createExportRequest.mutateAsync();
+    setShowExportModal(false);
   };
 
-  const handleDeleteRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (confirm('האם אתה בטוח לחלוטין? פעולה זו בלתי הפיכה לאחר אישור מנהל.')) {
-      await createDeleteRequest.mutateAsync(deleteReason);
-      setShowDeleteForm(false);
-      setDeleteReason('');
-    }
+  const handleDelete = async () => {
+    await createDeleteRequest.mutateAsync(deleteReason);
+    setShowDeleteModal(false);
+    setDeleteReason('');
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">ניהול חשבון</h2>
+      <h2 className="text-2xl font-bold text-gray-900">ניהול חשבון (GDPR)</h2>
 
-      {/* Export Data */}
-      <div className="bg-blue-50 p-6 rounded-lg">
-        <h3 className="font-semibold text-lg mb-2">ייצוא נתונים</h3>
-        <p className="text-gray-700 mb-4">
-          בקש ייצוא של כל הנתונים האישיים שלך במערכת. הבקשה תטופל על ידי מנהל והקובץ יישלח אליך במייל.
-        </p>
-        <button
-          onClick={handleExportRequest}
-          disabled={createExportRequest.isPending}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          {createExportRequest.isPending ? 'שולח בקשה...' : 'בקש ייצוא נתונים'}
-        </button>
+      <div className="space-y-4">
+        {/* Data Export */}
+        <div className="border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">ייצוא נתונים</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            בקש ייצוא של כל הנתונים האישיים שלך מהמערכת. הנתונים יישלחו אליך במייל לאחר עיבוד הבקשה.
+          </p>
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            בקש ייצוא נתונים
+          </button>
+        </div>
+
+        {/* Account Deletion */}
+        <div className="border border-red-200 rounded-lg p-6 bg-red-50">
+          <h3 className="text-lg font-semibold text-red-900 mb-2">מחיקת חשבון</h3>
+          <p className="text-sm text-red-700 mb-4">
+            בקש מחיקת החשבון והנתונים שלך מהמערכת. פעולה זו דורשת אישור מנהל ואינה הפיכה.
+          </p>
+          
+          {deleteRejection && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+              <p className="text-sm font-semibold text-red-800 mb-1">❌ בקשת המחיקה נדחתה</p>
+              {deleteRejection.adminNotes && (
+                <p className="text-sm text-red-700">הערת מנהל: {deleteRejection.adminNotes}</p>
+              )}
+            </div>
+          )}
+          
+          {deleteApproved && !deletePending && (
+            <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+              <p className="text-sm font-semibold text-green-800 mb-1">✅ בקשת מחיקת החשבון אושרה</p>
+              {deleteApproved.adminNotes && (
+                <p className="text-sm text-green-700">הערת מנהל: {deleteApproved.adminNotes}</p>
+              )}
+              <p className="text-xs text-green-600 mt-1">החשבון יימחק בקרוב</p>
+            </div>
+          )}
+          
+          {deletePending && (
+            <div className="mb-4 p-3 bg-orange-50 border border-orange-300 rounded-lg">
+              <p className="text-sm font-semibold text-orange-800">⏳ בקשת מחיקת חשבון ממתינה לאישור מנהל</p>
+              {deletePending.reason && (
+                <p className="text-sm text-orange-700 mt-1">סיבה: {deletePending.reason}</p>
+              )}
+            </div>
+          )}
+          
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition"
+          >
+            בקש הסרת חשבון
+          </button>
+        </div>
       </div>
 
-      {/* Delete Account */}
-      <div className="bg-red-50 p-6 rounded-lg border-2 border-red-200">
-        <h3 className="font-semibold text-lg mb-2 text-red-900">מחיקת חשבון</h3>
-        <p className="text-gray-700 mb-4">
-          בקש מחיקה מלאה של החשבון שלך מהמערכת. הפעולה תבוצע רק לאחר אישור מנהל ובהתאם לתקנות GDPR.
-          <br />
-          <strong className="text-red-700">שים לב:</strong> פעולה זו בלתי הפיכה ותמחק את כל המודעות, הפגישות והנתונים שלך.
-        </p>
-        
-        {deleteRejection && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg">
-            <p className="text-sm font-semibold text-red-800 mb-1">❌ בקשת המחיקה נדחתה</p>
-            {deleteRejection.adminNotes && (
-              <p className="text-sm text-red-700">הערת מנהל: {deleteRejection.adminNotes}</p>
-            )}
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">אישור ייצוא נתונים</h3>
+            <p className="text-gray-700 mb-6">
+              האם אתה בטוח שברצונך לבקש ייצוא של כל הנתונים האישיים שלך? הנתונים יישלחו אליך במייל לאחר עיבוד הבקשה.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={handleExport}
+                disabled={createExportRequest.isPending}
+                className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {createExportRequest.isPending ? 'שולח...' : 'אישור'}
+              </button>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="flex-1 bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+              >
+                ביטול
+              </button>
+            </div>
           </div>
-        )}
-        
-        {deleteApproved && !deletePending && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-            <p className="text-sm font-semibold text-green-800 mb-1">✅ בקשת מחיקת החשבון אושרה</p>
-            {deleteApproved.adminNotes && (
-              <p className="text-sm text-green-700">הערת מנהל: {deleteApproved.adminNotes}</p>
-            )}
-            <p className="text-xs text-green-600 mt-1">החשבון יימחק בקרוב</p>
-          </div>
-        )}
-        
-        {deletePending && (
-          <div className="mb-4 p-3 bg-orange-50 border border-orange-300 rounded-lg">
-            <p className="text-sm font-semibold text-orange-800">⏳ בקשת מחיקת חשבון ממתינה לאישור מנהל</p>
-            {deletePending.reason && (
-              <p className="text-sm text-orange-700 mt-1">סיבה: {deletePending.reason}</p>
-            )}
-          </div>
-        )}
-        
-        {!showDeleteForm ? (
-          <button
-            onClick={() => setShowDeleteForm(true)}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
-          >
-            בקש מחיקת חשבון
-          </button>
-        ) : (
-          <form onSubmit={handleDeleteRequest} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-red-900 mb-4">אישור מחיקת חשבון</h3>
+            <p className="text-gray-700 mb-4">
+              האם אתה בטוח שברצונך למחוק את החשבון שלך? פעולה זו דורשת אישור מנהל ואינה הפיכה.
+            </p>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 סיבת המחיקה (אופציונלי)
               </label>
               <textarea
@@ -118,32 +149,31 @@ const AccountManagementTab: React.FC = () => {
                 onChange={(e) => setDeleteReason(e.target.value)}
                 rows={3}
                 maxLength={500}
-                placeholder="נשמח לדעת מדוע אתה מבקש למחוק את החשבון..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                placeholder="ספר לנו למה אתה רוצה למחוק את החשבון..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
-                type="submit"
+                onClick={handleDelete}
                 disabled={createDeleteRequest.isPending}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                className="flex-1 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50"
               >
-                {createDeleteRequest.isPending ? 'שולח בקשה...' : 'אשר מחיקה'}
+                {createDeleteRequest.isPending ? 'שולח...' : 'אישור מחיקה'}
               </button>
               <button
-                type="button"
                 onClick={() => {
-                  setShowDeleteForm(false);
+                  setShowDeleteModal(false);
                   setDeleteReason('');
                 }}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400"
+                className="flex-1 bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
               >
                 ביטול
               </button>
             </div>
-          </form>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

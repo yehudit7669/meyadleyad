@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HolidayRentStep4Data, holidayRentStep4Schema } from '../../../types/wizard';
+import { useAuth } from '../../../hooks/useAuth';
+import { useBrokerTeam } from '../../../hooks/useBroker';
 
 interface HolidayRentStep4Props {
   data: Partial<HolidayRentStep4Data>;
@@ -8,11 +10,29 @@ interface HolidayRentStep4Props {
 }
 
 const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBack }) => {
+  const { user } = useAuth();
+  const isBroker = user?.role === 'BROKER' || user?.isBroker === true;
+  const { data: teamMembers } = useBrokerTeam();
+  const brokerTeam = isBroker && teamMembers ? teamMembers : [];
+
   const [formData, setFormData] = useState<Partial<HolidayRentStep4Data>>({
     contactName: data.contactName || '',
     contactPhone: data.contactPhone || '',
   });
+  const [selectedBrokerId, setSelectedBrokerId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (selectedBrokerId && brokerTeam.length > 0) {
+      const selectedBroker = brokerTeam.find((member: any) => member.id === selectedBrokerId);
+      if (selectedBroker) {
+        setFormData({
+          contactName: selectedBroker.fullName || '',
+          contactPhone: selectedBroker.phone || '',
+        });
+      }
+    }
+  }, [selectedBrokerId, brokerTeam]);
 
   const handleInputChange = (field: keyof HolidayRentStep4Data, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -40,6 +60,44 @@ const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBac
       <h2 className="text-2xl font-bold text-[#1F3F3A]">פרטי התקשרות</h2>
       <p className="text-gray-600">מלאו את פרטי הקשר שלכם</p>
 
+      {/* Broker Selection - Only for brokers */}
+      {isBroker && (
+        <div>
+          <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
+            בחר מתווך מהצוות
+          </label>
+          {brokerTeam.length > 0 ? (
+            <>
+              <select
+                value={selectedBrokerId}
+                onChange={(e) => setSelectedBrokerId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
+              >
+                <option value="">בחר מתווך או הזן באופן ידני</option>
+                {brokerTeam.map((member: any) => (
+                  <option key={member.id} value={member.id}>
+                    {member.fullName} - {member.phone}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                בחר מתווך מהצוות שלך והפרטים יועלו אוטומטית
+              </p>
+            </>
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-800">
+                💡 אין חברי צוות במערכת. 
+                <a href="/broker/my-profile?tab=team" className="font-medium underline mr-1">
+                  לחץ כאן להוסיף חברי צוות
+                </a>
+                או המשך למלא באופן ידני.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Contact Name */}
       <div>
         <label className="block text-sm font-medium text-[#1F3F3A] mb-2">שם (אופציונלי)</label>
@@ -51,6 +109,7 @@ const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBac
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
             errors.contactName ? 'border-red-500' : 'border-gray-300'
           }`}
+          disabled={!!selectedBrokerId}
         />
         {errors.contactName && <p className="text-red-500 text-sm mt-1">{errors.contactName}</p>}
       </div>
@@ -69,6 +128,7 @@ const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBac
             errors.contactPhone ? 'border-red-500' : 'border-gray-300'
           }`}
           dir="ltr"
+          disabled={!!selectedBrokerId}
         />
         {errors.contactPhone && <p className="text-red-500 text-sm mt-1">{errors.contactPhone}</p>}
         <p className="text-sm text-gray-500 mt-1">הזן מספר טלפון ישראלי תקין (10 ספרות)</p>
