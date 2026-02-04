@@ -24,6 +24,7 @@ import Profile from './pages/Profile';
 import BrokerProfile from './pages/BrokerProfile';
 import MyBrokerProfile from './pages/MyBrokerProfile';
 import PublicBrokerPage from './pages/PublicBrokerPage';
+import BrokerImportPropertiesFromFile from './pages/broker/ImportPropertiesFromFile';
 import ServiceProviderProfile from './pages/ServiceProviderProfile';
 import ProviderPublicPage from './pages/ProviderPublicPage';
 import UsersManagementPage from './pages/admin/UsersManagementPage';
@@ -146,6 +147,7 @@ const App: React.FC = () => {
                   {/* User Routes */}
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/broker/my-profile" element={<ProtectedRoute><MyBrokerProfile /></ProtectedRoute>} />
+                  <Route path="/broker/import-properties" element={<ProtectedRoute><BrokerImportPropertiesFromFile /></ProtectedRoute>} />
                   <Route path="/service-provider/my-profile" element={<ProtectedRoute><ServiceProviderProfile /></ProtectedRoute>} />
                   <Route path="/profile/ads" element={<ProtectedRoute><MyAds /></ProtectedRoute>} />
                   <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />

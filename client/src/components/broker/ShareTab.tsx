@@ -20,7 +20,7 @@ const ShareTab: React.FC = () => {
     }
   };
 
-  const handleShare = (adId: number, method: 'whatsapp' | 'email' | 'copy') => {
+  const handleShare = (adId: string, method: 'whatsapp' | 'email' | 'copy') => {
     const adUrl = `${baseUrl}/ads/${adId}`;
     
     switch (method) {
@@ -37,7 +37,7 @@ const ShareTab: React.FC = () => {
       
       case 'copy':
         navigator.clipboard.writeText(adUrl).then(() => {
-          setCopiedId(adId.toString());
+          setCopiedId(adId);
           setTimeout(() => setCopiedId(null), 2000);
         });
         break;
@@ -114,7 +114,7 @@ const ShareTab: React.FC = () => {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleShare(parseInt(ad.id), 'whatsapp')}
+                      onClick={() => handleShare(ad.id, 'whatsapp')}
                       title="שתף בוואטסאפ"
                       className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
                     >
@@ -124,7 +124,7 @@ const ShareTab: React.FC = () => {
                     </button>
 
                     <button
-                      onClick={() => handleShare(parseInt(ad.id), 'email')}
+                      onClick={() => handleShare(ad.id, 'email')}
                       title="שתף במייל"
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                     >
@@ -134,7 +134,7 @@ const ShareTab: React.FC = () => {
                     </button>
 
                     <button
-                      onClick={() => handleShare(parseInt(ad.id), 'copy')}
+                      onClick={() => handleShare(ad.id, 'copy')}
                       title="העתק קישור"
                       className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
                     >

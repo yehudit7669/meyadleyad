@@ -191,7 +191,7 @@ const TeamManagementTab: React.FC = () => {
               className="bg-white border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-md transition-shadow"
             >
               <div>
-                <h4 className="font-semibold text-lg">{member.fullName}</h4>
+                <h4 className="font-semibold text-lg text-gray-900">{member.fullName}</h4>
                 <p className="text-sm text-gray-600">{member.email}</p>
                 <p className="text-sm text-gray-600">{member.phone}</p>
                 {!member.isActive && (

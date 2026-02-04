@@ -20,8 +20,9 @@ type TabType =
   | 'communication'
   | 'share'
   | 'account'
-  | 'audit'
-  | 'featured';
+  | 'featured'
+  | 'audit';
+  
 
 const MyBrokerProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('personal');
@@ -63,8 +64,8 @@ const MyBrokerProfile: React.FC = () => {
     { id: 'communication', label: 'תקשורת ודיוור', icon: '📧' },
     { id: 'share', label: 'שיתוף קל', icon: '🔗' },
     { id: 'account', label: 'ניהול חשבון', icon: '⚙️' },
-    { id: 'audit', label: 'לוג מערכת', icon: '📝' },
     { id: 'featured', label: 'בקשת הדגשה', icon: '⭐' },
+    { id: 'audit', label: 'לוג מערכת', icon: '📝' },
   ];
 
   return (
@@ -142,8 +143,8 @@ const MyBrokerProfile: React.FC = () => {
           {activeTab === 'communication' && <CommunicationTab profile={profile} />}
           {activeTab === 'share' && <ShareTab />}
           {activeTab === 'account' && <AccountManagementTab />}
-          {activeTab === 'audit' && <AuditLogTab />}
           {activeTab === 'featured' && <FeaturedRequestTab />}
+          {activeTab === 'audit' && <AuditLogTab />}
         </div>
       </div>
     </div>

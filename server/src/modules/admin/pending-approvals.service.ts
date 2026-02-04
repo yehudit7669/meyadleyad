@@ -351,6 +351,12 @@ export class PendingApprovalsService {
         });
         break;
 
+      case PendingApprovalType.IMPORT_PROPERTIES_PERMISSION:
+        // אישור הרשאה לייבוא נכסים למתווך
+        // הבקשה עצמה מספיקה - סטטוס APPROVED מאפשר גישה
+        // אין צורך לעדכן שדות נוספים כי נבדוק את הבקשה המאושרת בזמן ייבוא
+        break;
+
       case PendingApprovalType.ACCOUNT_DELETION:
         // במקרה של אישור הסרת חשבון, נמחק את המשתמש
         await prisma.user.update({

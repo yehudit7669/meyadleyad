@@ -35,6 +35,8 @@ export class BrokerRepository {
       select: {
         logoUrlApproved: true,
         aboutBusinessApproved: true,
+        businessAddressApproved: true,
+        publishOfficeAddress: true,
       },
     });
 
@@ -46,7 +48,13 @@ export class BrokerRepository {
       select: {
         id: true,
         title: true,
+        description: true,
+        price: true,
+        views: true,
+        createdAt: true,
         adNumber: true,
+        isWanted: true,
+        requestedLocationText: true,
         Category: {
           select: { nameHe: true },
         },
@@ -56,6 +64,7 @@ export class BrokerRepository {
         AdImage: {
           take: 1,
           select: { url: true },
+          orderBy: { order: 'asc' },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -70,6 +79,7 @@ export class BrokerRepository {
         businessPhone: user.businessPhone,
         about: office?.aboutBusinessApproved,
         logoUrl: office?.logoUrlApproved,
+        businessAddress: office?.publishOfficeAddress ? office?.businessAddressApproved : null,
       },
       ads,
     };

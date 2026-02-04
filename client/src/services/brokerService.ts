@@ -161,6 +161,43 @@ export const brokerService = {
     return response.data as BrokerAd[];
   },
 
+  // Get broker ads with pagination (for MyAdsTab) - uses getBrokerAds and paginate client-side
+  getMyAds: async (params?: { page?: number; limit?: number }) => {
+    const page = params?.page || 1;
+    const limit = params?.limit || 10;
+    
+    const response = await api.get('/broker/ads');
+    const allAds = response.data as BrokerAd[];
+    
+    // Client-side pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedAds = allAds.slice(startIndex, endIndex);
+    
+    return {
+      ads: paginatedAds.map((ad: any) => ({
+        ...ad,
+        category: ad.Category?.nameHe || '',
+        cityName: ad.City?.nameHe || '',
+        streetName: ad.Street?.nameHe || '',
+        address: ad.City?.nameHe || '',
+        views: ad.views || 0,
+      })),
+      pagination: {
+        page,
+        limit,
+        total: allAds.length,
+        totalPages: Math.ceil(allAds.length / limit),
+      },
+    };
+  },
+
+  // Delete broker ad
+  deleteMyAd: async (adId: string) => {
+    const response = await api.delete(`/ads/${adId}`);
+    return response.data;
+  },
+
   // Appointments
   getAppointments: async (): Promise<BrokerAppointment[]> => {
     const response = await api.get('/broker/appointments');

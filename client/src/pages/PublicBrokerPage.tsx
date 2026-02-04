@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
+import AdCard from '../components/AdCard';
 
 interface PublicBrokerData {
   broker: {
@@ -10,6 +11,7 @@ interface PublicBrokerData {
     email: string;
     businessName?: string;
     businessPhone?: string;
+    businessAddress?: string;
     about?: string;
     logoUrl?: string;
   };
@@ -17,9 +19,19 @@ interface PublicBrokerData {
     id: string;
     title: string;
     adNumber: number;
+    description?: string;
+    price?: number;
+    views?: number;
+    createdAt: string;
     Category?: { nameHe: string };
     City?: { nameHe: string };
     AdImage?: Array<{ url: string }>;
+    isWanted?: boolean;
+    requestedLocationText?: string;
+    user?: {
+      email: string;
+      name?: string;
+    };
   }>;
 }
 
@@ -57,7 +69,8 @@ const PublicBrokerPage: React.FC = () => {
     );
   }
 
-  const { broker, ads } = data as any;
+  const broker = data.broker;
+  const ads = data.ads || [];
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -108,6 +121,16 @@ const PublicBrokerPage: React.FC = () => {
                     {broker.email}
                   </a>
                 </div>
+
+                {broker.businessAddress && (
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{broker.businessAddress}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -124,33 +147,25 @@ const PublicBrokerPage: React.FC = () => {
               <p className="text-gray-500">אין מודעות פעילות כרגע</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {ads.map((ad: any) => (
-                <a
+                <AdCard
                   key={ad.id}
-                  href={`/ads/${ad.id}`}
-                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
-                >
-                  {ad.AdImage && ad.AdImage[0] && (
-                    <img
-                      src={ad.AdImage[0].url}
-                      alt={ad.title}
-                      className="w-full h-48 object-cover"
-                    />
-                  )}
-                  
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
-                      {ad.title}
-                    </h3>
-                    
-                    <div className="text-sm text-gray-500 space-x-2 space-x-reverse">
-                      <span>#{ad.adNumber}</span>
-                      {ad.Category && <span>• {ad.Category.nameHe}</span>}
-                      {ad.City && <span>• {ad.City.nameHe}</span>}
-                    </div>
-                  </div>
-                </a>
+                  ad={{
+                    id: ad.id,
+                    title: ad.title,
+                    description: ad.description || '',
+                    price: ad.price,
+                    images: ad.AdImage,
+                    category: ad.Category || { nameHe: 'מודעה' },
+                    city: ad.City,
+                    createdAt: ad.createdAt,
+                    views: ad.views || 0,
+                    user: ad.user || broker,
+                    isWanted: ad.isWanted,
+                    requestedLocationText: ad.requestedLocationText,
+                  }}
+                />
               ))}
             </div>
           )}

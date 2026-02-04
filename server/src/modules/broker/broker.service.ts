@@ -3,6 +3,8 @@ import { AuditService } from '../profile/audit.service';
 import { pendingApprovalsService } from '../admin/pending-approvals.service';
 import { PendingApprovalType } from '@prisma/client';
 import prisma from '../../config/database';
+import * as XLSX from 'xlsx';
+import fs from 'fs/promises';
 import type {
   UpdatePersonalDetailsInput,
   UpdateOfficeDetailsInput,
@@ -236,6 +238,307 @@ export class BrokerService {
     const result = await brokerRepository.createAccountDeletionRequest(userId, data);
     await AuditService.log(userId, 'DELETE_REQ', { requestId: result.id, reason: data.reason }, ip);
     return result;
+  }
+
+  // Request import permission
+  async requestImportPermission(userId: string, reason: string, ip?: string) {
+    // Check if already has permission or pending request
+    const existingApproval = await prisma.pendingApproval.findFirst({
+      where: {
+        userId,
+        type: PendingApprovalType.IMPORT_PROPERTIES_PERMISSION,
+        status: { in: ['PENDING', 'APPROVED'] },
+      },
+    });
+
+    if (existingApproval) {
+      if (existingApproval.status === 'APPROVED') {
+        throw new Error('כבר יש לך הרשאה לייבוא נכסים');
+      }
+      throw new Error('קיימת בקשה ממתינה להרשאת ייבוא');
+    }
+
+    // Create pending approval
+    const result = await pendingApprovalsService.createApproval({
+      userId,
+      type: PendingApprovalType.IMPORT_PROPERTIES_PERMISSION,
+      requestData: { reason },
+      oldData: {},
+      reason: reason || 'בקשת הרשאה לייבוא נכסים מקובץ',
+    });
+
+    await AuditService.log(userId, 'IMPORT_PERMISSION_REQUEST', { approvalId: result.id }, ip);
+    return result;
+  }
+
+  // Check if broker has import permission
+  async checkImportPermission(userId: string): Promise<boolean> {
+    const approval = await prisma.pendingApproval.findFirst({
+      where: {
+        userId,
+        type: PendingApprovalType.IMPORT_PROPERTIES_PERMISSION,
+        status: 'APPROVED',
+      },
+    });
+
+    return !!approval;
+  }
+
+  // Import properties preview
+  async importPropertiesPreview(userId: string, file: Express.Multer.File, categoryId: string, adType: string) {
+    // Check permission
+    const hasPermission = await this.checkImportPermission(userId);
+    if (!hasPermission) {
+      await fs.unlink(file.path);
+      throw new Error('אין לך הרשאה לייבוא נכסים. נא לבקש הרשאה תחילה.');
+    }
+
+    // Validate file type
+    const ext = file.originalname.toLowerCase().split('.').pop();
+    if (ext !== 'xlsx' && ext !== 'xls') {
+      await fs.unlink(file.path);
+      throw new Error('ייבוא נכסים דורש קובץ XLSX בלבד');
+    }
+
+    // Read Excel file
+    const workbook = XLSX.readFile(file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+    // Clean up temp file
+    await fs.unlink(file.path);
+
+    if (data.length === 0) {
+      throw new Error('הקובץ ריק');
+    }
+
+    // Validate rows
+    const preview: any[] = [];
+    let validRows = 0;
+    let invalidRows = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      const errors: string[] = [];
+
+      // Basic validation
+      if (!row['שם'] || !row['טלפון']) {
+        errors.push('חסרים שם או טלפון');
+      }
+
+      const status = errors.length > 0 ? 'שגוי' : 'תקין';
+      if (status === 'תקין') {
+        validRows++;
+      } else {
+        invalidRows++;
+      }
+
+      preview.push({
+        rowNumber: i + 2, // Excel rows start at 2 (after header)
+        ...row,
+        status,
+        errors,
+      });
+    }
+
+    return {
+      fileName: file.originalname,
+      totalRows: data.length,
+      validRows,
+      invalidRows,
+      duplicates: 0,
+      warnings: [],
+      preview,
+    };
+  }
+
+  // Import properties commit
+  async importPropertiesCommit(userId: string, categoryId: string, adType: string, data: any[], ip?: string) {
+    console.log('🚀 Starting import commit:', { userId, categoryId, adType, dataLength: data.length });
+    
+    // Check permission
+    const hasPermission = await this.checkImportPermission(userId);
+    if (!hasPermission) {
+      throw new Error('אין לך הרשאה לייבוא נכסים');
+    }
+
+    // Find category
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new Error('קטגוריה לא נמצאה');
+    }
+
+    console.log('📁 Category found:', category.nameHe);
+
+    const isWanted = adType && adType.includes('WANTED');
+    let successCount = 0;
+    const errors: any[] = [];
+
+    // Import each valid row
+    for (const row of data) {
+      try {
+        console.log('📝 Processing row:', row);
+        
+        // Build custom fields
+        const customFields = this.buildCustomFields(row, category.slug, adType);
+
+        // Build title
+        const title = this.buildTitle(row, category.slug, adType);
+        
+        // Build address
+        const address = this.buildAddress(row, adType);
+
+        console.log('🏗️ Built ad data:', { title, address, customFields });
+
+        // For wanted ads: requestedLocationText
+        const requestedLocationText = isWanted ? (row['רחוב / אזור מבוקש'] || row.requestedLocation) : null;
+
+        // Find city if provided (for regular ads)
+        let cityRecord = null;
+        if (!isWanted && row['עיר']) {
+          cityRecord = await prisma.city.findFirst({
+            where: { name: { contains: row['עיר'], mode: 'insensitive' } },
+          });
+          console.log('🏙️ City found:', cityRecord?.nameHe);
+        }
+
+        // Create ad with PENDING status
+        const newAd = await prisma.ad.create({
+          data: {
+            id: `ad-import-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title,
+            description: row['תיאור הנכס'] || row.description || 'נכס מיובא',
+            price: row['מחיר'] ? parseFloat(row['מחיר'].toString()) : null,
+            userId,
+            categoryId: category.id,
+            cityId: cityRecord?.id,
+            address,
+            requestedLocationText,
+            isWanted,
+            adType,
+            customFields,
+            status: 'PENDING',
+            updatedAt: new Date(),
+          },
+        });
+
+        console.log('✅ Ad created:', newAd.id);
+        successCount++;
+      } catch (error: any) {
+        console.error('❌ Error creating ad:', error.message);
+        errors.push({
+          row: row.rowNumber,
+          error: error.message,
+        });
+      }
+    }
+
+    console.log('📊 Import summary:', { successCount, failedCount: errors.length });
+
+    await AuditService.log(userId, 'IMPORT_PROPERTIES', {
+      categoryId,
+      adType,
+      totalRows: data.length,
+      successRows: successCount,
+      failedRows: errors.length,
+    }, ip);
+
+    return {
+      success: true,
+      totalRows: data.length,
+      successRows: successCount,
+      failedRows: errors.length,
+      errors: errors.slice(0, 10),
+    };
+  }
+
+  // Helper: Build custom fields from row data
+  private buildCustomFields(row: any, categorySlug: string, adType: string): any {
+    const fields: any = {};
+    
+    // Common fields
+    if (row['תיווך']) fields.isBrokered = this.parseBoolean(row['תיווך']);
+    if (row['סוג הנכס']) fields.propertyType = row['סוג הנכס'];
+    if (row['מספר חדרים']) fields.rooms = parseFloat(row['מספר חדרים'].toString());
+    if (row['שטח במר']) fields.squareMeters = parseFloat(row['שטח במר'].toString());
+    if (row['קומה']) fields.floor = row['קומה'].toString();
+    if (row['מצב הנכס']) fields.condition = row['מצב הנכס'];
+    if (row['ריהוט']) fields.furniture = row['ריהוט'];
+    if (row['תאריך כניסה']) fields.entryDate = row['תאריך כניסה'];
+    if (row['ארנונה']) fields.propertyTax = parseFloat(row['ארנונה'].toString());
+    if (row['ועד בית']) fields.vaadBait = parseFloat(row['ועד בית'].toString());
+    
+    // Boolean fields
+    if (row['חניה']) fields.parking = this.parseBoolean(row['חניה']);
+    if (row['מחסן']) fields.storage = this.parseBoolean(row['מחסן']);
+    if (row['ממד']) fields.shelter = this.parseBoolean(row['ממד']);
+    if (row['מרפסת סוכה']) fields.sukkahBalcony = this.parseBoolean(row['מרפסת סוכה']);
+    if (row['מעלית']) fields.elevator = this.parseBoolean(row['מעלית']);
+    if (row['נוף']) fields.view = this.parseBoolean(row['נוף']);
+    if (row['יחידת הורים']) fields.masterBedroom = this.parseBoolean(row['יחידת הורים']);
+    if (row['יחידת דיור']) fields.housingUnit = this.parseBoolean(row['יחידת דיור']);
+    if (row['חצר']) fields.yard = this.parseBoolean(row['חצר']);
+    if (row['מיזוג']) fields.airConditioning = this.parseBoolean(row['מיזוג']);
+    if (row['אופציה']) fields.option = this.parseBoolean(row['אופציה']);
+    
+    // Wanted-specific fields
+    if (row['מספר מרפסות'] || row['מרפסות']) {
+      fields.balconies = parseFloat((row['מספר מרפסות'] || row['מרפסות']).toString());
+    }
+
+    // Contact info
+    if (row['שם']) fields.contactName = row['שם'];
+    if (row['טלפון']) fields.contactPhone = row['טלפון'];
+
+    return fields;
+  }
+
+  // Helper: Build title from row data
+  private buildTitle(row: any, categorySlug: string, adType: string): string {
+    const isWanted = adType && adType.includes('WANTED');
+    
+    if (isWanted) {
+      const rooms = row['מספר חדרים'] || '';
+      const location = row['רחוב / אזור מבוקש'] || '';
+      return `מחפש ${row['סוג הנכס'] || 'נכס'} ${rooms ? rooms + ' חדרים' : ''} ${location ? 'ב' + location : ''}`.trim();
+    }
+    
+    const propertyType = row['סוג הנכס'] || 'נכס';
+    const rooms = row['מספר חדרים'] || '';
+    const city = row['עיר'] || '';
+    const street = row['רחוב'] || '';
+    
+    return `${propertyType} ${rooms ? rooms + ' חדרים' : ''} ${street ? 'ב' + street : ''} ${city}`.trim();
+  }
+
+  // Helper: Build address from row data
+  private buildAddress(row: any, adType: string): string | null {
+    const isWanted = adType && adType.includes('WANTED');
+    
+    if (isWanted) {
+      return null; // Wanted ads don't have specific address
+    }
+    
+    const street = row['רחוב'] || '';
+    const houseNumber = row['מספר בית'] || '';
+    
+    if (!street) return null;
+    
+    return `${street}${houseNumber ? ' ' + houseNumber : ''}`.trim();
+  }
+
+  // Helper: Parse boolean values
+  private parseBoolean(value: any): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const lower = value.toLowerCase().trim();
+      return lower === 'כן' || lower === 'yes' || lower === 'true' || lower === '1';
+    }
+    return false;
   }
 }
 
