@@ -131,7 +131,7 @@ const ResidentialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
             images={formData.images}
             onChange={handleImagesChange}
             minImages={0}
-            maxImages={15}
+            maxImages={6}
             maxFileSize={5}
           />
           {errors.images && (
