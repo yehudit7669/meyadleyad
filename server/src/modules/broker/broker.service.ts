@@ -418,7 +418,7 @@ export class BrokerService {
             cityId: cityRecord?.id,
             address,
             requestedLocationText,
-            isWanted,
+            isWanted: isWanted || false,
             adType,
             customFields,
             status: 'PENDING',

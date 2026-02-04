@@ -245,8 +245,9 @@ export default function NewspaperLayoutPage() {
           orderBy: 'city'
         });
         
-        if (response.data.successCount > 0) {
-          alert(`✅ הלוח הכללי הופץ ל-${response.data.successCount} נמענים בהצלחה`);
+        const data = response.data as { successCount: number; failedCount: number };
+        if (data.successCount > 0) {
+          alert(`✅ הלוח הכללי הופץ ל-${data.successCount} נמענים בהצלחה`);
           setShowDistributeModal(false);
           setEmailList('');
           setSelectedAd(null);

@@ -338,20 +338,6 @@ export class BrokerController {
       next(error);
     }
   }
-
-  // POST /api/broker/import/request-permission
-  async requestImportPermission(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const userId = req.user!.id;
-      const ip = req.ip;
-      const { reason } = req.body;
-      
-      const result = await brokerService.requestImportPermission(userId, reason, ip);
-      res.json({ message: 'הבקשה נשלחה בהצלחה', data: result });
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 
 export const brokerController = new BrokerController();
