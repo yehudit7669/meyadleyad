@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Newspaper, Eye, Download, RefreshCw, Send, Trash2, FileText, Calendar, MapPin, Edit } from 'lucide-react';
+import { Newspaper, Eye, Download, RefreshCw, Send, Trash2, FileText, Calendar, MapPin, Edit, Globe } from 'lucide-react';
 import { api } from '../../services/api';
 
 interface NewspaperAd {
@@ -48,6 +48,7 @@ export default function NewspaperLayoutPage() {
   const [selectedAd, setSelectedAd] = useState<NewspaperAd | null>(null);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
   const [emailList, setEmailList] = useState('');
+  const [generatingGeneral, setGeneratingGeneral] = useState(false);
 
   // Fetch newspaper PDFs
   const { data, isLoading } = useQuery({
@@ -151,6 +152,57 @@ export default function NewspaperLayoutPage() {
     }
   };
 
+  // View General Sheet
+  const handleGenerateGeneralSheet = async () => {
+    setGeneratingGeneral(true);
+    try {
+      const response = await api.get('/admin/newspaper-sheets/general/view?orderBy=city', {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data as BlobPart], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      
+      // Cleanup
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    } catch (error: any) {
+      alert(`❌ שגיאה בצפייה בלוח כללי: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setGeneratingGeneral(false);
+    }
+  };
+
+  // Download General Sheet
+  const handleDownloadGeneralSheet = async () => {
+    setGeneratingGeneral(true);
+    try {
+      const response = await api.get('/admin/newspaper-sheets/general/download?orderBy=city', {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data as BlobPart], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `general-newspaper-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    } catch (error: any) {
+      alert(`❌ שגיאה בהורדת לוח כללי: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setGeneratingGeneral(false);
+    }
+  };
+
+  // Distribute General Sheet
+  const handleDistributeGeneralSheet = () => {
+    setSelectedAd({ id: 'general', isGeneral: true } as any);
+    setShowDistributeModal(true);
+  };
+
   const handleRegenerate = (newspaperAdId: string) => {
     if (confirm('האם לייצר גרסה חדשה של PDF זה? הגרסה הקיימת תישאר.')) {
       regenerateMutation.mutate(newspaperAdId);
@@ -163,7 +215,7 @@ export default function NewspaperLayoutPage() {
     }
   };
 
-  const handleDistribute = () => {
+  const handleDistribute = async () => {
     if (!selectedAd) return;
 
     const emails = emailList
@@ -185,6 +237,27 @@ export default function NewspaperLayoutPage() {
       return;
     }
 
+    // Check if this is the general sheet
+    if ((selectedAd as any).isGeneral) {
+      try {
+        const response = await api.post('/admin/newspaper-sheets/general/distribute', {
+          emailList: emails,
+          orderBy: 'city'
+        });
+        
+        if (response.data.successCount > 0) {
+          alert(`✅ הלוח הכללי הופץ ל-${response.data.successCount} נמענים בהצלחה`);
+          setShowDistributeModal(false);
+          setEmailList('');
+          setSelectedAd(null);
+        }
+      } catch (error: any) {
+        alert(`❌ שגיאה בהפצת לוח כללי: ${error.response?.data?.error || error.message}`);
+      }
+      return;
+    }
+
+    // Regular sheet distribution
     distributeMutation.mutate({
       newspaperAdId: selectedAd.id,
       emails,
@@ -296,6 +369,92 @@ export default function NewspaperLayoutPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
+                {/* General Sheet - Special Row (Always First) */}
+                <tr className="bg-gradient-to-r from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 transition-colors border-2 border-amber-200">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+                      <Globe className="w-4 h-4" />
+                      תמיד מעודכן
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <code className="text-xs bg-amber-100 px-2 py-1 rounded font-semibold text-amber-900">
+                      GENERAL
+                    </code>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="max-w-xs">
+                      <div className="font-bold text-amber-900 flex items-center gap-2">
+                        <Globe className="w-5 h-5" />
+                        לוח מודעות כללי
+                      </div>
+                      <div className="text-sm text-amber-700 mt-1">
+                        מאגד את כל הנכסים מכל הקטגוריות והערים
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm font-semibold bg-amber-200 text-amber-900">
+                      כל הנכסים
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      אוטומטי
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-sm font-mono text-amber-900">-</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-amber-800 font-medium">מערכת</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {/* View */}
+                      <button
+                        onClick={handleGenerateGeneralSheet}
+                        disabled={generatingGeneral}
+                        className="p-2 text-amber-700 hover:bg-amber-100 disabled:text-gray-400 rounded transition-colors"
+                        title="צפייה בלוח כללי"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      
+                      {/* Download */}
+                      <button
+                        onClick={handleDownloadGeneralSheet}
+                        disabled={generatingGeneral}
+                        className="p-2 text-amber-700 hover:bg-amber-100 disabled:text-gray-400 rounded transition-colors"
+                        title="הורדת לוח כללי"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      
+                      {/* Regenerate */}
+                      <button
+                        onClick={handleGenerateGeneralSheet}
+                        disabled={generatingGeneral}
+                        className="p-2 text-amber-700 hover:bg-amber-100 disabled:text-gray-400 rounded transition-colors"
+                        title="רענן לוח כללי"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                      
+                      {/* Distribute */}
+                      <button
+                        onClick={handleDistributeGeneralSheet}
+                        disabled={generatingGeneral}
+                        className="p-2 text-amber-700 hover:bg-amber-100 disabled:text-gray-400 rounded transition-colors"
+                        title="הפצת לוח כללי"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                
+                {/* Regular Sheets */}
                 {newspaperAds.map((newspaperAd: NewspaperAd) => (
                   <tr key={newspaperAd.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">

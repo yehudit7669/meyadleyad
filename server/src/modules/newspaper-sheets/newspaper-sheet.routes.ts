@@ -74,6 +74,43 @@ router.patch(
 );
 
 /**
+ * Generate General Sheet PDF (all properties)
+ * POST /api/admin/newspaper-sheets/general/generate-pdf
+ * ⚠️ Must be BEFORE /:id routes to avoid route conflict
+ */
+router.post(
+  '/general/generate-pdf',
+  newspaperSheetController.generateGeneralSheetPDF.bind(newspaperSheetController)
+);
+
+/**
+ * View General Sheet PDF
+ * GET /api/admin/newspaper-sheets/general/view
+ */
+router.get(
+  '/general/view',
+  newspaperSheetController.viewGeneralSheetPDF.bind(newspaperSheetController)
+);
+
+/**
+ * Download General Sheet PDF
+ * GET /api/admin/newspaper-sheets/general/download
+ */
+router.get(
+  '/general/download',
+  newspaperSheetController.downloadGeneralSheetPDF.bind(newspaperSheetController)
+);
+
+/**
+ * Distribute General Sheet PDF
+ * POST /api/admin/newspaper-sheets/general/distribute
+ */
+router.post(
+  '/general/distribute',
+  newspaperSheetController.distributeGeneralSheetPDF.bind(newspaperSheetController)
+);
+
+/**
  * Generate PDF for sheet
  * POST /api/admin/newspaper-sheets/:id/generate-pdf
  */

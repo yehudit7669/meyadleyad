@@ -124,3 +124,22 @@ export interface SheetListQuery {
   cityId?: string;
   status?: NewspaperSheetStatus;
 }
+
+/**
+ * General Sheet Options
+ * אפשרויות ליצירת לוח מודעות כללי
+ */
+export interface GeneralSheetOptions {
+  force?: boolean;  // כפה יצירה חדשה גם אם קיים PDF
+  orderBy?: 'city' | 'category';  // סדר הדפים: לפי עיר או קטגוריה
+}
+
+/**
+ * Combined Sheet for General Newspaper
+ * גיליון משולב ללוח המודעות הכללי
+ */
+export interface CombinedSheetData {
+  cityName: string;
+  categoryName: string;
+  sheets: SheetWithListings[];
+}

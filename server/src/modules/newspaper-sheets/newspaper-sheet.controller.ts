@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { newspaperSheetService } from './newspaper-sheet.service';
 import { NewspaperSheetStatus } from '@prisma/client';
+import { EmailService } from '../email/email.service';
+import { AuditService } from '../profile/audit.service';
+import path from 'path';
+import fs from 'fs/promises';
 
 // הרחבת Request עם user
 interface AuthRequest extends Request {
@@ -212,6 +216,173 @@ export class NewspaperSheetController {
       res.json(sheet);
     } catch (error: any) {
       console.error('Error getting/creating sheet:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/admin/newspaper-sheets/general/generate-pdf
+   * יצירת PDF כללי של כל הנכסים
+   */
+  async generateGeneralSheetPDF(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user?.id || '';
+      const { force = false, orderBy = 'city' } = req.body;
+
+      console.log('📰 Controller: Generating general sheet PDF...');
+
+      const result = await newspaperSheetService.generateGeneralSheetPDF(userId, {
+        force,
+        orderBy
+      });
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error generating general sheet PDF:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/admin/newspaper-sheets/general/view
+   * צפייה בלוח כללי (inline)
+   */
+  async viewGeneralSheetPDF(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user?.id || '';
+      const orderBy = (req.query.orderBy as string) || 'city';
+
+      console.log('📰 Controller: Viewing general sheet PDF...');
+
+      // Generate fresh PDF
+      const result = await newspaperSheetService.generateGeneralSheetPDF(userId, {
+        force: false,
+        orderBy: orderBy as 'city' | 'category'
+      });
+
+      // Serve PDF inline
+      const filePath = path.join(process.cwd(), result.pdfPath);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline');
+      
+      const fileBuffer = await fs.readFile(filePath);
+      res.send(fileBuffer);
+    } catch (error: any) {
+      console.error('Error viewing general sheet PDF:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/admin/newspaper-sheets/general/download
+   * הורדת לוח כללי
+   */
+  async downloadGeneralSheetPDF(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user?.id || '';
+      const orderBy = (req.query.orderBy as string) || 'city';
+
+      console.log('📰 Controller: Downloading general sheet PDF...');
+
+      // Generate fresh PDF
+      const result = await newspaperSheetService.generateGeneralSheetPDF(userId, {
+        force: false,
+        orderBy: orderBy as 'city' | 'category'
+      });
+
+      // Serve PDF as download
+      const filePath = path.join(process.cwd(), result.pdfPath);
+      const filename = path.basename(filePath);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      const fileBuffer = await fs.readFile(filePath);
+      res.send(fileBuffer);
+    } catch (error: any) {
+      console.error('Error downloading general sheet PDF:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * POST /api/admin/newspaper-sheets/general/distribute
+   * הפצת לוח כללי לרשימת תפוצה
+   */
+  async distributeGeneralSheetPDF(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user?.id || '';
+      const { emailList, orderBy = 'city' } = req.body;
+
+      if (!emailList || !Array.isArray(emailList) || emailList.length === 0) {
+        res.status(400).json({ error: 'Email list is required' });
+        return;
+      }
+
+      console.log('📰 Controller: Distributing general sheet PDF...');
+
+      // Generate fresh PDF
+      const result = await newspaperSheetService.generateGeneralSheetPDF(userId, {
+        force: false,
+        orderBy: orderBy as 'city' | 'category'
+      });
+
+      // Send email to each recipient
+      const emailService = new EmailService();
+      const filePath = path.join(process.cwd(), result.pdfPath);
+      const pdfBuffer = await fs.readFile(filePath);
+      const filename = path.basename(filePath);
+
+      let successCount = 0;
+      let failedEmails: string[] = [];
+
+      for (const email of emailList) {
+        try {
+          await emailService.sendEmail(
+            email,
+            'לוח מודעות כללי - מיעדליעד',
+            `
+              <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right;">
+                <h2>שלום,</h2>
+                <p>מצורף לוח מודעות כללי ממערכת מיעדליעד</p>
+                <p>הלוח כולל את כל המודעות הפעילות מכל הערים והקטגוריות.</p>
+                <p>הקובץ מצורף כ-PDF.</p>
+                <hr>
+                <p style="color: #666; font-size: 12px;">מערכת מיעדליעד - מודעות מסווגות</p>
+              </div>
+            `,
+            [
+              {
+                filename,
+                content: pdfBuffer
+              }
+            ]
+          );
+          successCount++;
+        } catch (emailError) {
+          console.error(`Failed to send to ${email}:`, emailError);
+          failedEmails.push(email);
+        }
+      }
+
+      // Log distribution
+      await AuditService.log(userId, 'GENERAL_SHEET_DISTRIBUTED', {
+        sheetsCount: result.sheetsCount,
+        emailsSent: successCount,
+        emailsFailed: failedEmails.length,
+        failedEmails
+      });
+
+      res.json({
+        success: true,
+        message: `General sheet distributed to ${successCount} recipients`,
+        successCount,
+        failedCount: failedEmails.length,
+        failedEmails
+      });
+    } catch (error: any) {
+      console.error('Error distributing general sheet PDF:', error);
       res.status(500).json({ error: error.message });
     }
   }

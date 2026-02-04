@@ -492,6 +492,42 @@ export class NewspaperSheetService {
 
     return true;
   }
+
+  /**
+   * Generate General Sheet PDF
+   * יצירת PDF כללי של כל הנכסים באתר
+   */
+  async generateGeneralSheetPDF(userId: string, options: { force?: boolean; orderBy?: 'city' | 'category' } = {}) {
+    const { newspaperGeneralSheetService } = await import('./newspaper-general-sheet.service.js');
+    
+    console.log('📰 Starting general sheet PDF generation...');
+    
+    // יצירת PDF
+    const pdfBuffer = await newspaperGeneralSheetService.generateGeneralSheetPDF({
+      orderBy: options.orderBy || 'city',
+      force: options.force
+    });
+
+    // שמירת PDF
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'newspaper-sheets');
+    await fs.mkdir(uploadsDir, { recursive: true });
+
+    const filename = `general_sheet_${Date.now()}.pdf`;
+    const filePath = path.join(uploadsDir, filename);
+
+    await fs.writeFile(filePath, pdfBuffer);
+
+    const pdfPath = `/uploads/newspaper-sheets/${filename}`;
+
+    await AuditService.log(userId, 'GENERAL_SHEET_PDF_GENERATED', {
+      pdfPath,
+      orderBy: options.orderBy || 'city'
+    });
+
+    console.log(`✅ General sheet PDF saved: ${pdfPath}`);
+
+    return { pdfPath };
+  }
 }
 
 export const newspaperSheetService = new NewspaperSheetService();
