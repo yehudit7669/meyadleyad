@@ -439,7 +439,11 @@ export default function PendingAds() {
 
               {/* כרטיסים - תצוגה למובייל */}
               <div className="lg:hidden space-y-4">
-                {filteredAds.map((ad: any) => (
+                {filteredAds.map((ad: any) => {
+                  const currentImageIndex = tableImageIndexes[ad.id] || 0;
+                  const images = ad.AdImage?.sort((a: any, b: any) => a.order - b.order) || [];
+                  
+                  return (
                   <div key={ad.id} className="bg-white rounded-lg shadow-md p-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start">
@@ -465,6 +469,68 @@ export default function PendingAds() {
                             <div className="text-sm text-gray-700">{ad.User.phone}</div>
                           )}
                         </div>
+                      </div>
+                      
+                      {/* תיאור */}
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 mb-1">תיאור:</div>
+                        <p className="text-sm text-gray-700 line-clamp-3">
+                          {ad.description || 'אין תיאור'}
+                        </p>
+                      </div>
+                      
+                      {/* תמונות */}
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 mb-2">תמונות:</div>
+                        <div className="flex items-center justify-center">
+                          {images.length > 0 ? (
+                            <div className="relative group w-full">
+                              <img
+                                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`}
+                                alt="תמונת נכס"
+                                className="w-full h-48 object-cover rounded-lg cursor-pointer"
+                                onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`, '_blank')}
+                              />
+                              {images.length > 1 && (
+                                <>
+                                  <button
+                                    onClick={() => setTableImageIndexes(prev => ({
+                                      ...prev,
+                                      [ad.id]: currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1
+                                    }))}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full text-sm opacity-0 group-hover:opacity-100 transition"
+                                  >
+                                    ←
+                                  </button>
+                                  <button
+                                    onClick={() => setTableImageIndexes(prev => ({
+                                      ...prev,
+                                      [ad.id]: currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1
+                                    }))}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 text-white p-2 rounded-full text-sm opacity-0 group-hover:opacity-100 transition"
+                                  >
+                                    →
+                                  </button>
+                                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm">
+                                    {currentImageIndex + 1}/{images.length}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
+                              אין תמונות
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* צפיות */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">צפיות:</span>
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                          👁️ {ad.views || 0}
+                        </span>
                       </div>
                       
                       <div className="flex gap-2">
@@ -523,7 +589,8 @@ export default function PendingAds() {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
