@@ -503,7 +503,7 @@ export class NewspaperSheetService {
     console.log('📰 Starting general sheet PDF generation...');
     
     // יצירת PDF
-    const pdfBuffer = await newspaperGeneralSheetService.generateGeneralSheetPDF({
+    const result = await newspaperGeneralSheetService.generateGeneralSheetPDF({
       orderBy: options.orderBy || 'city',
       force: options.force
     });
@@ -515,18 +515,19 @@ export class NewspaperSheetService {
     const filename = `general_sheet_${Date.now()}.pdf`;
     const filePath = path.join(uploadsDir, filename);
 
-    await fs.writeFile(filePath, pdfBuffer);
+    await fs.writeFile(filePath, result.pdfBuffer);
 
     const pdfPath = `/uploads/newspaper-sheets/${filename}`;
 
     await AuditService.log(userId, 'GENERAL_SHEET_PDF_GENERATED', {
       pdfPath,
+      sheetsCount: result.sheetsCount,
       orderBy: options.orderBy || 'city'
     });
 
     console.log(`✅ General sheet PDF saved: ${pdfPath}`);
 
-    return { pdfPath };
+    return { pdfPath, sheetsCount: result.sheetsCount };
   }
 }
 

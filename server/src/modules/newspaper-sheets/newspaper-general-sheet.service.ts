@@ -16,7 +16,7 @@ export class NewspaperGeneralSheetService {
    * Generate General Newspaper PDF
    * יצירת PDF כללי של כל הנכסים באתר
    */
-  async generateGeneralSheetPDF(options: GeneralSheetOptions = {}): Promise<Buffer> {
+  async generateGeneralSheetPDF(options: GeneralSheetOptions = {}): Promise<{ pdfBuffer: Buffer; sheetsCount: number }> {
     const { orderBy = 'city' } = options;
 
     // שליפת כל הלוחות הפעילים
@@ -65,7 +65,10 @@ export class NewspaperGeneralSheetService {
     await browser.close();
 
     console.log(`✅ General sheet PDF generated successfully`);
-    return Buffer.from(pdfBuffer);
+    return {
+      pdfBuffer: Buffer.from(pdfBuffer),
+      sheetsCount: sheets.length
+    };
   }
 
   /**
