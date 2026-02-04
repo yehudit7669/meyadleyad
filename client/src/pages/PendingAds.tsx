@@ -278,8 +278,17 @@ export default function PendingAds() {
                           {/* כתובת */}
                           <td className="px-4 py-4 text-sm">
                             <div className="max-w-xs">
-                              <div className="font-medium text-gray-900">{ad.City?.nameHe || 'לא צוין'}</div>
-                              {ad.Street && <div className="text-xs text-gray-700">{ad.Street.name}</div>}
+                              {ad.address ? (
+                                <>
+                                  <div className="font-medium text-gray-900">{ad.address}</div>
+                                  {ad.City?.nameHe && <div className="text-xs text-gray-700">{ad.City.nameHe}</div>}
+                                </>
+                              ) : (
+                                <>
+                                  <div className="font-medium text-gray-900">{ad.City?.nameHe || 'לא צוין'}</div>
+                                  {ad.Street && <div className="text-xs text-gray-700">{ad.Street.name}</div>}
+                                </>
+                              )}
                             </div>
                           </td>
                           
@@ -439,8 +448,11 @@ export default function PendingAds() {
                             {new Date(ad.createdAt).toLocaleDateString('he-IL')}
                           </div>
                           <div className="font-bold text-lg mb-1 text-gray-900">
-                            {ad.City?.nameHe}
-                            {ad.Street && `, ${ad.Street.name}`}
+                            {ad.address ? (
+                              <>{ad.address}{ad.City?.nameHe && `, ${ad.City.nameHe}`}</>
+                            ) : (
+                              <>{ad.City?.nameHe}{ad.Street && `, ${ad.Street.name}`}</>
+                            )}
                           </div>
                           <div className="text-sm text-gray-800 mb-1 font-medium">
                             {getPropertyType(ad.Category?.nameHe || '')}
