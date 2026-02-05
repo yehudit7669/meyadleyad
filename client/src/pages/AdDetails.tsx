@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { adsService } from '../services/api';
 import { useState, useEffect } from 'react';
 import { useAnalytics } from '../utils/analytics';
-import { formatCustomFields } from '../utils/fieldLabels';
 import SEO from '../components/SEO';
 import AdMap from '../components/AdMap';
 import AppointmentCard from '../components/appointments/AppointmentCard';
