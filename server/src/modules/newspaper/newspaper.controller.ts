@@ -190,12 +190,12 @@ export class NewspaperController {
             `
               <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right;">
                 <h2>שלום,</h2>
-                <p>מצורף מודעה בתצורת עיתון מ-מיעדליעד:</p>
+                <p>מצורף מודעה בתצורת עיתון מ-מקומי:</p>
                 <p><strong>${newspaperAd.title}</strong></p>
                 <p>${(newspaperAd as any).address || ''}</p>
                 <p>הקובץ מצורף כ-PDF.</p>
                 <hr>
-                <p style="color: #666; font-size: 12px;">מערכת מיעדליעד - מודעות מסווגות</p>
+                <p style="color: #666; font-size: 12px;">מערכת מקומי - מודעות מסווגות</p>
               </div>
             `,
             [{

@@ -73,21 +73,21 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Authentication & Registration
   [EmailType.USER_REGISTER_CONFIRMATION]: {
     type: EmailType.USER_REGISTER_CONFIRMATION,
-    subject: 'אימות כתובת מייל - מיעדליעד',
+    subject: 'אימות כתובת מייל - מקומי',
     description: 'מייל אימות לאחר הרשמה',
     requiresAuth: false,
     category: 'auth',
   },
   [EmailType.PASSWORD_RESET]: {
     type: EmailType.PASSWORD_RESET,
-    subject: 'איפוס סיסמה - מיעדליעד',
+    subject: 'איפוס סיסמה - מקומי',
     description: 'מייל איפוס סיסמה',
     requiresAuth: false,
     category: 'auth',
   },
   [EmailType.ACCOUNT_DELETION_CONFIRMATION]: {
     type: EmailType.ACCOUNT_DELETION_CONFIRMATION,
-    subject: 'החשבון שלך נמחק - מיעדליעד',
+    subject: 'החשבון שלך נמחק - מקומי',
     description: 'אישור מחיקת חשבון',
     requiresAuth: false,
     category: 'auth',
@@ -96,7 +96,7 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Email Operations - User Not Registered
   [EmailType.USER_NOT_REGISTERED_REDIRECT_TO_SIGNUP]: {
     type: EmailType.USER_NOT_REGISTERED_REDIRECT_TO_SIGNUP,
-    subject: 'נדרשת הרשמה - מיעדליעד',
+    subject: 'נדרשת הרשמה - מקומי',
     description: 'הפניה להרשמה למשתמש לא רשום',
     requiresAuth: false,
     category: 'ads',
@@ -105,35 +105,35 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Email Operations - Ad Publishing
   [EmailType.AD_PUBLISH_REQUEST_RECEIVED]: {
     type: EmailType.AD_PUBLISH_REQUEST_RECEIVED,
-    subject: 'בקשתך לפרסום מודעה התקבלה - מיעדליעד',
+    subject: 'בקשתך לפרסום מודעה התקבלה - מקומי',
     description: 'אישור קבלת בקשה לפרסום מודעה',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_WANTED_REQUEST_RECEIVED]: {
     type: EmailType.AD_WANTED_REQUEST_RECEIVED,
-    subject: 'בקשתך לפרסום דרושים התקבלה - מיעדליעד',
+    subject: 'בקשתך לפרסום דרושים התקבלה - מקומי',
     description: 'אישור קבלת בקשה לפרסום דרושים',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_UPDATE_REQUEST_RECEIVED]: {
     type: EmailType.AD_UPDATE_REQUEST_RECEIVED,
-    subject: 'בקשתך לעדכון מודעה התקבלה - מיעדליעד',
+    subject: 'בקשתך לעדכון מודעה התקבלה - מקומי',
     description: 'אישור קבלת בקשה לעדכון',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_REMOVE_REQUEST_RECEIVED]: {
     type: EmailType.AD_REMOVE_REQUEST_RECEIVED,
-    subject: 'בקשתך להסרת מודעה התקבלה - מיעדליעד',
+    subject: 'בקשתך להסרת מודעה התקבלה - מקומי',
     description: 'אישור קבלת בקשה להסרה',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_FORM_LINK_SENT]: {
     type: EmailType.AD_FORM_LINK_SENT,
-    subject: 'קישור לטופס פרסום - מיעדליעד',
+    subject: 'קישור לטופס פרסום - מקומי',
     description: 'שליחת קישור לטופס Google Forms',
     requiresAuth: true,
     category: 'ads',
@@ -142,21 +142,21 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Ad Lifecycle - Status Updates
   [EmailType.AD_CREATED_PENDING_APPROVAL]: {
     type: EmailType.AD_CREATED_PENDING_APPROVAL,
-    subject: 'המודעה שלך התקבלה והועברה לאישור - מיעדליעד',
+    subject: 'המודעה שלך התקבלה והועברה לאישור - מקומי',
     description: 'מודעה נוצרה וממתינה לאישור מנהל',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_APPROVED]: {
     type: EmailType.AD_APPROVED,
-    subject: 'המודעה שלך אושרה ופורסמה בהצלחה - מיעדליעד',
+    subject: 'המודעה שלך אושרה ופורסמה בהצלחה - מקומי',
     description: 'מודעה אושרה על ידי מנהל',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_REJECTED]: {
     type: EmailType.AD_REJECTED,
-    subject: 'המודעה שלך לא אושרה לפרסום - מיעדליעד',
+    subject: 'המודעה שלך לא אושרה לפרסום - מקומי',
     description: 'מודעה נדחתה על ידי מנהל',
     requiresAuth: true,
     category: 'ads',
@@ -170,14 +170,14 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   },
   [EmailType.AD_UPDATED_CONFIRMATION]: {
     type: EmailType.AD_UPDATED_CONFIRMATION,
-    subject: 'המודעה עודכנה בהצלחה - מיעדליעד',
+    subject: 'המודעה עודכנה בהצלחה - מקומי',
     description: 'אישור עדכון מודעה',
     requiresAuth: true,
     category: 'ads',
   },
   [EmailType.AD_REMOVED_CONFIRMATION]: {
     type: EmailType.AD_REMOVED_CONFIRMATION,
-    subject: 'המודעה הוסרה בהצלחה - מיעדליעד',
+    subject: 'המודעה הוסרה בהצלחה - מקומי',
     description: 'אישור הסרת מודעה',
     requiresAuth: true,
     category: 'ads',
@@ -186,28 +186,28 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Appointments
   [EmailType.APPOINTMENT_REQUEST_SENT]: {
     type: EmailType.APPOINTMENT_REQUEST_SENT,
-    subject: 'בקשה חדשה להצגת נכס - מיעדליעד',
+    subject: 'בקשה חדשה להצגת נכס - מקומי',
     description: 'התראה למפרסם על בקשת פגישה',
     requiresAuth: true,
     category: 'appointments',
   },
   [EmailType.APPOINTMENT_APPROVED]: {
     type: EmailType.APPOINTMENT_APPROVED,
-    subject: 'הפגישה אושרה! - מיעדליעד',
+    subject: 'הפגישה אושרה! - מקומי',
     description: 'אישור פגישה + קובץ ICS',
     requiresAuth: true,
     category: 'appointments',
   },
   [EmailType.APPOINTMENT_REJECTED]: {
     type: EmailType.APPOINTMENT_REJECTED,
-    subject: 'הפגישה נדחתה - מיעדליעד',
+    subject: 'הפגישה נדחתה - מקומי',
     description: 'דחיית בקשת פגישה',
     requiresAuth: true,
     category: 'appointments',
   },
   [EmailType.APPOINTMENT_RESCHEDULE]: {
     type: EmailType.APPOINTMENT_RESCHEDULE,
-    subject: 'הצעה למועד פגישה חלופי - מיעדליעד',
+    subject: 'הצעה למועד פגישה חלופי - מקומי',
     description: 'הצעת מועד חלופי לפגישה',
     requiresAuth: true,
     category: 'appointments',
@@ -216,21 +216,21 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Email Operations - Mailing List
   [EmailType.MAILING_LIST_SUBSCRIBED]: {
     type: EmailType.MAILING_LIST_SUBSCRIBED,
-    subject: 'נרשמת לרשימת התפוצה - מיעדליעד',
+    subject: 'נרשמת לרשימת התפוצה - מקומי',
     description: 'אישור הרשמה לרשימת תפוצה',
     requiresAuth: true,
     category: 'mailing',
   },
   [EmailType.MAILING_LIST_UNSUBSCRIBED]: {
     type: EmailType.MAILING_LIST_UNSUBSCRIBED,
-    subject: 'בוטלה ההרשמה לרשימת התפוצה - מיעדליעד',
+    subject: 'בוטלה ההרשמה לרשימת התפוצה - מקומי',
     description: 'אישור ביטול הרשמה',
     requiresAuth: true,
     category: 'mailing',
   },
   [EmailType.MAILING_LIST_PREFERENCES_UPDATED]: {
     type: EmailType.MAILING_LIST_PREFERENCES_UPDATED,
-    subject: 'העדפות רשימת התפוצה עודכנו - מיעדליעד',
+    subject: 'העדפות רשימת התפוצה עודכנו - מקומי',
     description: 'אישור עדכון העדפות',
     requiresAuth: true,
     category: 'mailing',
@@ -239,14 +239,14 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Content Distribution
   [EmailType.WEEKLY_CONTENT_DISTRIBUTION]: {
     type: EmailType.WEEKLY_CONTENT_DISTRIBUTION,
-    subject: 'תפוצת תוכן שבועית - מיעדליעד',
+    subject: 'תפוצת תוכן שבועית - מקומי',
     description: 'תפוצה שבועית אוטומטית',
     requiresAuth: false,
     category: 'distribution',
   },
   [EmailType.MANUAL_CONTENT_DISTRIBUTION]: {
     type: EmailType.MANUAL_CONTENT_DISTRIBUTION,
-    subject: 'תפוצת תוכן - מיעדליעד',
+    subject: 'תפוצת תוכן - מקומי',
     description: 'תפוצה ידנית על ידי מנהל',
     requiresAuth: false,
     category: 'distribution',
@@ -255,28 +255,28 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Email Operations - Errors
   [EmailType.AD_NOT_FOUND]: {
     type: EmailType.AD_NOT_FOUND,
-    subject: 'המודעה לא נמצאה - מיעדליעד',
+    subject: 'המודעה לא נמצאה - מקומי',
     description: 'שגיאה - מודעה לא קיימת',
     requiresAuth: false,
     category: 'errors',
   },
   [EmailType.UNAUTHORIZED_ACTION]: {
     type: EmailType.UNAUTHORIZED_ACTION,
-    subject: 'פעולה לא מורשית - מיעדליעד',
+    subject: 'פעולה לא מורשית - מקומי',
     description: 'שגיאה - אין הרשאה',
     requiresAuth: false,
     category: 'errors',
   },
   [EmailType.RATE_LIMIT_EXCEEDED]: {
     type: EmailType.RATE_LIMIT_EXCEEDED,
-    subject: 'חרגת ממכסת המיילים - מיעדליעד',
+    subject: 'חרגת ממכסת המיילים - מקומי',
     description: 'שגיאה - rate limit',
     requiresAuth: false,
     category: 'errors',
   },
   [EmailType.EMAIL_OPERATION_ERROR]: {
     type: EmailType.EMAIL_OPERATION_ERROR,
-    subject: 'שגיאה בעיבוד הבקשה - מיעדליעד',
+    subject: 'שגיאה בעיבוד הבקשה - מקומי',
     description: 'שגיאה כללית',
     requiresAuth: false,
     category: 'errors',
@@ -285,14 +285,14 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
   // Admin Notifications
   [EmailType.ADMIN_NOTIFICATION]: {
     type: EmailType.ADMIN_NOTIFICATION,
-    subject: 'התראת מנהל - מיעדליעד',
+    subject: 'התראת מנהל - מקומי',
     description: 'התראה כללית למנהלים',
     requiresAuth: true,
     category: 'admin',
   },
   [EmailType.NEWSPAPER_SHEET_READY]: {
     type: EmailType.NEWSPAPER_SHEET_READY,
-    subject: 'גיליון עיתון מוכן - מיעדליעד',
+    subject: 'גיליון עיתון מוכן - מקומי',
     description: 'התראה שגיליון עיתון מוכן',
     requiresAuth: true,
     category: 'admin',

@@ -696,7 +696,7 @@ export class PDFService {
               ${logoBase64 ? `
                 <img src="${logoBase64}" alt="לוגו האתר" class="logo-img" />
               ` : `
-                <div class="logo-text">מיעדליעד</div>
+                <div class="logo-text">מקומי</div>
                 <div class="logo-subtitle">הלוח השבועי של בית שמש</div>
               `}
             </div>
@@ -776,7 +776,7 @@ export class PDFService {
             
             <!-- Footer -->
             <div class="footer">
-              מסמך זה הופק באמצעות מערכת מיעדליעד • ${new Date().toLocaleDateString('he-IL')}
+              מסמך זה הופק באמצעות מערכת מקומי • ${new Date().toLocaleDateString('he-IL')}
             </div>
             
           </div>
@@ -877,7 +877,7 @@ export class PDFService {
         </head>
         <body>
           <div class="header">
-            <h1>📰 מיעדליעד - עיתון מודעות</h1>
+            <h1>📰 מקומי - עיתון מודעות</h1>
             <div class="date">${new Date().toLocaleDateString('he-IL')}</div>
           </div>
           

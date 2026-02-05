@@ -453,7 +453,7 @@ class EmailTestingController {
           
           <div class="container">
             <h1>📧 Email Testing System</h1>
-            <p class="subtitle">מערכת בדיקת מיילים - מיעדליעד</p>
+            <p class="subtitle">מערכת בדיקת מיילים - מקומי</p>
             
             <div class="stats">
               <div class="stat-card">

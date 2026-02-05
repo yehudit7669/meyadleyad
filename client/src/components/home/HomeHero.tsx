@@ -60,7 +60,7 @@ const HomeHero: React.FC = () => {
             <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <img
                 src="/hero-image-1.jpg"
-                alt="נדלן מיעדליעד"
+                alt="נדלן מקומי"
                 className="w-full h-64 md:h-80 object-cover"
                 onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                   // Fallback to gradient if image not found
@@ -74,7 +74,7 @@ const HomeHero: React.FC = () => {
             <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <img
                 src="/hero-image-2.jpg"
-                alt="נדלן מיעדליעד"
+                alt="נדלן מקומי"
                 className="w-full h-64 md:h-80 object-cover"
                 onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                   // Fallback to gradient if image not found

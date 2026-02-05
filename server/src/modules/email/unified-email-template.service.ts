@@ -211,7 +211,7 @@ export class UnifiedEmailTemplateService {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #2563eb; text-align: center;">ברוכים הבאים למיעדליעד!</h2>
+            <h2 style="color: #2563eb; text-align: center;">ברוכים הבאים למקומי!</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
               כדי לאשר את כתובת המייל שלך ולהפעיל את החשבון, לחץ על הכפתור הבא:
@@ -268,7 +268,7 @@ export class UnifiedEmailTemplateService {
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
             <h2 style="color: #dc2626; text-align: center;">החשבון שלך נמחק</h2>
             <p style="font-size: 16px;">שלום,</p>
-            <p style="font-size: 16px;">החשבון שלך באתר מיעדליעד נמחק בהצלחה.</p>
+            <p style="font-size: 16px;">החשבון שלך באתר מקומי נמחק בהצלחה.</p>
             <p style="font-size: 14px; color: #666;">אם זו לא הייתה פעולה שלך, צור קשר עם התמיכה.</p>
           </div>
         </body>
@@ -696,7 +696,7 @@ export class UnifiedEmailTemplateService {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
-            <h2 style="color: #2563eb; text-align: center;">תפוצת תוכן - מיעדליעד</h2>
+            <h2 style="color: #2563eb; text-align: center;">תפוצת תוכן - מקומי</h2>
             <p style="font-size: 16px;">שלום,</p>
             ${params.content || '<p>תוכן לא זמין</p>'}
             ${params.adsCount ? `<p style="font-size: 14px; color: #666;">מספר מודעות: ${params.adsCount}</p>` : ''}

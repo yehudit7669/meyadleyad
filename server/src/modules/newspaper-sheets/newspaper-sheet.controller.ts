@@ -341,15 +341,15 @@ export class NewspaperSheetController {
         try {
           await emailService.sendEmail(
             email,
-            'לוח מודעות כללי - מיעדליעד',
+            'לוח מודעות כללי - מקומי',
             `
               <div dir="rtl" style="font-family: Arial, sans-serif; text-align: right;">
                 <h2>שלום,</h2>
-                <p>מצורף לוח מודעות כללי ממערכת מיעדליעד</p>
+                <p>מצורף לוח מודעות כללי ממערכת מקומי</p>
                 <p>הלוח כולל את כל המודעות הפעילות מכל הערים והקטגוריות.</p>
                 <p>הקובץ מצורף כ-PDF.</p>
                 <hr>
-                <p style="color: #666; font-size: 12px;">מערכת מיעדליעד - מודעות מסווגות</p>
+                <p style="color: #666; font-size: 12px;">מערכת מקומי - מודעות מסווגות</p>
               </div>
             `,
             [
