@@ -461,6 +461,15 @@ export default function ImportPropertiesFromFile() {
     setError(null);
 
     try {
+      console.log('🔐 Token check:', localStorage.getItem('accessToken') ? 'Token exists' : 'NO TOKEN');
+      console.log('📤 Sending commit request with data:', {
+        categoryId: selectedCategoryId,
+        adType: showAdTypeSelector() ? (selectedAdType === 'WANTED' ? 'WANTED_FOR_SALE' : 'REGULAR') : 'REGULAR',
+        rowCount: validRows.length,
+        firstRow: validRows[0],
+        options: { initialStatus }
+      });
+      
       const response = await api.post(
         '/admin/import/properties-file/commit',
         {
@@ -474,6 +483,17 @@ export default function ImportPropertiesFromFile() {
       );
 
       const result = response.data as any;
+      console.log('📥 Response from server:', result);
+      console.log('✅ Created ads:', result.createdAds);
+      if (result.createdAds && result.createdAds.length > 0) {
+        console.log('🏙️ First ad details:', {
+          id: result.createdAds[0].id,
+          address: result.createdAds[0].address,
+          cityId: result.createdAds[0].cityId,
+          streetId: result.createdAds[0].streetId,
+          neighborhood: result.createdAds[0].neighborhood
+        });
+      }
       setSuccess(
         `ייבוא הושלם בהצלחה! ${result.successRows} מודעות נוצרו בסטטוס ${initialStatus === 'PENDING' ? 'ממתין לאישור' : 'טיוטה'}.`
       );
@@ -482,7 +502,8 @@ export default function ImportPropertiesFromFile() {
       setSelectedCategoryId('');
     } catch (err: any) {
       console.error('Commit error:', err);
-      setError(err.response?.data?.error || 'שגיאה בשמירת הנתונים');
+      console.error('Error response:', err.response);
+      setError(err.response?.data?.error || err.response?.data?.message || 'שגיאה בשמירת הנתונים');
     } finally {
       setLoading(false);
     }

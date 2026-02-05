@@ -867,6 +867,7 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
     const errors: any[] = [];
     const results: any[] = [];
     const createdAdIds: string[] = [];
+    const createdAds: any[] = [];
 
     // Use transaction
     await prisma.$transaction(async (tx) => {
@@ -898,10 +899,49 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
 
           // Find city if provided (for regular ads)
           let cityRecord = null;
+          let streetRecord = null;
+          let neighborhood = null;
+          
           if (!isWanted && row.city) {
+            const cityName = row.city.toString().trim();
+            console.log('🔍 ADMIN: Searching for city:', cityName);
+            
             cityRecord = await tx.city.findFirst({
-              where: { name: { contains: row.city, mode: 'insensitive' } },
+              where: { 
+                OR: [
+                  { name: { equals: cityName, mode: 'insensitive' } },
+                  { nameHe: { equals: cityName, mode: 'insensitive' } },
+                  { name: { contains: cityName, mode: 'insensitive' } },
+                  { nameHe: { contains: cityName, mode: 'insensitive' } },
+                ]
+              },
             });
+            console.log('🏙️ ADMIN: City found:', cityRecord ? `${cityRecord.nameHe} (ID: ${cityRecord.id})` : 'NOT FOUND');
+            
+            // Find street if city found and street provided
+            if (cityRecord && row.street) {
+              const streetName = row.street.toString().trim();
+              console.log('🔍 ADMIN: Searching for street:', streetName, 'in city:', cityRecord.nameHe);
+              
+              streetRecord = await tx.street.findFirst({
+                where: {
+                  OR: [
+                    { name: { equals: streetName, mode: 'insensitive' } },
+                    { name: { contains: streetName, mode: 'insensitive' } },
+                  ],
+                  cityId: cityRecord.id,
+                },
+                include: {
+                  Neighborhood: true,
+                },
+              });
+              console.log('🛣️ ADMIN: Street found:', streetRecord ? `${streetRecord.name} (ID: ${streetRecord.id})` : 'NOT FOUND');
+              
+              if (streetRecord?.Neighborhood) {
+                neighborhood = streetRecord.Neighborhood.name;
+                console.log('🏘️ ADMIN: Neighborhood:', neighborhood);
+              }
+            }
           }
 
           // Create ad
@@ -914,6 +954,8 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
               userId: user.id,
               categoryId: category.id,
               cityId: cityRecord?.id,
+              streetId: streetRecord?.id,
+              neighborhood: neighborhood,
               address,
               requestedLocationText,
               isWanted,
@@ -925,6 +967,7 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
           });
 
           createdAdIds.push(newAd.id);
+          createdAds.push(newAd);
           successCount++;
           results.push({
             rowIndex: row.rowNumber,
@@ -967,6 +1010,7 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
       failedRows: failedCount,
       results,
       errors: errors.slice(0, 10),
+      createdAds: createdAds,
     });
 
   } catch (error: any) {
@@ -1626,10 +1670,10 @@ function buildAddress(row: any, adType?: string): string | null {
     return row.requestedLocation || null;
   }
   
+  // Build address: street + house number (NO city - city is stored separately in cityId)
   const parts = [];
   if (row.street) parts.push(row.street);
   if (row.houseNumber) parts.push(row.houseNumber);
-  if (row.city) parts.push(row.city);
   return parts.length > 0 ? parts.join(' ') : null;
 }
 

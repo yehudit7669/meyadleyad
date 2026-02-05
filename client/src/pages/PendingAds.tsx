@@ -278,16 +278,11 @@ export default function PendingAds() {
                           {/* כתובת */}
                           <td className="px-4 py-4 text-sm">
                             <div className="max-w-xs">
-                              {ad.address ? (
-                                <>
-                                  <div className="font-medium text-gray-900">{ad.address}</div>
-                                  {ad.City?.nameHe && <div className="text-xs text-gray-700">{ad.City.nameHe}</div>}
-                                </>
-                              ) : (
-                                <>
-                                  <div className="font-medium text-gray-900">{ad.City?.nameHe || 'לא צוין'}</div>
-                                  {ad.Street && <div className="text-xs text-gray-700">{ad.Street.name}</div>}
-                                </>
+                              <div className="font-medium text-gray-900">
+                                {ad.address || ad.Street?.name || 'לא צוין'}
+                              </div>
+                              {ad.City?.nameHe && (
+                                <div className="text-xs text-gray-700">{ad.City.nameHe}</div>
                               )}
                             </div>
                           </td>

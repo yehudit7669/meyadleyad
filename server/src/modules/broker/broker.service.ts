@@ -355,6 +355,7 @@ export class BrokerService {
 
   // Import properties commit
   async importPropertiesCommit(userId: string, categoryId: string, adType: string, data: any[], ip?: string) {
+    // Force reload - updated city/street lookup logic
     console.log('🚀 Starting import commit:', { userId, categoryId, adType, dataLength: data.length });
     
     // Check permission
@@ -377,6 +378,7 @@ export class BrokerService {
     const isWanted = adType && adType.includes('WANTED');
     let successCount = 0;
     const errors: any[] = [];
+    const createdAds: any[] = [];
 
     // Import each valid row
     for (const row of data) {
@@ -399,11 +401,49 @@ export class BrokerService {
 
         // Find city if provided (for regular ads)
         let cityRecord = null;
+        let streetRecord = null;
+        let neighborhood = null;
+        
         if (!isWanted && row['עיר']) {
+          const cityName = row['עיר'].toString().trim();
+          console.log('🔍 Searching for city:', cityName);
+          
           cityRecord = await prisma.city.findFirst({
-            where: { name: { contains: row['עיר'], mode: 'insensitive' } },
+            where: { 
+              OR: [
+                { name: { equals: cityName, mode: 'insensitive' } },
+                { nameHe: { equals: cityName, mode: 'insensitive' } },
+                { name: { contains: cityName, mode: 'insensitive' } },
+                { nameHe: { contains: cityName, mode: 'insensitive' } },
+              ]
+            },
           });
-          console.log('🏙️ City found:', cityRecord?.nameHe);
+          console.log('🏙️ City found:', cityRecord ? `${cityRecord.nameHe} (ID: ${cityRecord.id})` : 'NOT FOUND');
+          
+          // Find street if city found and street provided
+          if (cityRecord && row['רחוב']) {
+            const streetName = row['רחוב'].toString().trim();
+            console.log('🔍 Searching for street:', streetName, 'in city:', cityRecord.nameHe);
+            
+            streetRecord = await prisma.street.findFirst({
+              where: {
+                OR: [
+                  { name: { equals: streetName, mode: 'insensitive' } },
+                  { name: { contains: streetName, mode: 'insensitive' } },
+                ],
+                cityId: cityRecord.id,
+              },
+              include: {
+                Neighborhood: true,
+              },
+            });
+            console.log('🛣️ Street found:', streetRecord ? `${streetRecord.name} (ID: ${streetRecord.id})` : 'NOT FOUND');
+            
+            if (streetRecord?.Neighborhood) {
+              neighborhood = streetRecord.Neighborhood.name;
+              console.log('🏘️ Neighborhood:', neighborhood);
+            }
+          }
         }
 
         // Create ad with PENDING status
@@ -416,6 +456,8 @@ export class BrokerService {
             userId,
             categoryId: category.id,
             cityId: cityRecord?.id,
+            streetId: streetRecord?.id,
+            neighborhood: neighborhood,
             address,
             requestedLocationText,
             isWanted: isWanted || false,
@@ -427,6 +469,7 @@ export class BrokerService {
         });
 
         console.log('✅ Ad created:', newAd.id);
+        createdAds.push(newAd);
         successCount++;
       } catch (error: any) {
         console.error('❌ Error creating ad:', error.message);
@@ -453,6 +496,7 @@ export class BrokerService {
       successRows: successCount,
       failedRows: errors.length,
       errors: errors.slice(0, 10),
+      createdAds: createdAds,
     };
   }
 
