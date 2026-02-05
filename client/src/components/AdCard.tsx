@@ -20,6 +20,12 @@ interface AdCardProps {
     };
     isWanted?: boolean;
     requestedLocationText?: string;
+    customFields?: {
+      rooms?: number;
+      squareMeters?: number;
+      floor?: number;
+      [key: string]: any;
+    };
   };
   featured?: boolean;
 }
@@ -153,40 +159,41 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
 
       {/* תוכן */}
       <div className="p-4">
-        <h3 className="font-bold text-lg mb-2 line-clamp-1 group-hover:text-blue-600 transition">
-          {ad.title}
-        </h3>
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{ad.description}</p>
-
         {/* מחיר */}
         {ad.price && (
-          <div className="text-2xl font-bold text-green-600 mb-3">
+          <div className="text-xl font-bold text-[#C9A24D] mb-2">
             ₪{ad.price.toLocaleString()}
           </div>
         )}
 
-        {/* פרטים */}
-        <div className="flex items-center justify-between text-sm text-gray-500 border-t pt-3">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              📁 {ad.category?.nameHe || 'מודעה'}
-            </span>
-            {(ad.city || ad.requestedLocationText) && (
-              <span className="flex items-center gap-1">
-                📍 {ad.isWanted && ad.requestedLocationText 
-                  ? ad.requestedLocationText 
-                  : ad.city?.nameHe}
-              </span>
-            )}
+        {/* כתובת */}
+        {(ad.city || ad.requestedLocationText) && (
+          <div className="text-base font-semibold text-gray-900 mb-2">
+            {ad.isWanted && ad.requestedLocationText 
+              ? ad.requestedLocationText 
+              : ad.city?.nameHe}
           </div>
-          <span className="flex items-center gap-1">
-            👁️ {ad.views}
-          </span>
-        </div>
+        )}
 
-        {/* מפרסם */}
-        <div className="mt-2 text-xs text-gray-500">
-          {ad.user?.name || ad.user?.email || 'משתמש'} • {new Date(ad.createdAt).toLocaleDateString('he-IL')}
+        {/* פרטי נכס */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          {(ad as any).customFields?.rooms && (
+            <span>{(ad as any).customFields.rooms} חדרים</span>
+          )}
+          {(ad as any).customFields?.rooms && (ad as any).customFields?.squareMeters && (
+            <span className="text-gray-400">|</span>
+          )}
+          {(ad as any).customFields?.squareMeters && (
+            <span>{(ad as any).customFields.squareMeters} מ"ר</span>
+          )}
+          {((ad as any).customFields?.squareMeters || (ad as any).customFields?.rooms) && 
+           (ad as any).customFields?.floor !== null && 
+           (ad as any).customFields?.floor !== undefined && (
+            <span className="text-gray-400">|</span>
+          )}
+          {(ad as any).customFields?.floor !== null && (ad as any).customFields?.floor !== undefined && (
+            <span>קומה {(ad as any).customFields.floor}</span>
+          )}
         </div>
       </div>
     </Link>
