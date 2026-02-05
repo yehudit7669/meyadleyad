@@ -42,6 +42,12 @@ export default function EditAd() {
   const selectedCategory = categories?.find((cat: any) => cat.id === formData.categoryId);
   const categorySlug = selectedCategory?.slug || '';
 
+  console.log('EditAd - Category info:', {
+    categoryId: formData.categoryId,
+    selectedCategory,
+    categorySlug
+  });
+
   // Define features based on category
   const getCategoryFeatures = () => {
     // דירות נופש / שבת
@@ -69,13 +75,12 @@ export default function EditAd() {
         { key: 'balcony', label: 'מרפסת' },
         { key: 'storage', label: 'מחסן' },
         { key: 'airConditioning', label: 'מיזוג אוויר' },
-        { key: 'heating', label: 'חימום' },
         { key: 'mamad', label: 'ממ"ד' },
         { key: 'view', label: 'נוף' },
         { key: 'masterUnit', label: 'יחידת הורים' },
         { key: 'housingUnit', label: 'יחידת דיור' },
         { key: 'yard', label: 'חצר' },
-        { key: 'option', label: 'אופציה' },
+        { key: 'hasOption', label: 'אופציה' },
       ];
     }
     
@@ -86,7 +91,6 @@ export default function EditAd() {
       { key: 'balcony', label: 'מרפסת' },
       { key: 'storage', label: 'מחסן' },
       { key: 'airConditioning', label: 'מיזוג אוויר' },
-      { key: 'heating', label: 'חימום' },
       { key: 'mamad', label: 'ממ"ד' },
       { key: 'view', label: 'נוף' },
       { key: 'masterUnit', label: 'יחידת הורים' },
@@ -124,15 +128,26 @@ export default function EditAd() {
   // Load ad data into form
   useEffect(() => {
     if (ad) {
-      // Extract features from customFields (they might be nested)
       const loadedCustomFields = ad.customFields || {};
-      const features = loadedCustomFields.features || {};
       
-      // Merge features into the main customFields object for easier access
+      // Extract features from nested structure if they exist
+      const features = (loadedCustomFields as any).features || {};
+      
+      console.log('=== FULL DEBUG ===');
+      console.log('Full ad object:', ad);
+      console.log('ad.customFields:', loadedCustomFields);
+      console.log('ad.customFields.features:', features);
+      console.log('All keys in customFields:', Object.keys(loadedCustomFields));
+      console.log('All keys in features:', Object.keys(features));
+      
+      // Merge features to root level for form binding
       const mergedCustomFields = {
         ...loadedCustomFields,
-        ...features, // Spread features so they're at the root level
+        ...features, // Spread nested features to root level
       };
+      
+      console.log('mergedCustomFields:', mergedCustomFields);
+      console.log('All keys in merged:', Object.keys(mergedCustomFields));
       
       setFormData({
         title: ad.title || '',
@@ -247,12 +262,39 @@ export default function EditAd() {
   };
 
   const handleCustomFieldChange = (field: string, value: any) => {
+    const updatedFields = {
+      ...formData.customFields,
+      [field]: value,
+    };
+    
+    // Handle alternative field names - update both the new name and the old name
+    if (field === 'mamad') {
+      updatedFields['safeRoom'] = value;
+    } else if (field === 'safeRoom') {
+      updatedFields['mamad'] = value;
+    }
+    
+    if (field === 'masterUnit') {
+      updatedFields['parentalUnit'] = value;
+    } else if (field === 'parentalUnit') {
+      updatedFields['masterUnit'] = value;
+    }
+    
+    if (field === 'balcony') {
+      updatedFields['sukkaBalcony'] = value;
+    } else if (field === 'sukkaBalcony') {
+      updatedFields['balcony'] = value;
+    }
+    
+    if (field === 'hasOption') {
+      updatedFields['option'] = value;
+    } else if (field === 'option') {
+      updatedFields['hasOption'] = value;
+    }
+    
     setFormData({
       ...formData,
-      customFields: {
-        ...formData.customFields,
-        [field]: value,
-      },
+      customFields: updatedFields,
     });
   };
 
@@ -305,6 +347,38 @@ export default function EditAd() {
     // תמונות אופציונליות - אין מינימום
     
     try {
+      // Prepare customFields: separate features from other fields
+      // Map field names to their database equivalents
+      const fieldNameMapping: any = {
+        'mamad': 'safeRoom',
+        'masterUnit': 'parentalUnit',
+        'balcony': 'sukkaBalcony',
+        'hasOption': 'hasOption', // This one stays the same
+      };
+      
+      const featureKeys = categoryFeatures.map(f => f.key);
+      const features: any = {};
+      const otherFields: any = {};
+      
+      Object.keys(formData.customFields).forEach(key => {
+        if (featureKeys.includes(key)) {
+          // Use the database field name if there's a mapping, otherwise use the key as-is
+          const dbFieldName = fieldNameMapping[key] || key;
+          features[dbFieldName] = formData.customFields[key];
+        } else if (!['safeRoom', 'parentalUnit', 'sukkaBalcony', 'option'].includes(key)) {
+          // Skip the old alternative names if they exist (we already mapped them above)
+          otherFields[key] = formData.customFields[key];
+        }
+      });
+      
+      // Reconstruct customFields with features nested
+      const customFieldsToSave = {
+        ...otherFields,
+        features: features,
+      };
+      
+      console.log('Saving customFields:', customFieldsToSave);
+      
       updateMutation.mutate({
         title: formData.title,
         description: formData.description,
@@ -313,7 +387,7 @@ export default function EditAd() {
         adType: formData.adType,
         cityId: formData.cityId,
         streetId: formData.streetId,
-        customFields: formData.customFields,
+        customFields: customFieldsToSave,
         images: formData.images,
       });
     } catch (error) {
@@ -632,17 +706,36 @@ export default function EditAd() {
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-3 text-gray-900">מאפיינים נוספים</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {categoryFeatures.map((feature) => (
-                    <label key={feature.key} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.customFields?.[feature.key] || false}
-                        onChange={(e) => handleCustomFieldChange(feature.key, e.target.checked)}
-                        className="w-5 h-5 text-blue-600 rounded"
-                      />
-                      <span className="text-sm text-gray-900">{feature.label}</span>
-                    </label>
-                  ))}
+                  {categoryFeatures.map((feature) => {
+                    // Handle alternative field names for backwards compatibility
+                    let isChecked = formData.customFields?.[feature.key] || false;
+                    
+                    // Map alternative names
+                    if (feature.key === 'mamad' && !isChecked) {
+                      isChecked = formData.customFields?.['safeRoom'] || false;
+                    }
+                    if (feature.key === 'masterUnit' && !isChecked) {
+                      isChecked = formData.customFields?.['parentalUnit'] || false;
+                    }
+                    if (feature.key === 'balcony' && !isChecked) {
+                      isChecked = formData.customFields?.['sukkaBalcony'] || false;
+                    }
+                    if (feature.key === 'hasOption' && !isChecked) {
+                      isChecked = formData.customFields?.['option'] || false;
+                    }
+                    
+                    return (
+                      <label key={feature.key} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => handleCustomFieldChange(feature.key, e.target.checked)}
+                          className="w-5 h-5 text-blue-600 rounded"
+                        />
+                        <span className="text-sm text-gray-900">{feature.label}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>

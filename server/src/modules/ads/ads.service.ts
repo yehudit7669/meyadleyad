@@ -564,7 +564,8 @@ export class AdsService {
       data: {
         ...data,
         neighborhood,
-        status: AdStatus.PENDING, // Reset to pending after edit
+        // If user is ADMIN or SUPER_ADMIN, keep status as ACTIVE, otherwise set to PENDING
+        status: (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') ? AdStatus.ACTIVE : AdStatus.PENDING,
       },
       include: {
         Category: true,
