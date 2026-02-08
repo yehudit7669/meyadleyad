@@ -85,11 +85,8 @@ export default function ManageAdsStatus() {
   // Update ad status mutation
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: string; reason?: string }) => {
-      if (status === 'REJECTED' && !reason) {
-        throw new Error('סיבת דחייה נדרשת');
-      }
       if (status === 'REJECTED') {
-        return adminService.rejectAd(id, reason!);
+        return adminService.rejectAd(id, reason || '');
       }
       return adminService.updateAdStatus(id, status);
     },
@@ -99,7 +96,6 @@ export default function ManageAdsStatus() {
       setEditingAdId(null);
       setNewStatus('');
       setRejectionReason('');
-      alert('✅ סטטוס המודעה עודכן בהצלחה');
     },
     onError: (error: any) => {
       alert(`❌ שגיאה: ${error.message}`);
@@ -112,15 +108,9 @@ export default function ManageAdsStatus() {
       return;
     }
 
-    if (newStatus === 'REJECTED') {
-      if (!rejectionReason || rejectionReason.trim().length === 0) {
-        alert('נא להזין סיבת דחייה');
-        return;
-      }
-      if (rejectionReason.length > 250) {
-        alert('סיבת דחייה חייבת להיות עד 250 תווים');
-        return;
-      }
+    if (newStatus === 'REJECTED' && rejectionReason.length > 250) {
+      alert('סיבת דחייה חייבת להיות עד 250 תווים');
+      return;
     }
 
     updateStatusMutation.mutate({

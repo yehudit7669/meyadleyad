@@ -374,6 +374,13 @@ export class NewspaperSheetController {
         failedEmails
       });
 
+      // Increment global issue number after successful distribution
+      // העלאת מספר הגליון הגלובלי לאחר הפצה מוצלחת
+      if (successCount > 0) {
+        await newspaperSheetService.incrementGlobalIssueNumber();
+        console.log(`✅ Global issue number incremented after successful distribution`);
+      }
+
       res.json({
         success: true,
         message: `General sheet distributed to ${successCount} recipients`,

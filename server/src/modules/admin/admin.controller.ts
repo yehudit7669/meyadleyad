@@ -59,15 +59,7 @@ export class AdminController {
       const { reason } = req.body;
       const adminId = (req as any).user.id;
       
-      if (!reason || reason.trim().length === 0) {
-        res.status(400).json({
-          status: 'error',
-          message: 'נא להזין סיבת דחייה',
-        });
-        return;
-      }
-
-      if (reason.length > 250) {
+      if (reason && reason.length > 250) {
         res.status(400).json({
           status: 'error',
           message: 'סיבת הדחייה חייבת להיות עד 250 תווים',
@@ -75,7 +67,7 @@ export class AdminController {
         return;
       }
 
-      const ad = await adminService.rejectAd(req.params.id, reason, adminId);
+      const ad = await adminService.rejectAd(req.params.id, reason || '', adminId);
       res.json({
         status: 'success',
         data: ad,

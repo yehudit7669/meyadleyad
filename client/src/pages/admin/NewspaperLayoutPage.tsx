@@ -604,11 +604,13 @@ export default function NewspaperLayoutPage() {
 
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                <strong>מודעה:</strong> {selectedAd.ad.title}
+                <strong>מודעה:</strong> {(selectedAd as any).isGeneral ? 'לוח מודעות כללי' : selectedAd.ad.title}
               </p>
-              <p className="text-sm text-gray-600 mb-4">
-                <strong>גרסה:</strong> v{selectedAd.version}
-              </p>
+              {!(selectedAd as any).isGeneral && (
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>גרסה:</strong> v{selectedAd.version}
+                </p>
+              )}
             </div>
 
             <div className="mb-4">

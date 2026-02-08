@@ -21,6 +21,43 @@ export class NewspaperSheetService {
   }
 
   /**
+   * Get or create global settings for newspaper issue number
+   * קבלה או יצירה של הגדרות גלובליות למספר גליון
+   */
+  async getGlobalSettings() {
+    let settings = await prisma.newspaperGlobalSettings.findFirst();
+    
+    if (!settings) {
+      settings = await prisma.newspaperGlobalSettings.create({
+        data: {
+          currentIssue: 1
+        }
+      });
+    }
+    
+    return settings;
+  }
+
+  /**
+   * Increment global issue number after successful distribution
+   * העלאת מספר הגליון הגלובלי לאחר הפצה מוצלחת
+   */
+  async incrementGlobalIssueNumber() {
+    const settings = await this.getGlobalSettings();
+    
+    const updated = await prisma.newspaperGlobalSettings.update({
+      where: { id: settings.id },
+      data: {
+        currentIssue: settings.currentIssue + 1,
+        lastDistributed: new Date()
+      }
+    });
+    
+    console.log(`📰 Global issue number incremented to ${updated.currentIssue}`);
+    return updated;
+  }
+
+  /**
    * Get or Create Active Sheet for Category + City
    * מציאה או יצירה של גיליון פעיל לקטגוריה+עיר
    */

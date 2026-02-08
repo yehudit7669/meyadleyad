@@ -5,12 +5,31 @@ import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../../config/index.js';
+import prisma from '../../config/database';
 
 /**
  * PDF Service for Newspaper Sheets
  * יצירת PDF לגיליון עיתון שלם (קטגוריה + עיר)
  */
 export class NewspaperSheetPDFService {
+  /**
+   * Get current global issue number
+   * קבלת מספר הגליון הגלובלי הנוכחי
+   */
+  private async getGlobalIssueNumber(): Promise<number> {
+    let settings = await prisma.newspaperGlobalSettings.findFirst();
+    
+    if (!settings) {
+      settings = await prisma.newspaperGlobalSettings.create({
+        data: {
+          currentIssue: 1
+        }
+      });
+    }
+    
+    return settings.currentIssue;
+  }
+
   /**
    * Generate PDF for complete newspaper sheet
    * רינדור תבנית עיתון מלאה עם כותרת, banner וגריד של כרטיסי נכסים
@@ -100,8 +119,9 @@ export class NewspaperSheetPDFService {
     // יצירת כרטיסי נכסים
     const cardsHTML = this.generatePropertyCards(sheet);
     
-    // מספר גיליון ותאריך
-    const issueNumber = (sheet as any).issueNumber || `גליון ${sheet.version}`;
+    // מספר גיליון ותאריך - שימוש במספר הגליון הגלובלי
+    const globalIssueNumber = await this.getGlobalIssueNumber();
+    const issueNumber = (sheet as any).issueNumber || `גליון ${globalIssueNumber}`;
     const issueDate = (sheet as any).issueDate || new Date().toLocaleDateString('he-IL', { weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric' });
 
     return `

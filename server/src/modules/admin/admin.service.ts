@@ -299,11 +299,7 @@ export class AdminService {
   }
 
   async rejectAd(adId: string, reason: string, adminId: string) {
-    if (!reason || reason.trim().length === 0) {
-      throw new Error('Rejection reason is required');
-    }
-
-    if (reason.length > 250) {
+    if (reason && reason.length > 250) {
       throw new Error('Rejection reason must be 250 characters or less');
     }
 

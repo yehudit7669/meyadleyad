@@ -141,13 +141,6 @@ const Header: React.FC = () => {
                       >
                         הפרופיל שלי
                       </Link>
-                      <Link
-                        to="/profile/ads"
-                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                        onClick={() => setProfileMenuOpen(false)}
-                      >
-                        המודעות שלי
-                      </Link>
                       {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR') && (
                         <Link 
                           to="/admin" 
@@ -266,13 +259,6 @@ const Header: React.FC = () => {
                     onClick={closeMobileMenu}
                   >
                     פרסום חדש
-                  </Link>
-                  <Link 
-                    to="/profile/ads" 
-                    className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
-                    onClick={closeMobileMenu}
-                  >
-                    המודעות שלי
                   </Link>
                   <Link 
                     to="/profile" 

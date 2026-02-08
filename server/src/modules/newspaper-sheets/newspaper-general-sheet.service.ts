@@ -13,6 +13,24 @@ import { config } from '../../config/index.js';
  */
 export class NewspaperGeneralSheetService {
   /**
+   * Get current global issue number
+   * קבלת מספר הגליון הגלובלי הנוכחי
+   */
+  private async getGlobalIssueNumber(): Promise<number> {
+    let settings = await prisma.newspaperGlobalSettings.findFirst();
+    
+    if (!settings) {
+      settings = await prisma.newspaperGlobalSettings.create({
+        data: {
+          currentIssue: 1
+        }
+      });
+    }
+    
+    return settings.currentIssue;
+  }
+
+  /**
    * Generate General Newspaper PDF
    * יצירת PDF כללי של כל הנכסים באתר
    */
@@ -131,13 +149,14 @@ export class NewspaperGeneralSheetService {
    * יצירת HTML מאוחד לכל הלוחות
    */
   private async generateCombinedHTML(sheets: SheetWithListings[]): Promise<string> {
-    // יצירת תאריך ומספר גיליון
+    // יצירת תאריך ומספר גיליון - שימוש במספר הגליון הגלובלי
+    const globalIssueNumber = await this.getGlobalIssueNumber();
     const issueDate = new Date().toLocaleDateString('he-IL', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-    const issueNumber = `גיליון כללי - ${new Date().toLocaleDateString('he-IL')}`;
+    const issueNumber = `גליון ${globalIssueNumber}`;
 
     // סגנונות משותפים (מהתבנית המקורית)
     const styles = await this.getSharedStyles();
