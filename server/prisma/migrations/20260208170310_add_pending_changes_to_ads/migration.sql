@@ -1,5 +1,5 @@
 -- DropIndex
-DROP INDEX "Ad_isWanted_idx";
+DROP INDEX IF EXISTS "Ad_isWanted_idx";
 
 -- AlterTable
 ALTER TABLE "Ad" ADD COLUMN     "hasPendingChanges" BOOLEAN NOT NULL DEFAULT false,
