@@ -39,6 +39,7 @@ interface SubMenuItem {
   path: string;
   requiredRoles: ('ADMIN' | 'SUPER_ADMIN' | 'MODERATOR')[];
   requiredPermission?: string; // Optional: requires email permission
+  badge?: boolean; // Optional: show badge indicator
 }
 
 const menuItems: MenuItem[] = [
@@ -60,6 +61,13 @@ const menuItems: MenuItem[] = [
         title: 'מודעות ממתינות לאישור',
         path: '/admin/ads/pending',
         requiredRoles: ['ADMIN', 'SUPER_ADMIN', 'MODERATOR']
+      },
+      {
+        id: 'ads-pending-changes',
+        title: 'שינויים ממתינים לאישור',
+        path: '/admin/ads/pending-changes',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+        badge: true // נוסיף badge שמציג כמה שינויים יש
       },
       {
         id: 'ads-manage',

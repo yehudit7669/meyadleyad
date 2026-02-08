@@ -1,8 +1,11 @@
 import prisma from '../../config/database';
 import { EmailService } from '../email/email.service';
-import { AdStatus } from '@prisma/client';
+import { AdStatus, Prisma } from '@prisma/client';
 import { emailOperationsFormController } from '../email-operations/email-operations-form.controller';
 import { notificationsService } from '../notifications/notifications.service';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 export class AdminService {
   private emailService: EmailService;
@@ -832,4 +835,242 @@ export class AdminService {
     const BOM = '\uFEFF';
     return BOM + [csvHeaders, ...csvRows].join('\n');
   }
-}
+
+  // ✅ אישור שינויים ממתינים
+  async approvePendingChanges(adId: string, adminId: string) {
+    const ad = await prisma.ad.findUnique({
+      where: { id: adId },
+      include: {
+        Category: true,
+        City: true,
+        Street: {
+          include: {
+            Neighborhood: true,
+          },
+        },
+      },
+    });
+
+    if (!ad) {
+      throw new Error('Ad not found');
+    }
+
+    if (!ad.hasPendingChanges || !ad.pendingChanges) {
+      throw new Error('No pending changes to approve');
+    }
+
+    const pendingChanges = ad.pendingChanges as any;
+    
+    // טיפול בתמונות אם יש שינויים
+    if (pendingChanges.images && Array.isArray(pendingChanges.images)) {
+      // מחיקת התמונות הקיימות
+      await prisma.adImage.deleteMany({
+        where: { adId },
+      });
+
+      // יצירת התמונות החדשות
+      if (pendingChanges.images.length > 0) {
+        const processedImages = [];
+        
+        for (let index = 0; index < pendingChanges.images.length; index++) {
+          const img = pendingChanges.images[index];
+          let imageUrl = img.url;
+          
+          // אם התמונה היא base64 (תמונה חדשה שטרם הועלתה)
+          if (imageUrl && imageUrl.startsWith('data:image')) {
+            try {
+              // המרת base64 לקובץ
+              const base64Data = imageUrl.split(',')[1];
+              const buffer = Buffer.from(base64Data, 'base64');
+              
+              // יצירת שם קובץ ייחודי
+              const filename = `${crypto.randomBytes(16).toString('hex')}.jpg`;
+              const uploadDir = path.join(process.cwd(), 'uploads');
+              
+              // וידוא שתיקיית uploads קיימת
+              if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+              }
+              
+              const filePath = path.join(uploadDir, filename);
+              
+              // שמירת הקובץ
+              fs.writeFileSync(filePath, buffer);
+              
+              // עדכון ל-URL יחסי
+              imageUrl = `/uploads/${filename}`;
+            } catch (error) {
+              console.error('Failed to process base64 image:', error);
+              // אם נכשל, נשתמש ב-URL המקורי
+            }
+          }
+          
+          processedImages.push({
+            id: crypto.randomUUID(),
+            adId,
+            url: imageUrl,
+            order: img.order ?? index,
+          });
+        }
+        
+        if (processedImages.length > 0) {
+          await prisma.adImage.createMany({
+            data: processedImages,
+          });
+        }
+      }
+    }
+    
+    // החלת השינויים על המודעה
+    const updatedAd = await prisma.ad.update({
+      where: { id: adId },
+      data: {
+        title: pendingChanges.title || ad.title,
+        description: pendingChanges.description !== undefined ? pendingChanges.description : ad.description,
+        price: pendingChanges.price !== undefined ? pendingChanges.price : ad.price,
+        categoryId: pendingChanges.categoryId || ad.categoryId,
+        adType: pendingChanges.adType !== undefined ? pendingChanges.adType : ad.adType,
+        cityId: pendingChanges.cityId || ad.cityId,
+        streetId: pendingChanges.streetId || ad.streetId,
+        address: pendingChanges.address !== undefined ? pendingChanges.address : ad.address,
+        latitude: pendingChanges.latitude !== undefined ? pendingChanges.latitude : ad.latitude,
+        longitude: pendingChanges.longitude !== undefined ? pendingChanges.longitude : ad.longitude,
+        customFields: pendingChanges.customFields || ad.customFields,
+        neighborhood: pendingChanges.neighborhood !== undefined ? pendingChanges.neighborhood : ad.neighborhood,
+        hasPendingChanges: false,
+        pendingChanges: Prisma.DbNull,
+        pendingChangesAt: null,
+      },
+      include: {
+        User: true,
+        Category: true,
+        City: true,
+        Street: {
+          include: {
+            Neighborhood: true,
+          },
+        },
+        AdImage: true,
+      },
+    });
+
+    // רישום לוג
+    await this.logAdminAction(
+      adminId,
+      adId,
+      'APPROVE_CHANGES',
+      undefined,
+      undefined,
+      'שינויים אושרו והוחלו על המודעה'
+    );
+
+    console.log(`✅ Admin ${adminId} approved changes for ad ${adId}`);
+
+    return updatedAd;
+  }
+
+  // ✅ דחייה של שינויים ממתינים
+  async rejectPendingChanges(adId: string, adminId: string, reason?: string) {
+    const ad = await prisma.ad.findUnique({
+      where: { id: adId },
+    });
+
+    if (!ad) {
+      throw new Error('Ad not found');
+    }
+
+    if (!ad.hasPendingChanges || !ad.pendingChanges) {
+      throw new Error('No pending changes to reject');
+    }
+
+    // מחיקת השינויים הממתינים
+    const updatedAd = await prisma.ad.update({
+      where: { id: adId },
+      data: {
+        hasPendingChanges: false,
+        pendingChanges: Prisma.DbNull,
+        pendingChangesAt: null,
+      },
+      include: {
+        User: true,
+        Category: true,
+        City: true,
+        Street: {
+          include: {
+            Neighborhood: true,
+          },
+        },
+        AdImage: true,
+      },
+    });
+
+    // רישום לוג
+    await this.logAdminAction(
+      adminId,
+      adId,
+      'REJECT_CHANGES',
+      undefined,
+      undefined,
+      reason || 'שינויים נדחו'
+    );
+
+    console.log(`❌ Admin ${adminId} rejected changes for ad ${adId}`);
+
+    return updatedAd;
+  }
+
+  // ✅ קבלת מודעות עם שינויים ממתינים
+  async getAdsWithPendingChanges(
+    page: number = 1,
+    limit: number = 20
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [ads, total] = await Promise.all([
+      prisma.ad.findMany({
+        where: {
+          hasPendingChanges: true,
+        },
+        include: {
+          User: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          Category: true,
+          City: true,
+          Street: {
+            include: {
+              Neighborhood: true,
+            },
+          },
+          AdImage: true,
+        },
+        orderBy: {
+          pendingChangesAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.ad.count({
+        where: {
+          hasPendingChanges: true,
+        },
+      }),
+    ]);
+
+    return {
+      ads,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }}
+
+export const adminService = new AdminService();

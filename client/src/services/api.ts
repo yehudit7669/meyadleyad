@@ -272,11 +272,13 @@ export const adsService = {
       cityId: data.cityId,
       streetId: data.streetId,
       customFields: data.customFields,
+      images: data.images, // שולח את כל מערך התמונות (כולל חדשות עם base64 וקיימות עם URLs)
     });
     const ad = (response.data as any).data;
     
-    // If there are new images to upload (with file objects)
-    if (data.images && data.images.length > 0) {
+    // רק אם המודעה לא ACTIVE - מעלים תמונות חדשות ישירות
+    // אם המודעה ACTIVE - התמונות נשמרות ב-pendingChanges והמנהל יאשר אותן
+    if (ad.status !== 'ACTIVE' && data.images && data.images.length > 0) {
       const newImages = data.images.filter((img: any) => img.file);
       
       if (newImages.length > 0) {
@@ -470,6 +472,26 @@ export const adminService = {
       responseType: 'blob'
     });
     return response.data;
+  },
+
+  // ✅ שינויים ממתינים
+  getAdsWithPendingChanges: async (page?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    
+    const response = await api.get(`/admin/ads/pending-changes?${params.toString()}`);
+    return (response.data as any).data;
+  },
+
+  approvePendingChanges: async (adId: string) => {
+    const response = await api.post(`/admin/ads/${adId}/approve-changes`);
+    return (response.data as any).data;
+  },
+
+  rejectPendingChanges: async (adId: string, reason?: string) => {
+    const response = await api.post(`/admin/ads/${adId}/reject-changes`, { reason });
+    return (response.data as any).data;
   },
 
   getUsers: async () => {

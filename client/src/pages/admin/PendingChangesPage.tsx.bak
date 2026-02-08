@@ -1,0 +1,440 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminService } from '../../services/api';
+import { AlertTriangle, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
+
+interface PendingChanges {
+  title?: string;
+  description?: string;
+  price?: number;
+  categoryId?: string;
+  adType?: string;
+  cityId?: string;
+  streetId?: string;
+  houseNumber?: number;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  customFields?: Record<string, any>;
+  contactName?: string;
+  contactPhone?: string;
+  neighborhood?: string;
+  requestedAt?: string;
+  requestedBy?: string;
+}
+
+interface Ad {
+  id: string;
+  adNumber: number;
+  title: string;
+  description: string;
+  price: number;
+  status: string;
+  createdAt: string;
+  hasPendingChanges: boolean;
+  pendingChanges: PendingChanges | null;
+  pendingChangesAt: string | null;
+  address?: string;
+  Category?: { nameHe: string };
+  City?: { nameHe: string };
+  Street?: { name: string };
+  User?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  customFields?: Record<string, any>;
+  contactName?: string;
+  contactPhone?: string;
+  neighborhood?: string;
+}
+
+export default function PendingChangesPage() {
+  const queryClient = useQueryClient();
+  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  // Fetch ads with pending changes
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-pending-changes'],
+    queryFn: () => adminService.getAdsWithPendingChanges(),
+  });
+
+  const ads = data?.ads || [];
+
+  // Approve changes mutation
+  const approveMutation = useMutation({
+    mutationFn: (adId: string) => adminService.approvePendingChanges(adId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-changes'] });
+      setShowModal(false);
+      setSelectedAd(null);
+      alert('✅ השינויים אושרו והוחלו על המודעה');
+    },
+    onError: (error: any) => {
+      alert(`❌ שגיאה באישור שינויים: ${error.message}`);
+    },
+  });
+
+  // Reject changes mutation
+  const rejectMutation = useMutation({
+    mutationFn: ({ adId, reason }: { adId: string; reason?: string }) => 
+      adminService.rejectPendingChanges(adId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-changes'] });
+      setShowModal(false);
+      setSelectedAd(null);
+      setRejectionReason('');
+      alert('✅ השינויים נדחו');
+    },
+    onError: (error: any) => {
+      alert(`❌ שגיאה בדחיית שינויים: ${error.message}`);
+    },
+  });
+
+  const handleApprove = (adId: string) => {
+    if (confirm('האם לאשר את השינויים המבוקשים? השינויים יוחלו על המודעה הפעילה.')) {
+      approveMutation.mutate(adId);
+    }
+  };
+
+  const handleReject = (adId: string) => {
+    if (confirm('האם לדחות את השינויים המבוקשים?')) {
+      rejectMutation.mutate({ adId, reason: rejectionReason });
+    }
+  };
+
+  const renderFieldComparison = (label: string, oldValue: any, newValue: any) => {
+    return (
+      <div className="bg-gradient-to-l from-yellow-50 to-white border-r-4 border-yellow-500 rounded-lg p-4 shadow-sm">
+        <div className="font-bold text-gray-800 mb-3 text-lg">{label}</div>
+        <div className="grid grid-cols-2 gap-4">
+          {/* Before */}
+          <div>
+            <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">לפני השינוי</div>
+            <div className="bg-gray-100 px-4 py-3 rounded-lg border-2 border-gray-300">
+              <div className="text-gray-700 whitespace-pre-wrap break-words">
+                {oldValue || <span className="text-gray-400 italic">לא צוין</span>}
+              </div>
+            </div>
+          </div>
+          {/* After */}
+          <div>
+            <div className="text-xs font-semibold text-yellow-700 mb-2 uppercase tracking-wide">אחרי השינוי</div>
+            <div className="bg-yellow-50 px-4 py-3 rounded-lg border-2 border-yellow-400">
+              <div className="text-yellow-900 font-medium whitespace-pre-wrap break-words">
+                {newValue || <span className="text-gray-400 italic">לא צוין</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">טוען...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
+      <div className="container mx-auto px-4 max-w-7xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-black flex items-center gap-3">
+            <Clock className="w-8 h-8 text-yellow-600" />
+            שינויים ממתינים לאישור
+          </h1>
+          <p className="text-gray-600">
+            מודעות מאושרות שהמשתמשים ביקשו לעדכן - השינויים ממתינים לאישור שלך
+          </p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-3">
+              <Clock className="w-10 h-10 text-yellow-600" />
+              <div>
+                <div className="text-3xl font-bold text-yellow-600">{ads.length}</div>
+                <div className="text-sm text-gray-600">מודעות עם שינויים ממתינים</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ads List */}
+        {ads.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
+            <h2 className="text-2xl font-bold mb-2 text-black">אין שינויים ממתינים</h2>
+            <p className="text-gray-600">כל השינויים המבוקשים טופלו</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {ads.map((ad: Ad) => (
+              <div key={ad.id} className="bg-white rounded-lg shadow-md p-6 border-r-4 border-yellow-400">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-bold text-black">מודעה #{ad.adNumber}</h3>
+                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                        שינויים ממתינים
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div>📍 {ad.City?.nameHe} {ad.Street?.name && `, ${ad.Street.name}`}</div>
+                      <div>📁 {ad.Category?.nameHe}</div>
+                      <div>👤 {ad.User?.name || ad.User?.email}</div>
+                      <div className="flex items-center gap-2 text-yellow-700 font-medium mt-2">
+                        <Clock className="w-4 h-4" />
+                        התקבל: {ad.pendingChangesAt ? new Date(ad.pendingChangesAt).toLocaleString('he-IL') : 'לא ידוע'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedAd(ad);
+                        setShowModal(true);
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                    >
+                      🔍 צפייה והשוואה
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex gap-3 pt-4 border-t">
+                  <button
+                    onClick={() => handleApprove(ad.id)}
+                    disabled={approveMutation.isPending}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:bg-gray-400"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    אשר שינויים
+                  </button>
+                  <button
+                    onClick={() => handleReject(ad.id)}
+                    disabled={rejectMutation.isPending}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:bg-gray-400"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    דחה שינויים
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Comparison Modal */}
+        {showModal && selectedAd && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-black flex items-center gap-3">
+                      <AlertTriangle className="w-7 h-7 text-yellow-600" />
+                      השוואת שינויים - מודעה #{selectedAd.adNumber}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      המודעה המקורית נשארת פעילה באתר עד לאישור השינויים
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedAd(null);
+                    }}
+                    className="text-gray-500 hover:text-gray-700 text-3xl"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* User Info */}
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <h3 className="font-bold text-blue-900 mb-2">מידע על המבקש</h3>
+                  <div className="text-sm space-y-1 text-blue-800">
+                    <div>👤 {selectedAd.User?.name}</div>
+                    <div>📧 {selectedAd.User?.email}</div>
+                    {selectedAd.User?.phone && <div>📱 {selectedAd.User.phone}</div>}
+                  </div>
+                </div>
+
+                {/* Changes Comparison */}
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                    שינויים שבוצעו על ידי המשתמש
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {(() => {
+                      const changes = selectedAd.pendingChanges;
+                      if (!changes) {
+                        return (
+                          <div className="text-center text-gray-500 py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                            <p className="text-lg font-medium">לא נמצאו נתוני שינויים</p>
+                            <p className="text-sm mt-2">ייתכן שיש בעיה בשמירת השינויים</p>
+                          </div>
+                        );
+                      }
+
+                      const changedFields = [];
+
+                      // כותרת
+                      if (changes.title !== undefined && changes.title !== selectedAd.title) {
+                        changedFields.push(
+                          <div key="title">
+                            {renderFieldComparison('📌 כותרת המודעה', selectedAd.title, changes.title)}
+                          </div>
+                        );
+                      }
+
+                      // תיאור
+                      if (changes.description !== undefined && changes.description !== selectedAd.description) {
+                        changedFields.push(
+                          <div key="description">
+                            {renderFieldComparison('📝 תיאור המודעה', selectedAd.description, changes.description)}
+                          </div>
+                        );
+                      }
+
+                      // מחיר
+                      if (changes.price !== undefined && changes.price !== selectedAd.price) {
+                        changedFields.push(
+                          <div key="price">
+                            {renderFieldComparison(
+                              '💰 מחיר',
+                              selectedAd.price ? `₪${selectedAd.price.toLocaleString()}` : 'לא צוין',
+                              changes.price ? `₪${changes.price.toLocaleString()}` : 'לא צוין'
+                            )}
+                          </div>
+                        );
+                      }
+
+                      // כתובת
+                      if (changes.address !== undefined && changes.address !== selectedAd.address) {
+                        changedFields.push(
+                          <div key="address">
+                            {renderFieldComparison('📍 כתובת', selectedAd.address || 'לא צוין', changes.address || 'לא צוין')}
+                          </div>
+                        );
+                      }
+
+                      // שכונה
+                      if (changes.neighborhood !== undefined && changes.neighborhood !== selectedAd.neighborhood) {
+                        changedFields.push(
+                          <div key="neighborhood">
+                            {renderFieldComparison('🏘️ שכונה', selectedAd.neighborhood || 'לא צוין', changes.neighborhood || 'לא צוין')}
+                          </div>
+                        );
+                      }
+
+                      // שם איש קשר
+                      if (changes.contactName !== undefined && changes.contactName !== selectedAd.contactName) {
+                        changedFields.push(
+                          <div key="contactName">
+                            {renderFieldComparison('👤 שם איש קשר', selectedAd.contactName || 'לא צוין', changes.contactName || 'לא צוין')}
+                          </div>
+                        );
+                      }
+
+                      // טלפון איש קשר
+                      if (changes.contactPhone !== undefined && changes.contactPhone !== selectedAd.contactPhone) {
+                        changedFields.push(
+                          <div key="contactPhone">
+                            {renderFieldComparison('📱 טלפון איש קשר', selectedAd.contactPhone || 'לא צוין', changes.contactPhone || 'לא צוין')}
+                          </div>
+                        );
+                      }
+
+                      if (changedFields.length === 0) {
+                        return (
+                          <div className="text-center text-gray-500 py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                            <p className="text-lg font-medium">לא זוהו שינויים בשדות הבסיסיים</p>
+                            <p className="text-sm mt-2">ייתכן ששדות מתקדמים אחרים השתנו (customFields, קטגוריה, עיר וכו')</p>
+                            <details className="mt-4">
+                              <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+                                הצג נתונים גולמיים
+                              </summary>
+                              <pre className="text-xs mt-2 text-right bg-white p-3 rounded border overflow-auto max-h-60">
+                                {JSON.stringify(changes, null, 2)}
+                              </pre>
+                            </details>
+                          </div>
+                        );
+                      }
+
+                      return changedFields;
+                    })()}
+                  </div>
+                </div>
+
+                {/* Rejection Reason Input */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    סיבת דחייה (אופציונלי)
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="הוסף הסבר למה השינויים נדחו..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    maxLength={250}
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    {rejectionReason.length}/250 תווים
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => handleApprove(selectedAd.id)}
+                    disabled={approveMutation.isPending}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-bold text-lg disabled:bg-gray-400"
+                  >
+                    <CheckCircle className="w-6 h-6" />
+                    אשר והחל שינויים
+                  </button>
+                  <button
+                    onClick={() => handleReject(selectedAd.id)}
+                    disabled={rejectMutation.isPending}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-bold text-lg disabled:bg-gray-400"
+                  >
+                    <XCircle className="w-6 h-6" />
+                    דחה שינויים
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedAd(null);
+                    }}
+                    className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition font-bold text-lg"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

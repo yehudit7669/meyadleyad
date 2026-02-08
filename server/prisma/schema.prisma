@@ -37,6 +37,9 @@ model Ad {
   streetId              String?
   isWanted              Boolean                 @default(false)
   requestedLocationText String?
+  hasPendingChanges     Boolean                 @default(false)
+  pendingChanges        Json?
+  pendingChangesAt      DateTime?
   Category              Category                @relation(fields: [categoryId], references: [id])
   City                  City?                   @relation(fields: [cityId], references: [id])
   Street                Street?                 @relation(fields: [streetId], references: [id])

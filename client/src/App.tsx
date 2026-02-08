@@ -77,6 +77,7 @@ import NotificationsAdminPage from './pages/admin/NotificationsAdminPage';
 import AdminConversations from './components/admin/AdminConversations';
 import AdminConversationDetail from './components/admin/AdminConversationDetail';
 import UserConversations from './pages/UserConversations';
+import PendingChangesPage from './pages/admin/PendingChangesPage';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -170,6 +171,7 @@ const App: React.FC = () => {
                   {/* Ads Management Routes */}
                   <Route path="/admin/ads/pending" element={<AdminRoute><AdminLayout><PendingAds /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/ads/manage" element={<AdminRoute><AdminLayout><AdminAdsPage /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/ads/pending-changes" element={<AdminRoute><AdminLayout><PendingChangesPage /></AdminLayout></AdminRoute>} />
                   
                   {/* Legacy redirects for backward compatibility */}
                   <Route path="/admin/pending" element={<Navigate to="/admin/ads/pending" replace />} />

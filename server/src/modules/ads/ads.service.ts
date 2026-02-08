@@ -529,16 +529,35 @@ export class AdsService {
     customFields?: Record<string, any>;
     contactName?: string;
     contactPhone?: string;
+    images?: Array<{ url: string; order: number }>;
   }>) {
     const ad = await prisma.ad.findUnique({
       where: { id: adId },
+      include: {
+        Category: true,
+        City: true,
+        Street: {
+          include: {
+            Neighborhood: true,
+          },
+        },
+        User: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        AdImage: true,
+      },
     });
 
     if (!ad) {
       throw new NotFoundError('Ad not found');
     }
 
-    if (ad.userId !== userId && userRole !== 'ADMIN') {
+    if (ad.userId !== userId && userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
       throw new ForbiddenError('You do not have permission to update this ad');
     }
 
@@ -559,13 +578,84 @@ export class AdsService {
       neighborhood = street.Neighborhood?.name || null;
     }
 
+    // אם המשתמש הוא מנהל - מעדכן ישירות
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+      const updatedAd = await prisma.ad.update({
+        where: { id: adId },
+        data: {
+          ...data,
+          neighborhood,
+        },
+        include: {
+          Category: true,
+          City: true,
+          Street: {
+            include: {
+              Neighborhood: true,
+            },
+          },
+          User: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          AdImage: true,
+        },
+      });
+
+      return this.transformAdForResponse(updatedAd);
+    }
+
+    // אם המשתמש רגיל ומודעה מאושרת - שומר שינויים בהמתנה
+    if (ad.status === AdStatus.ACTIVE) {
+      const pendingChanges = {
+        ...data,
+        neighborhood,
+        requestedAt: new Date().toISOString(),
+        requestedBy: userId,
+      };
+
+      const updatedAd = await prisma.ad.update({
+        where: { id: adId },
+        data: {
+          hasPendingChanges: true,
+          pendingChanges: pendingChanges,
+          pendingChangesAt: new Date(),
+        },
+        include: {
+          Category: true,
+          City: true,
+          Street: {
+            include: {
+              Neighborhood: true,
+            },
+          },
+          User: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          AdImage: true,
+        },
+      });
+
+      console.log(`✅ User ${userId} requested changes for ad ${adId}. Changes pending admin approval.`);
+      
+      return this.transformAdForResponse(updatedAd);
+    }
+
+    // אם המודעה לא מאושרת (PENDING/REJECTED) - מעדכן ישירות
     const updatedAd = await prisma.ad.update({
       where: { id: adId },
       data: {
         ...data,
         neighborhood,
-        // If user is ADMIN or SUPER_ADMIN, keep status as ACTIVE, otherwise set to PENDING
-        status: (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') ? AdStatus.ACTIVE : AdStatus.PENDING,
       },
       include: {
         Category: true,

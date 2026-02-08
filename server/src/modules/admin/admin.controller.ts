@@ -231,4 +231,50 @@ export class AdminController {
       next(error);
     }
   }
-}
+
+  // ✅ קבלת מודעות עם שינויים ממתינים
+  async getAdsWithPendingChanges(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      const result = await adminService.getAdsWithPendingChanges(page, limit);
+      res.json({
+        status: 'success',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ✅ אישור שינויים ממתינים
+  async approvePendingChanges(req: Request, res: Response, next: NextFunction) {
+    try {
+      const adminId = (req as any).user.id;
+      const ad = await adminService.approvePendingChanges(req.params.id, adminId);
+      res.json({
+        status: 'success',
+        data: ad,
+        message: 'השינויים אושרו והוחלו על המודעה',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ✅ דחייה של שינויים ממתינים
+  async rejectPendingChanges(req: Request, res: Response, next: NextFunction) {
+    try {
+      const adminId = (req as any).user.id;
+      const { reason } = req.body;
+      const ad = await adminService.rejectPendingChanges(req.params.id, adminId, reason);
+      res.json({
+        status: 'success',
+        data: ad,
+        message: 'השינויים נדחו',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }}

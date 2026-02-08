@@ -200,12 +200,24 @@ export default function EditAd() {
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => adsService.updateAd(id!, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['ad', id] });
       queryClient.invalidateQueries({ queryKey: ['my-ads'] });
-      navigate(`/ads/${id}`, {
-        state: { message: 'המודעה עודכנה בהצלחה!' },
-      });
+      
+      // בדיקה אם יש שינויים ממתינים
+      const updatedAd = response?.data || response;
+      if (updatedAd?.hasPendingChanges) {
+        navigate(`/ads/${id}`, {
+          state: { 
+            message: '✅ השינויים נשמרו והועברו לאישור מנהל!\n\n📢 המודעה המקורית נשארת פעילה באתר עד לאישור השינויים.\n\n⏱️ לאחר שמנהל יאשר את השינויים, המודעה המעודכנת תופיע באתר.',
+            type: 'pending-changes'
+          },
+        });
+      } else {
+        navigate(`/ads/${id}`, {
+          state: { message: 'המודעה עודכנה בהצלחה!' },
+        });
+      }
     },
   });
 
@@ -318,6 +330,14 @@ export default function EditAd() {
   };
 
   const handleDeleteImage = async (imageId: string) => {
+    // אם המודעה מאושרת (ACTIVE), לא מוחקים תמונות ישירות
+    // השינויים יישמרו ב-pendingChanges ויחכו לאישור מנהל
+    if (ad?.status === 'ACTIVE') {
+      // לא עושים כלום - המחיקה תתבצע רק אחרי אישור מנהל
+      return;
+    }
+    
+    // רק אם המודעה לא מאושרת - מוחקים ישירות
     try {
       await adsService.deleteImage(imageId);
     } catch (error) {
