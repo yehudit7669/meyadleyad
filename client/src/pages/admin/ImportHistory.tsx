@@ -110,6 +110,14 @@ export default function ImportHistoryPage() {
   const handleViewDetails = (importLog: ImportLog) => {
     setSelectedImport(importLog);
     setShowDetailsModal(true);
+    console.log('📊 Import Log Details:', {
+      importType: importLog.importType,
+      hasMetadata: !!importLog.metadata,
+      metadataKeys: importLog.metadata ? Object.keys(importLog.metadata) : [],
+      hasImportedData: importLog.metadata?.importedData ? true : false,
+      importedDataLength: importLog.metadata?.importedData?.length || 0,
+      fullMetadata: importLog.metadata
+    });
   };
 
   if (isLoading) {
@@ -272,7 +280,7 @@ export default function ImportHistoryPage() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <FileText className="w-6 h-6 text-[#1F3F3A]" />
-                <h3 className="text-xl font-bold text-black">פרטי ייבוא</h3>
+                <h3 className="text-xl font-bold text-black">פרטי ייבוא - גרסה חדשה 🔥</h3>
               </div>
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -280,6 +288,12 @@ export default function ImportHistoryPage() {
               >
                 ✕
               </button>
+            </div>
+
+            {/* DEBUG INFO */}
+            <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded">
+              <p className="text-xs font-mono">DEBUG: metadata exists: {selectedImport.metadata ? 'YES' : 'NO'}</p>
+              <p className="text-xs font-mono">DEBUG: importedData: {selectedImport.metadata?.importedData ? `YES (${selectedImport.metadata.importedData.length} rows)` : 'NO'}</p>
             </div>
 
             <div className="space-y-4">
@@ -360,23 +374,65 @@ export default function ImportHistoryPage() {
                 </div>
               )}
 
-              {/* Metadata */}
-              {selectedImport.metadata && Object.keys(selectedImport.metadata).length > 0 && (
+              {/* Metadata - Cities and Streets Created */}
+              {selectedImport.metadata && Object.keys(selectedImport.metadata).length > 0 && (selectedImport.metadata.createdCityIds || selectedImport.metadata.createdCities || selectedImport.metadata.createdStreets) && (
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-black mb-3">מטא-דאטה</h4>
-                  <div className="bg-white rounded p-3">
-                    {selectedImport.metadata.createdCityIds && (
-                      <div className="mb-3">
+                  <h4 className="font-semibold text-black mb-3">פריטים שנוצרו</h4>
+                  <div className="bg-white rounded p-3 space-y-4">
+                    {/* Created Cities */}
+                    {selectedImport.metadata.createdCities && Array.isArray(selectedImport.metadata.createdCities) && selectedImport.metadata.createdCities.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-black mb-2">ערים שנוצרו ({selectedImport.metadata.createdCities.length}):</p>
+                        <div className="bg-gray-50 rounded p-2 max-h-40 overflow-y-auto">
+                          <div className="space-y-1">
+                            {selectedImport.metadata.createdCities.map((city: any, index: number) => (
+                              <div key={city.id || index} className="text-xs text-gray-700 flex items-center gap-2">
+                                <span className="text-gray-400">{index + 1}.</span>
+                                <span className="font-medium">{city.name}</span>
+                                <span className="text-gray-400 font-mono text-[10px]">({city.id})</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Created Streets */}
+                    {selectedImport.metadata.createdStreets && Array.isArray(selectedImport.metadata.createdStreets) && selectedImport.metadata.createdStreets.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-black mb-2">רחובות שנוצרו ({selectedImport.metadata.createdStreets.length}):</p>
+                        <div className="bg-gray-50 rounded p-2 max-h-60 overflow-y-auto">
+                          <div className="space-y-1">
+                            {selectedImport.metadata.createdStreets.slice(0, 100).map((street: any, index: number) => (
+                              <div key={street.id || index} className="text-xs text-gray-700 flex items-center gap-2">
+                                <span className="text-gray-400">{index + 1}.</span>
+                                <span className="font-medium">{street.name}</span>
+                                <span className="text-gray-500">({street.cityName})</span>
+                              </div>
+                            ))}
+                            {selectedImport.metadata.createdStreets.length > 100 && (
+                              <p className="text-xs text-gray-500 italic mt-2">
+                                ועוד {selectedImport.metadata.createdStreets.length - 100} רחובות...
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Legacy format - just IDs */}
+                    {!selectedImport.metadata.createdCities && selectedImport.metadata.createdCityIds && (
+                      <div>
                         <p className="text-sm font-medium text-black">ערים שנוצרו:</p>
                         <p className="text-xs text-gray-600">
                           {Array.isArray(selectedImport.metadata.createdCityIds)
-                            ? selectedImport.metadata.createdCityIds.join(', ')
+                            ? `${selectedImport.metadata.createdCityIds.length} ערים`
                             : selectedImport.metadata.createdCityIds}
                         </p>
                       </div>
                     )}
-                    {selectedImport.metadata.createdStreetIds && (
-                      <div className="mb-3">
+                    {!selectedImport.metadata.createdStreets && selectedImport.metadata.createdStreetIds && (
+                      <div>
                         <p className="text-sm font-medium text-black">רחובות שנוצרו:</p>
                         <p className="text-xs text-gray-600">
                           {Array.isArray(selectedImport.metadata.createdStreetIds)
@@ -384,6 +440,50 @@ export default function ImportHistoryPage() {
                             : selectedImport.metadata.createdStreetIds}
                         </p>
                       </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Imported Data Preview */}
+              {selectedImport.metadata?.importedData && Array.isArray(selectedImport.metadata.importedData) && selectedImport.metadata.importedData.length > 0 && (
+                <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-900 mb-3 text-lg">📋 כל הנתונים מהקובץ המקורי ({selectedImport.metadata.importedData.length} שורות)</h4>
+                  <div className="bg-white rounded p-3 max-h-96 overflow-auto">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr>
+                            {Object.keys(selectedImport.metadata.importedData[0])
+                              .filter(key => !['status', 'errors', 'rowNumber'].includes(key))
+                              .map((key) => (
+                              <th key={key} className="px-3 py-2 text-right text-xs font-medium text-gray-500 whitespace-nowrap">
+                                {key}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedImport.metadata.importedData.map((row: any, index: number) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              {Object.entries(row)
+                                .filter(([key]) => !['status', 'errors', 'rowNumber'].includes(key))
+                                .map(([, value]: [string, any], cellIndex: number) => (
+                                <td key={cellIndex} className="px-3 py-2 whitespace-nowrap text-xs text-gray-700">
+                                  {typeof value === 'boolean' ? (value ? '✓' : '✗') :
+                                   typeof value === 'object' && value !== null ? JSON.stringify(value) : 
+                                   String(value ?? '')}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {selectedImport.totalRows > selectedImport.metadata.importedData.length && (
+                      <p className="text-xs text-gray-500 mt-3 text-center">
+                        מוצגים {selectedImport.metadata.importedData.length} מתוך {selectedImport.totalRows} שורות
+                      </p>
                     )}
                   </div>
                 </div>

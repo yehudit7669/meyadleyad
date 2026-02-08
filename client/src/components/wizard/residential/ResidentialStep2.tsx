@@ -8,8 +8,8 @@ import { WizardStepProps } from '../../../types/wizard';
 const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) => {
   const [formData, setFormData] = useState<ResidentialStep2Data>(
     data || {
-      cityId: '', // Will be set from beitShemeshCity
-      cityName: 'בית שמש',
+      cityId: '',
+      cityName: '',
       streetId: '',
       streetName: '',
       neighborhoodId: '',
@@ -25,32 +25,25 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
 
   console.log('STREET FIELD INIT - ResidentialStep2');
 
-  // Get Beit Shemesh city
-  const { data: beitShemeshCity } = useQuery({
-    queryKey: ['beit-shemesh-city'],
-    queryFn: citiesService.getBeitShemesh,
+  // Get all cities
+  const { data: cities } = useQuery({
+    queryKey: ['cities'],
+    queryFn: citiesService.getCities,
   });
 
-  // Set Beit Shemesh as default city
+  // Set city from data if exists
   useEffect(() => {
-    if (beitShemeshCity) {
-      // Always update cityId to the current Beit Shemesh ID (in case it changed from import)
-      if (!formData.cityId || formData.cityId !== beitShemeshCity.id) {
-        console.log('[UPDATING CITY ID] from', formData.cityId, 'to', beitShemeshCity.id);
+    if (data?.cityId && cities) {
+      const city = cities.find((c: any) => c.id === data.cityId);
+      if (city) {
         setFormData((prev) => ({
           ...prev,
-          cityId: beitShemeshCity.id,
-          cityName: beitShemeshCity.nameHe || 'בית שמש',
-          // Reset street selection when city changes
-          streetId: '',
-          streetName: '',
-          neighborhoodId: '',
-          neighborhoodName: '',
+          cityId: city.id,
+          cityName: city.nameHe,
         }));
-        setStreetSearch('');
       }
     }
-  }, [beitShemeshCity]);
+  }, [data?.cityId, cities]);
 
   // Get all streets
   const { data: allStreets } = useQuery({
@@ -168,20 +161,43 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
       </div>
 
       <div className="space-y-4">
-        {/* City (Read Only) */}
+        {/* City Selector */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             עיר <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={formData.cityName}
-            disabled
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            כרגע המערכת תומכת בבית שמש בלבד
-          </p>
+          <select
+            value={formData.cityId}
+            onChange={(e) => {
+              const selectedCity = cities?.find((c: any) => c.id === e.target.value);
+              if (selectedCity) {
+                setFormData({
+                  ...formData,
+                  cityId: selectedCity.id,
+                  cityName: selectedCity.nameHe,
+                  // Reset street selection when city changes
+                  streetId: '',
+                  streetName: '',
+                  neighborhoodId: '',
+                  neighborhoodName: '',
+                });
+                setStreetSearch('');
+              }
+            }}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+              errors.cityId ? 'border-red-500' : 'border-gray-300'
+            }`}
+          >
+            <option value="">בחר עיר</option>
+            {cities?.map((city: any) => (
+              <option key={city.id} value={city.id}>
+                {city.nameHe}
+              </option>
+            ))}
+          </select>
+          {errors.cityId && (
+            <p className="mt-1 text-sm text-red-500">{errors.cityId}</p>
+          )}
         </div>
 
         {/* Street */}

@@ -11,8 +11,8 @@ interface HolidayRentStep1Props {
 
 const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => {
   const [formData, setFormData] = useState<Partial<HolidayRentStep1Data>>({
-    cityId: '',
-    cityName: 'בית שמש',
+    cityId: data.cityId || '',
+    cityName: data.cityName || '',
     streetId: data.streetId || '',
     streetName: data.streetName || '',
     neighborhoodId: data.neighborhoodId || '',
@@ -26,22 +26,25 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
 
   console.log('STREET FIELD INIT - HolidayRentStep1');
 
-  // Get Beit Shemesh city
-  const { data: beitShemeshCity } = useQuery({
-    queryKey: ['beit-shemesh-city'],
-    queryFn: citiesService.getBeitShemesh,
+  // Get all cities
+  const { data: cities } = useQuery({
+    queryKey: ['cities'],
+    queryFn: citiesService.getCities,
   });
 
-  // Set Beit Shemesh as default city
+  // Set city from data if exists
   useEffect(() => {
-    if (beitShemeshCity && !formData.cityId) {
-      setFormData((prev) => ({
-        ...prev,
-        cityId: beitShemeshCity.id,
-        cityName: beitShemeshCity.nameHe || 'בית שמש',
-      }));
+    if (data?.cityId && cities) {
+      const city = cities.find((c: any) => c.id === data.cityId);
+      if (city) {
+        setFormData((prev) => ({
+          ...prev,
+          cityId: city.id,
+          cityName: city.nameHe,
+        }));
+      }
     }
-  }, [beitShemeshCity]);
+  }, [data?.cityId, cities]);
 
   // Get all streets
   const { data: allStreets } = useQuery({
@@ -136,20 +139,45 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-[#1F3F3A]">כתובת הנכס</h2>
-      <p className="text-gray-600">מלאו את כתובת הדירה לשבת (בית שמש בלבד)</p>
+      <p className="text-gray-600">מלאו את כתובת הדירה לשבת</p>
 
-      {/* City (Read-only) */}
+      {/* City Selector */}
       <div>
         <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
           עיר <span className="text-red-500">*</span>
         </label>
-        <input
-          type="text"
-          value="בית שמש"
-          disabled
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
-        />
-        <p className="mt-1 text-xs text-gray-500">כרגע המערכת תומכת בבית שמש בלבד</p>
+        <select
+          value={formData.cityId}
+          onChange={(e) => {
+            const selectedCity = cities?.find((c: any) => c.id === e.target.value);
+            if (selectedCity) {
+              setFormData({
+                ...formData,
+                cityId: selectedCity.id,
+                cityName: selectedCity.nameHe,
+                // Reset street selection when city changes
+                streetId: '',
+                streetName: '',
+                neighborhoodId: '',
+                neighborhoodName: '',
+              });
+              setStreetSearch('');
+            }
+          }}
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+            errors.cityId ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          <option value="">בחר עיר</option>
+          {cities?.map((city: any) => (
+            <option key={city.id} value={city.id}>
+              {city.nameHe}
+            </option>
+          ))}
+        </select>
+        {errors.cityId && (
+          <p className="mt-1 text-sm text-red-500">{errors.cityId}</p>
+        )}
       </div>
 
       {/* Street (Autocomplete) */}

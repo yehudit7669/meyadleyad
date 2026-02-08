@@ -199,6 +199,8 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
     const errors: any[] = [];
     const createdCityIds: string[] = [];
     const createdStreetIds: string[] = [];
+    const createdCities: Array<{id: string, name: string}> = [];
+    const createdStreets: Array<{id: string, name: string, cityName: string}> = [];
 
     // Use transaction with extended timeout for large imports
     await prisma.$transaction(async (tx) => {
@@ -243,6 +245,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
               },
             });
             createdCityIds.push(city.id);
+            createdCities.push({ id: city.id, name: cityName });
             console.log(`✅ Created new city: ${cityName} (${city.id})`);
           } else {
             console.log(`ℹ️ City already exists: ${cityName} (${city.id})`);
@@ -315,6 +318,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
               },
             });
             createdStreetIds.push(newStreet.id);
+            createdStreets.push({ id: newStreet.id, name: streetName, cityName: city.nameHe || city.name });
             successCount++;
           } else if (!mergeMode) {
             // Update existing street if not in merge mode
@@ -355,8 +359,11 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
           failedRows: failedCount,
           errors: errors.length > 0 ? errors : undefined,
           metadata: {
-            cityIds: createdCityIds,
-            streetIds: createdStreetIds,
+            createdCityIds,
+            createdStreetIds,
+            createdCities, // List of created cities with names
+            createdStreets, // List of created streets with names
+            importedData: data.slice(0, 100), // Save first 100 rows for preview
           },
         },
       });
@@ -644,6 +651,9 @@ router.post('/properties/commit', async (req: Request, res: Response): Promise<v
           failedRows: failedCount,
           errors: errors.length > 0 ? errors : undefined,
           importedItemIds: createdAdIds,
+          metadata: {
+            importedData: data.slice(0, 100), // Save first 100 rows for preview
+          },
         },
       });
     });
@@ -999,6 +1009,9 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
           failedRows: failedCount,
           errors: errors.length > 0 ? errors : undefined,
           importedItemIds: createdAdIds,
+          metadata: {
+            importedData: data.slice(0, 100), // Save first 100 rows for preview
+          },
         },
       });
     });
