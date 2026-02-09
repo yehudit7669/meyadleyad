@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ServiceProviderType } from '../types';
 import { Eye, EyeOff } from 'lucide-react';
+import { useCities } from '../hooks/useCities';
 
 interface WizardData {
   // שלב 1
@@ -48,6 +49,7 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
   loading,
   error,
 }) => {
+  const { data: cities, isLoading: citiesLoading } = useCities();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<WizardData>({
     serviceProviderType: '',
@@ -203,10 +205,10 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-black">
             שלב {currentStep} מתוך {totalSteps}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-black">
             {Math.round((currentStep / totalSteps) * 100)}%
           </span>
         </div>
@@ -252,6 +254,8 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
           <Step4BrokerDetails
             data={data}
             onChange={updateData}
+            cities={cities}
+            citiesLoading={citiesLoading}
           />
         )}
 
@@ -315,8 +319,8 @@ const Step1ServiceType: React.FC<{
   onSelect: (type: ServiceProviderType) => void;
 }> = ({ selectedType, onSelect }) => (
   <div>
-    <h2 className="text-2xl font-bold mb-2">בחר את סוג נותן השירות</h2>
-    <p className="text-gray-600 mb-6">באיזה תחום אתה עוסק?</p>
+    <h2 className="text-2xl font-bold text-black mb-2">בחר את סוג נותן השירות</h2>
+    <p className="text-black mb-6">באיזה תחום אתה עוסק?</p>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {SERVICE_PROVIDER_TYPES.map((type) => (
@@ -330,7 +334,7 @@ const Step1ServiceType: React.FC<{
               : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
           }`}
         >
-          <div className="text-lg font-semibold">{type.label}</div>
+          <div className="text-lg font-semibold text-black">{type.label}</div>
         </button>
       ))}
     </div>
@@ -347,13 +351,13 @@ const Step2PersonalDetails: React.FC<{
   
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-2">פרטים אישיים</h2>
-      <p className="text-gray-600 mb-6">מלא את הפרטים האישיים שלך</p>
+      <h2 className="text-2xl font-bold text-black mb-2">פרטים אישיים</h2>
+      <p className="text-black mb-6">מלא את הפרטים האישיים שלך</p>
 
       <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+          <label htmlFor="firstName" className="block text-sm font-medium text-black mb-1">
             שם פרטי <span className="text-red-500">*</span>
           </label>
           <input
@@ -368,7 +372,7 @@ const Step2PersonalDetails: React.FC<{
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+          <label htmlFor="lastName" className="block text-sm font-medium text-black mb-1">
             שם משפחה <span className="text-red-500">*</span>
           </label>
           <input
@@ -384,7 +388,7 @@ const Step2PersonalDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="phonePersonal" className="block text-sm font-medium mb-1">
+        <label htmlFor="phonePersonal" className="block text-sm font-medium text-black mb-1">
           טלפון אישי <span className="text-red-500">*</span>
         </label>
         <input
@@ -400,7 +404,7 @@ const Step2PersonalDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
           אימייל <span className="text-red-500">*</span>
         </label>
         <input
@@ -415,7 +419,7 @@ const Step2PersonalDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium mb-1">
+        <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
           סיסמה <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -438,11 +442,11 @@ const Step2PersonalDetails: React.FC<{
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">לפחות 6 תווים</p>
+        <p className="text-xs text-black mt-1">לפחות 6 תווים</p>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1">
           אימות סיסמה <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -476,12 +480,12 @@ const Step3BusinessDetails: React.FC<{
   onChange: (field: keyof WizardData, value: string) => void;
 }> = ({ data, onChange }) => (
   <div>
-    <h2 className="text-2xl font-bold mb-2">פרטי עסק/משרד</h2>
-    <p className="text-gray-600 mb-6">מלא את פרטי העסק או המשרד שלך</p>
+    <h2 className="text-2xl font-bold text-black mb-2">פרטי עסק/משרד</h2>
+    <p className="text-black mb-6">מלא את פרטי העסק או המשרד שלך</p>
 
     <div className="space-y-4">
       <div>
-        <label htmlFor="businessName" className="block text-sm font-medium mb-1">
+        <label htmlFor="businessName" className="block text-sm font-medium text-black mb-1">
           שם העסק/המשרד <span className="text-red-500">*</span>
         </label>
         <input
@@ -496,7 +500,7 @@ const Step3BusinessDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="businessAddress" className="block text-sm font-medium mb-1">
+        <label htmlFor="businessAddress" className="block text-sm font-medium text-black mb-1">
           כתובת משרד <span className="text-red-500">*</span>
         </label>
         <input
@@ -512,7 +516,7 @@ const Step3BusinessDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="businessPhone" className="block text-sm font-medium mb-1">
+        <label htmlFor="businessPhone" className="block text-sm font-medium text-black mb-1">
           טלפון עסק (אופציונלי)
         </label>
         <input
@@ -526,7 +530,7 @@ const Step3BusinessDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="website" className="block text-sm font-medium mb-1">
+        <label htmlFor="website" className="block text-sm font-medium text-black mb-1">
           אתר אינטרנט (אופציונלי)
         </label>
         <input
@@ -546,14 +550,16 @@ const Step3BusinessDetails: React.FC<{
 const Step4BrokerDetails: React.FC<{
   data: WizardData;
   onChange: (field: keyof WizardData, value: string) => void;
-}> = ({ data, onChange }) => (
+  cities?: any[];
+  citiesLoading: boolean;
+}> = ({ data, onChange, cities, citiesLoading }) => (
   <div>
-    <h2 className="text-2xl font-bold mb-2">פרטי תיווך</h2>
-    <p className="text-gray-600 mb-6">מלא את הפרטים הספציפיים למתווכים</p>
+    <h2 className="text-2xl font-bold text-black mb-2">פרטי תיווך</h2>
+    <p className="text-black mb-6">מלא את הפרטים הספציפיים למתווכים</p>
 
     <div className="space-y-4">
       <div>
-        <label htmlFor="brokerLicenseNumber" className="block text-sm font-medium mb-1">
+        <label htmlFor="brokerLicenseNumber" className="block text-sm font-medium text-black mb-1">
           מספר רישיון תיווך <span className="text-red-500">*</span>
         </label>
         <input
@@ -568,7 +574,7 @@ const Step4BrokerDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="brokerCityId" className="block text-sm font-medium mb-1">
+        <label htmlFor="brokerCityId" className="block text-sm font-medium text-black mb-1">
           אזור פעילות <span className="text-red-500">*</span>
         </label>
         <select
@@ -578,13 +584,26 @@ const Step4BrokerDetails: React.FC<{
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           required
           aria-required="true"
+          disabled={citiesLoading}
         >
-          <option value="">בחר עיר</option>
-          <option value="beit-shemesh">בית שמש</option>
+          <option value="">
+            {citiesLoading ? 'טוען ערים...' : 'בחר עיר'}
+          </option>
+          {cities && cities.length > 0 ? (
+            cities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.nameHe || city.name}
+              </option>
+            ))
+          ) : (
+            !citiesLoading && <option value="" disabled>אין ערים זמינות</option>
+          )}
         </select>
-        <p className="text-xs text-gray-500 mt-1">
-          בשלב זה זמין רק אזור בית שמש. ערים נוספות יתווספו בהמשך.
-        </p>
+        {cities && cities.length > 0 && (
+          <p className="text-xs text-black mt-1">
+            בחר את אזור הפעילות העיקרי שלך
+          </p>
+        )}
       </div>
     </div>
   </div>
@@ -596,8 +615,8 @@ const Step5Preferences: React.FC<{
   onChange: (value: boolean) => void;
 }> = ({ weeklyDigestOptIn, onChange }) => (
   <div>
-    <h2 className="text-2xl font-bold mb-2">העדפות</h2>
-    <p className="text-gray-600 mb-6">הגדר את העדפות התקשורת שלך</p>
+    <h2 className="text-2xl font-bold text-black mb-2">העדפות</h2>
+    <p className="text-black mb-6">הגדר את העדפות התקשורת שלך</p>
 
     <div className="space-y-4">
       <label className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -608,8 +627,8 @@ const Step5Preferences: React.FC<{
           className="mt-1 w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
         />
         <div className="flex-1">
-          <div className="font-medium">גיליון נכסים שבועי</div>
-          <div className="text-sm text-gray-600 mt-1">
+          <div className="font-medium text-black">גיליון נכסים שבועי</div>
+          <div className="text-sm text-black mt-1">
             קבל עדכון שבועי על נכסים חדשים והזדמנויות באזור שלך
           </div>
         </div>
@@ -630,8 +649,8 @@ const Step6Terms: React.FC<{
   onChangeDeclaration: (value: boolean) => void;
 }> = ({ termsAccepted, declarationAccepted, onChangeTerms, onChangeDeclaration }) => (
   <div>
-    <h2 className="text-2xl font-bold mb-2">תנאים והצהרות</h2>
-    <p className="text-gray-600 mb-6">יש לאשר את התנאים הבאים להשלמת ההרשמה</p>
+    <h2 className="text-2xl font-bold text-black mb-2">תנאים והצהרות</h2>
+    <p className="text-black mb-6">יש לאשר את התנאים הבאים להשלמת ההרשמה</p>
 
     <div className="space-y-4">
       <label className="flex items-start gap-3 p-4 border-2 rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -644,10 +663,10 @@ const Step6Terms: React.FC<{
           aria-required="true"
         />
         <div className="flex-1">
-          <div className="font-medium">
+          <div className="font-medium text-black">
             אני מאשר שקראתי ואני מסכים לתקנון ולתנאי השימוש <span className="text-red-500">*</span>
           </div>
-          <div className="text-sm text-gray-600 mt-1">
+          <div className="text-sm text-black mt-1">
             תנאי השימוש כוללים הסכמה למדיניות הפרטיות ולכללי השימוש באתר
           </div>
         </div>
@@ -663,10 +682,10 @@ const Step6Terms: React.FC<{
           aria-required="true"
         />
         <div className="flex-1">
-          <div className="font-medium">
+          <div className="font-medium text-black">
             אני מצהיר שכל הפרטים שמסרתי נכונים ומדויקים <span className="text-red-500">*</span>
           </div>
-          <div className="text-sm text-gray-600 mt-1">
+          <div className="text-sm text-black mt-1">
             מסירת פרטים שגויים עלולה לגרום לחסימת החשבון או לפעולות משפטיות
           </div>
         </div>

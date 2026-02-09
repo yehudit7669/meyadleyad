@@ -271,15 +271,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
             {/* Signup Type Selection */}
             {mode === 'signup' && !signupType && (
               <div className="mb-8">
-                <h3 className="text-xl font-bold mb-4 text-center">בחר את סוג ההרשמה</h3>
+                <h3 className="text-xl font-bold text-black mb-4 text-center">בחר את סוג ההרשמה</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     onClick={() => setSignupType('regular')}
                     className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all text-center"
                   >
                     <div className="text-4xl mb-2">👤</div>
-                    <div className="font-bold text-lg mb-1">משתמש רגיל</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-bold text-lg text-black mb-1">משתמש רגיל</div>
+                    <div className="text-sm text-black">
                       לפרסום ומציאת נכסים
                     </div>
                   </button>
@@ -289,8 +289,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                     className="p-6 border-2 border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all text-center"
                   >
                     <div className="text-4xl mb-2">💼</div>
-                    <div className="font-bold text-lg mb-1">נותן שירות</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-bold text-lg text-black mb-1">נותן שירות</div>
+                    <div className="text-sm text-black">
                       מתווך, עו"ד, שמאי ועוד
                     </div>
                   </button>
