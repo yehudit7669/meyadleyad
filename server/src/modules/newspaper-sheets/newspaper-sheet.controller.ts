@@ -393,6 +393,115 @@ export class NewspaperSheetController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * POST /api/admin/newspaper-sheets/:id/ads
+   * הוספת פרסומת לגיליון
+   */
+  async addAdvertisement(req: AuthRequest, res: Response) {
+    try {
+      const { id: sheetId } = req.params;
+      const { imageUrl, size, anchorType, beforeListingId, page, row, col } = req.body;
+      const userId = req.user?.id || '';
+
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const ad = await newspaperSheetService.addAdvertisement(
+        sheetId,
+        {
+          imageUrl,
+          size,
+          anchorType,
+          beforeListingId,
+          page,
+          row,
+          col
+        },
+        userId
+      );
+
+      res.json(ad);
+    } catch (error: any) {
+      console.error('Error adding advertisement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * PUT/PATCH /api/admin/newspaper-sheets/:id/ads/:adId
+   * עדכון פרסומת
+   */
+  async updateAdvertisement(req: AuthRequest, res: Response) {
+    try {
+      const { id: sheetId, adId } = req.params;
+      const { imageUrl, size, anchorType, beforeListingId, page, row, col } = req.body;
+      const userId = req.user?.id || '';
+
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const ad = await newspaperSheetService.updateAdvertisement(
+        adId,
+        {
+          imageUrl,
+          size,
+          anchorType,
+          beforeListingId,
+          page,
+          row,
+          col
+        },
+        userId
+      );
+
+      res.json(ad);
+    } catch (error: any) {
+      console.error('Error updating advertisement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * DELETE /api/admin/newspaper-sheets/:id/ads/:adId
+   * הסרת פרסומת מגיליון
+   */
+  async removeAdvertisement(req: AuthRequest, res: Response) {
+    try {
+      const { id: sheetId, adId } = req.params;
+      const userId = req.user?.id || '';
+
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      await newspaperSheetService.removeAdvertisement(sheetId, adId, userId);
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error removing advertisement:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  /**
+   * GET /api/admin/newspaper-sheets/:id/calculate-layout
+   * חישוב layout עם פרסומות לתצוגה מקדימה
+   */
+  async calculateLayout(req: AuthRequest, res: Response) {
+    try {
+      const { id: sheetId } = req.params;
+
+      const layout = await newspaperSheetService.calculateSheetLayout(sheetId);
+
+      res.json(layout);
+    } catch (error: any) {
+      console.error('Error calculating layout:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 export const newspaperSheetController = new NewspaperSheetController();

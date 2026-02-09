@@ -74,6 +74,46 @@ router.patch(
 );
 
 /**
+ * Add advertisement to sheet
+ * POST /api/admin/newspaper-sheets/:id/ads
+ */
+router.post(
+  '/:id/ads',
+  newspaperSheetController.addAdvertisement.bind(newspaperSheetController)
+);
+
+/**
+ * Update advertisement
+ * PUT/PATCH /api/admin/newspaper-sheets/:id/ads/:adId
+ */
+router.put(
+  '/:id/ads/:adId',
+  newspaperSheetController.updateAdvertisement.bind(newspaperSheetController)
+);
+router.patch(
+  '/:id/ads/:adId',
+  newspaperSheetController.updateAdvertisement.bind(newspaperSheetController)
+);
+
+/**
+ * Remove advertisement from sheet
+ * DELETE /api/admin/newspaper-sheets/:id/ads/:adId
+ */
+router.delete(
+  '/:id/ads/:adId',
+  newspaperSheetController.removeAdvertisement.bind(newspaperSheetController)
+);
+
+/**
+ * Calculate layout with ads for preview
+ * GET /api/admin/newspaper-sheets/:id/calculate-layout
+ */
+router.get(
+  '/:id/calculate-layout',
+  newspaperSheetController.calculateLayout.bind(newspaperSheetController)
+);
+
+/**
  * Generate General Sheet PDF (all properties)
  * POST /api/admin/newspaper-sheets/general/generate-pdf
  * ⚠️ Must be BEFORE /:id routes to avoid route conflict

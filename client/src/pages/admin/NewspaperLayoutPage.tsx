@@ -73,7 +73,6 @@ export default function NewspaperLayoutPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newspaper-ads'] });
-      alert('✅ PDF עיתון נוצר מחדש בהצלחה');
     },
     onError: (error: any) => {
       alert(`❌ שגיאה: ${error.response?.data?.error || error.message}`);
@@ -87,7 +86,6 @@ export default function NewspaperLayoutPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newspaper-ads'] });
-      alert('✅ PDF נמחק בהצלחה');
     },
     onError: (error: any) => {
       alert(`❌ שגיאה: ${error.response?.data?.error || error.message}`);

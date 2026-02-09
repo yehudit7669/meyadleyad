@@ -79,7 +79,6 @@ export default function UsersManagementPage() {
       delete exportFilters.limit;
       
       await usersAdminService.exportUsers(exportFilters);
-      alert('הקובץ הורד בהצלחה!');
     } catch (error: any) {
       alert(error.response?.data?.message || 'שגיאה בייצוא משתמשים');
     } finally {
@@ -100,7 +99,6 @@ export default function UsersManagementPage() {
         role: 'USER',
         password: '',
       });
-      alert('המשתמש נוצר בהצלחה!');
     },
     onError: (error: any) => {
       alert(error.response?.data?.message || 'שגיאה ביצירת משתמש');

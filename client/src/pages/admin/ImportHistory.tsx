@@ -100,7 +100,6 @@ export default function ImportHistoryPage() {
       setSelectedImport(null);
       setApprovedCheck(null);
       
-      alert('הייבוא נמחק בהצלחה');
     } catch (error: any) {
       console.error('Error deleting import:', error);
       alert('שגיאה במחיקת הייבוא: ' + (error.response?.data?.error || error.message));

@@ -12,6 +12,7 @@ import { AuditService } from '../profile/audit.service';
 import path from 'path';
 import fs from 'fs/promises';
 import { NewspaperSheetPDFService } from './newspaper-sheet-pdf.service';
+import { calculateNewspaperLayout } from './newspaper-layout.service';
 
 export class NewspaperSheetService {
   private pdfService: NewspaperSheetPDFService;
@@ -100,6 +101,9 @@ export class NewspaperSheetService {
             }
           }
         },
+        ads: {
+          orderBy: { createdAt: 'asc' }
+        },
         _count: {
           select: { listings: true }
         }
@@ -163,17 +167,13 @@ export class NewspaperSheetService {
               }
             }
           },
+          ads: {
+            orderBy: { createdAt: 'asc' }
+          },
           _count: {
             select: { listings: true }
           }
         }
-      });
-
-      await AuditService.log(userId, 'NEWSPAPER_SHEET_CREATED', {
-        sheetId: sheet.id,
-        categoryId,
-        cityId,
-        title
       });
     }
 
@@ -388,6 +388,9 @@ export class NewspaperSheetService {
           orderBy: { version: 'desc' },
           take: 5
         },
+        ads: {
+          orderBy: { createdAt: 'asc' }
+        },
         _count: {
           select: { listings: true }
         }
@@ -565,6 +568,206 @@ export class NewspaperSheetService {
     console.log(`✅ General sheet PDF saved: ${pdfPath}`);
 
     return { pdfPath, sheetsCount: result.sheetsCount };
+  }
+
+  /**
+   * Add Advertisement to Sheet
+   * הוספת פרסומת לגיליון
+   */
+  async addAdvertisement(
+    sheetId: string,
+    data: {
+      imageUrl: string;
+      size: '1x1' | '2x1' | '3x1' | '2x2';
+      anchorType: 'beforeIndex' | 'pagePosition';
+      beforeListingId?: string;
+      page?: number;
+      row?: number;
+      col?: number;
+    },
+    userId: string
+  ) {
+    // Validate sheet exists
+    const sheet = await prisma.newspaperSheet.findUnique({
+      where: { id: sheetId }
+    });
+
+    if (!sheet) {
+      throw new Error('Sheet not found');
+    }
+
+    // Validate anchor data
+    if (data.anchorType === 'beforeIndex' && !data.beforeListingId) {
+      throw new Error('beforeListingId is required for beforeIndex anchor');
+    }
+
+    if (data.anchorType === 'pagePosition' && (!data.page || !data.row || !data.col)) {
+      throw new Error('page, row, and col are required for pagePosition anchor');
+    }
+
+    // Create advertisement
+    const ad = await prisma.newspaperSheetAd.create({
+      data: {
+        sheetId,
+        imageUrl: data.imageUrl,
+        size: data.size,
+        anchorType: data.anchorType,
+        beforeListingId: data.beforeListingId,
+        page: data.page,
+        row: data.row,
+        col: data.col,
+        createdBy: userId
+      }
+    });
+
+    await AuditService.log(userId, 'NEWSPAPER_SHEET_AD_ADDED', {
+      sheetId,
+      adId: ad.id,
+      size: data.size,
+      anchorType: data.anchorType
+    });
+
+    return ad;
+  }
+
+  /**
+   * Update Advertisement
+   * עדכון פרסומת
+   */
+  async updateAdvertisement(
+    adId: string,
+    data: {
+      imageUrl?: string;
+      size?: '1x1' | '2x1' | '3x1' | '2x2';
+      anchorType?: 'beforeIndex' | 'pagePosition';
+      beforeListingId?: string;
+      page?: number;
+      row?: number;
+      col?: number;
+    },
+    userId: string
+  ) {
+    // Get existing ad
+    const existingAd = await prisma.newspaperSheetAd.findUnique({
+      where: { id: adId }
+    });
+
+    if (!existingAd) {
+      throw new Error('Advertisement not found');
+    }
+
+    // Validate anchor data if anchorType is changing
+    const newAnchorType = data.anchorType || existingAd.anchorType;
+    if (newAnchorType === 'beforeIndex' && !data.beforeListingId && !existingAd.beforeListingId) {
+      throw new Error('beforeListingId is required for beforeIndex anchor');
+    }
+
+    if (newAnchorType === 'pagePosition') {
+      const newPage = data.page ?? existingAd.page;
+      const newRow = data.row ?? existingAd.row;
+      const newCol = data.col ?? existingAd.col;
+      
+      if (!newPage || !newRow || !newCol) {
+        throw new Error('page, row, and col are required for pagePosition anchor');
+      }
+    }
+
+    // Update advertisement
+    const updatedAd = await prisma.newspaperSheetAd.update({
+      where: { id: adId },
+      data: {
+        imageUrl: data.imageUrl,
+        size: data.size,
+        anchorType: data.anchorType,
+        beforeListingId: data.beforeListingId,
+        page: data.page,
+        row: data.row,
+        col: data.col
+      }
+    });
+
+    await AuditService.log(userId, 'NEWSPAPER_SHEET_AD_UPDATED', {
+      sheetId: existingAd.sheetId,
+      adId: adId,
+      changes: data
+    });
+
+    return updatedAd;
+  }
+
+  /**
+   * Remove Advertisement from Sheet
+   * הסרת פרסומת מגיליון
+   */
+  async removeAdvertisement(
+    sheetId: string,
+    adId: string,
+    userId: string
+  ) {
+    const ad = await prisma.newspaperSheetAd.findUnique({
+      where: { id: adId }
+    });
+
+    if (!ad) {
+      throw new Error('Advertisement not found');
+    }
+
+    if (ad.sheetId !== sheetId) {
+      throw new Error('Advertisement does not belong to this sheet');
+    }
+
+    await prisma.newspaperSheetAd.delete({
+      where: { id: adId }
+    });
+
+    await AuditService.log(userId, 'NEWSPAPER_SHEET_AD_REMOVED', {
+      sheetId,
+      adId
+    });
+
+    return true;
+  }
+
+  /**
+   * Calculate Layout with Ads
+   * חישוב פריסה מלאה עם פרסומות
+   */
+  async calculateSheetLayout(sheetId: string) {
+    const sheet = await this.getSheetById(sheetId);
+    
+    // Prepare listings data
+    const listings = sheet.listings
+      .sort((a, b) => a.positionIndex - b.positionIndex)
+      .map(l => ({
+        ...l.listing,
+        id: l.listingId
+      }));
+
+    // Prepare ads data
+    const ads = (sheet.ads || []).map(ad => ({
+      id: ad.id,
+      imageUrl: ad.imageUrl,
+      size: ad.size as '1x1' | '2x1' | '3x1' | '2x2',
+      anchorType: ad.anchorType as 'beforeIndex' | 'pagePosition',
+      beforeListingId: ad.beforeListingId ?? undefined,
+      page: ad.page ?? undefined,
+      row: ad.row ?? undefined,
+      col: ad.col ?? undefined
+    }));
+
+    // Calculate layout
+    const layout = calculateNewspaperLayout(listings, ads);
+
+    return {
+      ...layout,
+      sheetInfo: {
+        title: sheet.title,
+        category: sheet.category.nameHe,
+        city: sheet.city.nameHe,
+        listingsCount: listings.length,
+        adsCount: ads.length
+      }
+    };
   }
 }
 

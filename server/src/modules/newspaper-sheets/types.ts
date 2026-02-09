@@ -101,6 +101,16 @@ export interface SheetWithListings {
       }>;
     };
   }>;
+  ads?: Array<{
+    id: string;
+    imageUrl: string;
+    size: string;
+    anchorType: string;
+    beforeListingId: string | null;
+    page: number | null;
+    row: number | null;
+    col: number | null;
+  }>;
   _count: {
     listings: number;
   };

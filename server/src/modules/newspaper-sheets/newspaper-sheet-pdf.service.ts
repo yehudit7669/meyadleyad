@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../../config/index.js';
 import prisma from '../../config/database';
+import { calculateNewspaperLayout } from './newspaper-layout.service';
 
 /**
  * PDF Service for Newspaper Sheets
@@ -116,8 +117,34 @@ export class NewspaperSheetPDFService {
       }
     }
 
-    // יצירת כרטיסי נכסים
-    const cardsHTML = this.generatePropertyCards(sheet);
+    // Calculate layout if there are ads
+    let cardsHTML = '';
+    if (sheet.ads && sheet.ads.length > 0) {
+      // Use layout algorithm
+      const listings = sheet.listings
+        .sort((a, b) => a.positionIndex - b.positionIndex)
+        .map(l => ({
+          ...l.listing,
+          id: l.listingId
+        }));
+
+      const ads = sheet.ads.map(ad => ({
+        id: ad.id,
+        imageUrl: ad.imageUrl,
+        size: ad.size as '1x1' | '2x1' | '3x1' | '2x2',
+        anchorType: ad.anchorType as 'beforeIndex' | 'pagePosition',
+        beforeListingId: ad.beforeListingId ?? undefined,
+        page: ad.page ?? undefined,
+        row: ad.row ?? undefined,
+        col: ad.col ?? undefined
+      }));
+
+      const layout = calculateNewspaperLayout(listings, ads);
+      cardsHTML = await this.generateLayoutHTML(layout, sheet);
+    } else {
+      // No ads - use simple card generation
+      cardsHTML = this.generatePropertyCards(sheet);
+    }
     
     // מספר גיליון ותאריך - שימוש במספר הגליון הגלובלי
     const globalIssueNumber = await this.getGlobalIssueNumber();
@@ -249,6 +276,7 @@ export class NewspaperSheetPDFService {
     .newspaper-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 53mm;
       gap: 4.23mm;
       padding: 0 6.35mm;
       margin-top: 3.17mm;
@@ -592,6 +620,117 @@ export class NewspaperSheetPDFService {
   }
 
   /**
+   * Generate HTML from calculated layout (with ads)
+   */
+  private async generateLayoutHTML(layout: any, sheet: SheetWithListings): Promise<string> {
+    let html = '';
+    
+    // Flatten all items from all pages into a single array
+    const allItems: any[] = [];
+    for (const page of layout.pages) {
+      for (const row of page.rows) {
+        for (const item of row) {
+          if (item.type === 'listing' || (item.type === 'ad' && !item.data?.isOccupied)) {
+            allItems.push(item);
+          }
+        }
+      }
+    }
+    
+    // Generate HTML for each item
+    for (const item of allItems) {
+      if (item.type === 'listing') {
+        // Find the listing from sheet
+        const sheetListing = sheet.listings.find(l => l.listingId === item.id);
+        if (!sheetListing) continue;
+        
+        const listing = sheetListing.listing;
+        const customFields = listing.customFields || {};
+        
+        // Generate listing card
+        html += await this.generateListingCardHTML(listing, customFields);
+      } else if (item.type === 'ad') {
+        // Generate ad card - span columns
+        const colspan = item.colspan || 1;
+        const adImageBase64 = await this.imageToBase64(item.data.imageUrl);
+        
+        html += `
+          <div class="newspaper-property-card" style="grid-column: span ${colspan}; overflow: hidden;">
+            <img src="${adImageBase64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          </div>
+        `;
+      }
+    }
+    
+    return html;
+  }
+
+  /**
+   * Generate single listing card HTML
+   */
+  private async generateListingCardHTML(listing: any, customFields: any): Promise<string> {
+    const rooms = customFields.rooms || '';
+    const size = customFields.size || '';
+    const floor = customFields.floor || '';
+    const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
+
+    const features: string[] = [];
+    const featuresObj = customFields.features || {};
+    
+    if (featuresObj.hasOption) features.push('אופציה');
+    if (featuresObj.parking) features.push('חניה');
+    if (featuresObj.parentalUnit || featuresObj.masterUnit) features.push('יחידת הורים');
+    if (featuresObj.storage) features.push('מחסן');
+    if (featuresObj.ac || featuresObj.airConditioning) features.push('מיזוג');
+    if (featuresObj.elevator) features.push('מעלית');
+    if (featuresObj.balcony) features.push('מרפסת');
+    if (featuresObj.safeRoom) features.push('ממ״ד');
+    if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
+    if (featuresObj.view) features.push('נוף');
+    if (featuresObj.yard) features.push('חצר');
+    if (featuresObj.housingUnit) features.push('יח׳ דיור');
+
+    const contactName = customFields.contactName || 'פרטים נוספים';
+    const contactPhone = customFields.contactPhone || (listing.User?.phone) || '';
+
+    const formatAddress = (fullAddress: string) => {
+      if (!fullAddress) return 'נכס';
+      const parts = fullAddress.split(',');
+      return this.escapeHtml(parts[0].trim());
+    };
+
+    return `
+      <a href="#" class="newspaper-property-card-link">
+        <div class="newspaper-property-card">
+          ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
+          
+          <div class="property-card-header">
+            <div class="property-title">${formatAddress(listing.address)}</div>
+          </div>
+
+          <div class="property-card-body">
+            <div class="property-meta">
+              ${size ? `<div class="meta-item"><span class="meta-icon">📐</span><span class="meta-value">${this.escapeHtml(size)}</span></div>` : ''}
+              ${floor ? `<div class="meta-item"><span class="meta-icon">🏢</span><span class="meta-value">${this.escapeHtml(floor)}</span></div>` : ''}
+              ${rooms ? `<div class="meta-item"><span class="meta-icon">🚪</span><span class="meta-value">${this.escapeHtml(rooms)}</span></div>` : ''}
+            </div>
+
+            <div class="property-description">${this.escapeHtml(listing.title)}</div>
+
+            ${features.length > 0 ? `<div class="property-features">${features.join(' · ')}</div>` : ''}
+            ${listing.price ? `<div class="property-price">₪${listing.price.toLocaleString('he-IL')}</div>` : ''}
+          </div>
+
+          <div class="property-contact">
+            <div class="contact-name">${this.escapeHtml(contactName)}</div>
+            <div class="contact-phone">${this.escapeHtml(contactPhone)}</div>
+          </div>
+        </div>
+      </a>
+    `;
+  }
+
+  /**
    * Convert image to base64
    */
   private async imageToBase64(imageUrl: string): Promise<string> {
@@ -624,9 +763,10 @@ export class NewspaperSheetPDFService {
   /**
    * Escape HTML special characters
    */
-  private escapeHtml(text: string): string {
-    if (!text) return '';
-    return text
+  private escapeHtml(text: any): string {
+    if (!text && text !== 0) return '';
+    const str = String(text);
+    return str
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')

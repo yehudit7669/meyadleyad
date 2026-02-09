@@ -62,7 +62,6 @@ export default function PendingAds() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-ads'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      alert('✅ המודעה אושרה בהצלחה');
     },
   });
 
@@ -84,10 +83,6 @@ export default function PendingAds() {
 
   const handleReject = (id: string) => {
     const reason = rejectionReason[id] || '';
-    if (!reason.trim()) {
-      alert('נא להזין סיבת דחייה');
-      return;
-    }
     if (reason.length > 250) {
       alert('סיבת דחייה חייבת להיות עד 250 תווים');
       return;

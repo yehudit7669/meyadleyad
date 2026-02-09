@@ -249,7 +249,6 @@ const AuditLogPage: React.FC = () => {
       }
 
       setShowExportModal(false);
-      alert('הלוגים יוצאו בהצלחה');
       
       // Refresh logs to show the export action
       fetchLogs();

@@ -280,6 +280,7 @@ model User {
   Favorite                   Favorite[]
   HighlightRequest           HighlightRequest[]
   NewspaperAdCreated         NewspaperAd[]                @relation("NewspaperAdCreator")
+  NewspaperSheetAdCreated    NewspaperSheetAd[]           @relation("NewspaperSheetAdCreator")
   NewspaperSheetCreated      NewspaperSheet[]             @relation("NewspaperSheetCreator")
   NewspaperVersionGenerated  NewspaperSheetVersion[]      @relation("NewspaperVersionGenerator")
   NotificationQueue          NotificationQueue[]
@@ -781,6 +782,7 @@ model NewspaperSheet {
   creator      User                    @relation("NewspaperSheetCreator", fields: [createdBy], references: [id])
   listings     NewspaperSheetListing[]
   versions     NewspaperSheetVersion[]
+  ads          NewspaperSheetAd[]
 
   @@unique([categoryId, cityId, status])
   @@index([categoryId])
@@ -831,6 +833,27 @@ model NewspaperAd {
   creator   User     @relation("NewspaperAdCreator", fields: [createdBy], references: [id])
 
   @@index([adId])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+model NewspaperSheetAd {
+  id              String         @id @default(cuid())
+  sheetId         String
+  imageUrl        String
+  size            String         // "1x1" | "2x1" | "3x1" | "2x2"
+  anchorType      String         // "beforeIndex" | "pagePosition"
+  beforeListingId String?
+  page            Int?
+  row             Int?
+  col             Int?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  createdBy       String
+  sheet           NewspaperSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  creator         User           @relation("NewspaperSheetAdCreator", fields: [createdBy], references: [id])
+
+  @@index([sheetId])
   @@index([createdBy])
   @@index([createdAt])
 }

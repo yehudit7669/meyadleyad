@@ -32,6 +32,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
+import AdvertisementManager from '../../components/admin/AdvertisementManager';
 import './NewspaperSheetEditor.css';
 
 // Helper to get full image URL
@@ -77,9 +78,21 @@ interface NewspaperSheet {
     nameHe: string;
   };
   listings: Listing[];
+  ads?: Advertisement[];
   _count: {
     listings: number;
   };
+}
+
+interface Advertisement {
+  id: string;
+  imageUrl: string;
+  size: '1x1' | '2x1' | '3x1' | '2x2';
+  anchorType: 'beforeIndex' | 'pagePosition';
+  beforeListingId?: string;
+  page?: number;
+  row?: number;
+  col?: number;
 }
 
 // Sortable Property Card in Grid (with newspaper styling)
@@ -306,6 +319,87 @@ function PropertyCardOverlay({ listing }: { listing: Listing }) {
   );
 }
 
+// Ad Slot Card - displays advertisement in grid
+function AdSlotCard({ ad, onRemove }: { ad: Advertisement; onRemove: () => void }) {
+  const getImageUrl = (url: string) => {
+    if (url.startsWith('http')) return url;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const baseUrl = apiUrl.replace(/\/api$/, '');
+    return `${baseUrl}${url}`;
+  };
+
+  // Parse size to get grid span
+  const [cols, rows] = ad.size.split('x').map(Number);
+
+  return (
+    <div 
+      className="newspaper-property-card group" 
+      style={{ 
+        position: 'relative', 
+        gridColumn: `span ${cols}`,
+        gridRow: `span ${rows}`,
+        height: '100%'
+      }}
+    >
+      {/* Remove Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="absolute top-2 left-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center z-20 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        title="הסר פרסומת"
+      >
+        <X className="w-4 h-4" />
+      </button>
+
+      {/* Ad Badge */}
+      <div className="absolute top-2 right-2 bg-yellow-600 text-white text-xs px-2 py-1 rounded-md font-bold shadow z-10">
+        פרסומת {ad.size}
+      </div>
+
+      {/* Ad Image */}
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        padding: '0.5rem',
+        overflow: 'hidden',
+        display: 'flex',
+        alignItems: 'stretch'
+      }}>
+        <img
+          src={getImageUrl(ad.imageUrl)}
+          alt="Advertisement"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover', // Crop image to fit card dimensions
+            borderRadius: '8px',
+            display: 'block'
+          }}
+        />
+      </div>
+
+      {/* Ad Info */}
+      <div style={{ 
+        position: 'absolute', 
+        bottom: '8px', 
+        left: '8px', 
+        right: '8px', 
+        background: 'rgba(255, 193, 7, 0.9)', 
+        padding: '4px 8px', 
+        borderRadius: '4px',
+        fontSize: '12px',
+        color: '#000',
+        fontWeight: 'bold',
+        textAlign: 'center'
+      }}>
+        {ad.anchorType === 'beforeIndex' ? 'עוגן: לפני נכס' : `עמוד ${ad.page}, שורה ${ad.row}, עמודה ${ad.col}`}
+      </div>
+    </div>
+  );
+}
+
 export default function NewspaperSheetEditorPage() {
   const { sheetId } = useParams<{ sheetId: string }>();
   const navigate = useNavigate();
@@ -326,6 +420,7 @@ export default function NewspaperSheetEditorPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [useCalculatedLayout, setUseCalculatedLayout] = useState(false);
 
   // Sensors with proper activation constraint
   const sensors = useSensors(
@@ -366,8 +461,20 @@ export default function NewspaperSheetEditorPage() {
         setHeaderImageHeight(120);
       }
       setListings([...sheet.listings].sort((a, b) => a.positionIndex - b.positionIndex));
+      // Enable calculated layout if there are ads
+      setUseCalculatedLayout((sheet.ads?.length || 0) > 0);
     }
   }, [sheet]);
+
+  // Fetch calculated layout when there are ads
+  const { data: calculatedLayout } = useQuery<any>({
+    queryKey: ['newspaper-layout', sheetId, sheet?.ads?.length],
+    queryFn: async () => {
+      const response = await api.get(`/admin/newspaper-sheets/${sheetId}/calculate-layout`);
+      return response.data;
+    },
+    enabled: !!sheetId && useCalculatedLayout && (sheet?.ads?.length || 0) > 0,
+  });
 
   // Update sheet mutation
   const updateSheetMutation = useMutation({
@@ -826,7 +933,71 @@ export default function NewspaperSheetEditorPage() {
                   <p className="text-lg">אין מודעות בגיליון</p>
                   <p className="text-sm mt-2">מודעות שאושרו יתווספו אוטומטית</p>
                 </div>
+              ) : useCalculatedLayout && calculatedLayout ? (
+                /* Render using calculated layout when there are ads */
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  modifiers={[snapCenterToCursor]}
+                >
+                  <SortableContext items={listings.map(l => l.id)} strategy={rectSortingStrategy}>
+                    <div className="newspaper-grid">
+                      {calculatedLayout.pages.flatMap((page: any, pageIdx: number) =>
+                        page.rows.flatMap((row: any[], rowIdx: number) =>
+                          row.map((item: any, colIdx: number) => {
+                            // Skip occupied cells
+                            if (item.type === 'empty' || item.data?.isOccupied) {
+                              return null;
+                            }
+
+                            if (item.type === 'listing') {
+                              const listing = listings.find(l => l.listingId === item.id);
+                              if (!listing) return null;
+                              return (
+                                <div key={`${pageIdx}-${rowIdx}-${colIdx}-${item.id}`}>
+                                  <SortablePropertyCard
+                                    listing={listing}
+                                    onRemove={handleRemoveListing}
+                                  />
+                                </div>
+                              );
+                            } else if (item.type === 'ad') {
+                              const ad = sheet.ads?.find(a => a.id === item.id);
+                              if (!ad) return null;
+                              return (
+                                <div 
+                                  key={`${pageIdx}-${rowIdx}-${colIdx}-${item.id}`} 
+                                  style={{ 
+                                    gridColumn: `span ${item.colspan || 1}`, 
+                                    gridRow: `span ${item.rowspan || 1}` 
+                                  }}
+                                >
+                                  <AdSlotCard
+                                    ad={ad}
+                                    onRemove={async () => {
+                                        try {
+                                          await api.delete(`/admin/newspaper-sheets/${sheetId}/ads/${ad.id}`);
+                                          queryClient.invalidateQueries({ queryKey: ['newspaper-sheet', sheetId] });
+                                          queryClient.invalidateQueries({ queryKey: ['newspaper-layout', sheetId] });
+                                        } catch (error: any) {
+                                          alert(`❌ שגיאה: ${error.response?.data?.error || error.message}`);
+                                        }
+                                    }}
+                                  />
+                                </div>
+                              );
+                            }
+                            return null;
+                          })
+                        )
+                      )}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               ) : (
+                /* Render normally without ads */
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -837,9 +1008,9 @@ export default function NewspaperSheetEditorPage() {
                   <SortableContext items={listings.map(l => l.id)} strategy={rectSortingStrategy}>
                     <div className="newspaper-grid">
                       {listings.map((listing) => (
-                        <SortablePropertyCard 
-                          key={listing.id} 
-                          listing={listing} 
+                        <SortablePropertyCard
+                          key={listing.id}
+                          listing={listing}
                           onRemove={handleRemoveListing}
                         />
                       ))}
@@ -973,6 +1144,17 @@ export default function NewspaperSheetEditorPage() {
           </div>
         </div>
       </div>
+
+      {/* Advertisement Manager */}
+      <AdvertisementManager
+        sheetId={sheetId!}
+        advertisements={sheet.ads || []}
+        listings={listings}
+        onUpdate={() => {
+          queryClient.invalidateQueries({ queryKey: ['newspaper-sheet', sheetId] });
+          queryClient.invalidateQueries({ queryKey: ['newspaper-layout', sheetId] });
+        }}
+      />
 
       {/* DragOverlay Portal - rendered at document.body for accurate positioning */}
       {createPortal(
