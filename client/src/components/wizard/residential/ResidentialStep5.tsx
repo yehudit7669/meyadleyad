@@ -3,7 +3,7 @@ import { ResidentialStep5Data } from '../../../types/wizard';
 import { residentialStep5Schema } from '../../../types/wizard';
 import { WizardStepProps } from '../../../types/wizard';
 import { useAuth } from '../../../hooks/useAuth';
-import { useBrokerTeam } from '../../../hooks/useBroker';
+import { useBrokerTeam, useBrokerProfile } from '../../../hooks/useBroker';
 
 const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) => {
   const { user } = useAuth();
@@ -11,6 +11,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
   
   // Fetch team members only if user is a broker
   const { data: teamMembers } = useBrokerTeam();
+  const { data: brokerProfile } = useBrokerProfile();
   const brokerTeam = isBroker && teamMembers ? teamMembers : [];
 
   const [formData, setFormData] = useState<ResidentialStep5Data>(
@@ -25,7 +26,15 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
 
   // Auto-fill phone when broker is selected
   useEffect(() => {
-    if (selectedBrokerId && brokerTeam.length > 0) {
+    if (selectedBrokerId === 'OFFICE' && brokerProfile?.office) {
+      // Fill office details
+      setFormData((prev) => ({
+        ...prev,
+        contactName: brokerProfile.office?.businessName || '',
+        contactPhone: brokerProfile.office?.businessPhone || '',
+      }));
+    } else if (selectedBrokerId && selectedBrokerId !== 'OFFICE' && brokerTeam.length > 0) {
+      // Fill broker member details
       const selectedBroker = brokerTeam.find((member: any) => member.id === selectedBrokerId);
       if (selectedBroker) {
         setFormData((prev) => ({
@@ -35,7 +44,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
         }));
       }
     }
-  }, [selectedBrokerId, brokerTeam]);
+  }, [selectedBrokerId, brokerTeam, brokerProfile]);
 
   const handleChange = (field: keyof ResidentialStep5Data, value: any) => {
     setFormData((prev) => ({
@@ -79,9 +88,9 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
         {isBroker && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              בחר מתווך מהצוות
+              בחר מתווך מהצוות או משרד
             </label>
-            {brokerTeam.length > 0 ? (
+            {brokerTeam.length > 0 || brokerProfile?.office?.businessName ? (
               <>
                 <select
                   value={selectedBrokerId}
@@ -89,6 +98,11 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 >
                   <option value="">בחר מתווך או הזן באופן ידני</option>
+                  {brokerProfile?.office?.businessName && (
+                    <option value="OFFICE">
+                      🏢 {brokerProfile.office.businessName} - {brokerProfile.office.businessPhone}
+                    </option>
+                  )}
                   {brokerTeam.map((member: any) => (
                     <option key={member.id} value={member.id}>
                       {member.fullName} - {member.phone}
@@ -96,7 +110,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  בחר מתווך מהצוות שלך והפרטים יועלו אוטומטית
+                  בחר מתווך מהצוות שלך, בחר את המשרד, או הפרטים יועלו אוטומטית
                 </p>
               </>
             ) : (
