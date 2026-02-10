@@ -254,8 +254,17 @@ export class UsersAdminService {
     }
 
     // Only Super Admin can change roleType
-    if (data.roleType && adminRole !== UserRole.SUPER_ADMIN) {
-      throw new Error('רק מנהל על יכול לשנות סוג משתמש');
+    // Admin can change role only for regular users (USER role)
+    if (data.roleType) {
+      if (adminRole !== UserRole.SUPER_ADMIN) {
+        // Admin can only change role for USER type (not BROKER or SERVICE_PROVIDER)
+        if (currentUser.role !== UserRole.USER) {
+          throw new Error('רק מנהל על יכול לשנות סוג משתמש של מתווך/נותן שירות');
+        }
+        if (adminRole !== UserRole.ADMIN) {
+          throw new Error('רק מנהל או מנהל על יכול לשנות סוג משתמש');
+        }
+      }
     }
 
     // Build update data

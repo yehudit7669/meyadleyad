@@ -183,21 +183,38 @@ export default function UserProfilePage() {
               />
             </div>
 
-            {isSuperAdmin && (
+            {(isSuperAdmin || (isAdmin && profile.role === 'USER')) && (
               <div>
-                <label className="block text-sm font-medium text-black mb-1">סוג משתמש</label>
-                <select
-                  value={formData.roleType}
-                  onChange={(e) => setFormData({ ...formData, roleType: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="USER">משתמש פרטי</option>
-                  <option value="BROKER">מתווך</option>
-                  <option value="SERVICE_PROVIDER">נותן שירות</option>
-                  <option value="ADMIN">מנהל</option>
-                  <option value="SUPER_ADMIN">מנהל על</option>
-                  <option value="MODERATOR">מנהל צופה</option>
-                </select>
+                <label className="block text-sm font-medium text-black mb-1">ROLE</label>
+                {isSuperAdmin ? (
+                  <select
+                    value={formData.roleType}
+                    onChange={(e) => setFormData({ ...formData, roleType: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="USER">משתמש פרטי</option>
+                    <option value="BROKER">מתווך</option>
+                    <option value="SERVICE_PROVIDER">נותן שירות</option>
+                    <option value="ADMIN">מנהל</option>
+                    <option value="SUPER_ADMIN">מנהל על</option>
+                    <option value="MODERATOR">מנהל צופה</option>
+                  </select>
+                ) : (
+                  <select
+                    value={formData.roleType}
+                    onChange={(e) => setFormData({ ...formData, roleType: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="USER">משתמש פרטי (USER)</option>
+                    <option value="ADMIN">מנהל (ADMIN)</option>
+                    <option value="MODERATOR">מנהל צופה (MODERATOR)</option>
+                  </select>
+                )}
+                {isAdmin && !isSuperAdmin && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    ניתן לשנות ROLE רק למשתמשים רגילים (לא מתווכים/נותני שירות)
+                  </p>
+                )}
               </div>
             )}
 
