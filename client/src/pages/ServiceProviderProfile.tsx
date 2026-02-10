@@ -8,7 +8,6 @@ import SPCommunicationTab from '../components/service-provider/SPCommunicationTa
 import SPAccountManagementTab from '../components/service-provider/SPAccountManagementTab';
 import SPShareTab from '../components/service-provider/SPShareTab';
 import SPHighlightRequestTab from '../components/service-provider/SPHighlightRequestTab';
-import SPAuditLogTab from '../components/service-provider/SPAuditLogTab';
 
 type TabType =
   | 'personal'
@@ -17,8 +16,7 @@ type TabType =
   | 'communication'
   | 'account'
   | 'share'
-  | 'highlight'
-  | 'audit';
+  | 'highlight';
 
 const ServiceProviderProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('personal');
@@ -63,7 +61,6 @@ const ServiceProviderProfile: React.FC = () => {
     { id: 'account', label: 'ניהול חשבון', icon: '⚙️' },
     { id: 'share', label: 'שיתוף קל', icon: '🔗' },
     { id: 'highlight', label: 'בקשת הדגשה', icon: '⭐' },
-    { id: 'audit', label: 'לוג מערכת', icon: '📝' },
   ];
 
   const renderTabContent = () => {
@@ -82,8 +79,6 @@ const ServiceProviderProfile: React.FC = () => {
         return <SPShareTab profile={profile} />;
       case 'highlight':
         return <SPHighlightRequestTab />;
-      case 'audit':
-        return <SPAuditLogTab />;
       default:
         return null;
     }

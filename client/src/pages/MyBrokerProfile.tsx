@@ -9,7 +9,6 @@ import CommunicationTab from '../components/broker/CommunicationTab';
 import AccountManagementTab from '../components/broker/AccountManagementTab';
 import FeaturedRequestTab from '../components/broker/FeaturedRequestTab';
 import ShareTab from '../components/broker/ShareTab';
-import AuditLogTab from '../components/broker/AuditLogTab';
 
 type TabType =
   | 'personal'
@@ -20,8 +19,7 @@ type TabType =
   | 'communication'
   | 'share'
   | 'account'
-  | 'featured'
-  | 'audit';
+  | 'featured';
   
 
 const MyBrokerProfile: React.FC = () => {
@@ -65,7 +63,6 @@ const MyBrokerProfile: React.FC = () => {
     { id: 'share', label: 'שיתוף קל', icon: '🔗' },
     { id: 'account', label: 'ניהול חשבון', icon: '⚙️' },
     { id: 'featured', label: 'בקשת הדגשה', icon: '⭐' },
-    { id: 'audit', label: 'לוג מערכת', icon: '📝' },
   ];
 
   return (
@@ -144,7 +141,6 @@ const MyBrokerProfile: React.FC = () => {
           {activeTab === 'share' && <ShareTab />}
           {activeTab === 'account' && <AccountManagementTab />}
           {activeTab === 'featured' && <FeaturedRequestTab />}
-          {activeTab === 'audit' && <AuditLogTab />}
         </div>
       </div>
     </div>
