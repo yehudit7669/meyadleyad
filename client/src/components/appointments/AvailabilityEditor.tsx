@@ -172,7 +172,7 @@ export default function AvailabilityEditor({ adId }: AvailabilityEditorProps) {
           onClick={addSlot}
           className="bg-gray-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-700 transition"
         >
-          + הוסף זמן זמין
+          + הוסף יום זמין
         </button>
         <button
           type="button"
