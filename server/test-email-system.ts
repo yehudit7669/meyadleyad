@@ -8,14 +8,12 @@ async function testEmailSystem() {
   console.log('\n🔍 בדיקת מערכת המיילים\n');
   console.log('=' .repeat(60));
 
-  // 1. בדיקת הגדרות SMTP
-  console.log('\n1️⃣  הגדרות SMTP:');
-  console.log('   SMTP מופעל:', config.smtp.enabled ? '✅ כן' : '❌ לא');
-  console.log('   שרת SMTP:', config.smtp.host);
-  console.log('   פורט:', config.smtp.port);
-  console.log('   משתמש:', config.smtp.user);
-  console.log('   סיסמה:', config.smtp.pass ? '✅ מוגדרת' : '❌ לא מוגדרת');
-  console.log('   שולח מ:', config.smtp.from);
+  // 1. בדיקת הגדרות SendGrid
+  console.log('\n1️⃣  הגדרות SendGrid:');
+  console.log('   SendGrid מופעל:', config.sendgrid.enabled ? '✅ כן' : '❌ לא');
+  console.log('   API Key:', config.sendgrid.apiKey ? '✅ מוגדר' : '❌ לא מוגדר');
+  console.log('   שולח מ:', config.sendgrid.fromEmail);
+  console.log('   שם השולח:', config.sendgrid.fromName);
 
   // 2. בדיקת טבלאות DB
   console.log('\n2️⃣  בדיקת טבלאות מסד נתונים:');
@@ -39,10 +37,10 @@ async function testEmailSystem() {
     const emailService = new EmailService();
     console.log('   ✅ EmailService נוצר בהצלחה');
     
-    if (config.smtp.enabled) {
-      console.log('   ⚠️  SMTP מופעל - מיילים אמיתיים יישלחו!');
+    if (config.sendgrid.enabled) {
+      console.log('   ✅ SendGrid מופעל - מיילים אמיתיים יישלחו!');
     } else {
-      console.log('   ℹ️  SMTP כבוי - מיילים לא יישלחו (מצב הדגמה)');
+      console.log('   ℹ️  SendGrid כבוי - מיילים לא יישלחו (מצב הדגמה)');
     }
   } catch (error) {
     console.log('   ❌ שגיאה ביצירת EmailService:', error);
@@ -59,17 +57,19 @@ async function testEmailSystem() {
 
   // 5. הוראות הפעלה
   console.log('\n5️⃣  הוראות הפעלה:');
-  if (!config.smtp.enabled) {
+  if (!config.sendgrid.enabled) {
     console.log('   📝 להפעלת מיילים:');
-    console.log('   1. פתח את הקובץ SETUP_EMAIL.md');
-    console.log('   2. עקוב אחרי ההוראות ליצירת App Password ב-Gmail');
-    console.log('   3. עדכן את server/.env:');
-    console.log('      - SMTP_ENABLED="true"');
-    console.log('      - EMAIL_USER="your-email@gmail.com"');
-    console.log('      - EMAIL_PASSWORD="your-16-char-app-password"');
-    console.log('   4. הפעל מחדש את השרת: .\\start-server.ps1');
+    console.log('   1. הירשם ל-SendGrid בכתובת https://sendgrid.com');
+    console.log('   2. אמת את כתובת המייל שממנה תרצה לשלוח');
+    console.log('   3. צור API Key עם הרשאות Mail Send');
+    console.log('   4. עדכן את server/.env:');
+    console.log('      - SENDGRID_ENABLED="true"');
+    console.log('      - SENDGRID_API_KEY="your-api-key"');
+    console.log('      - SENDGRID_FROM_EMAIL="your-verified-email@domain.com"');
+    console.log('      - SENDGRID_FROM_NAME="meyadleyad"');
+    console.log('   5. הפעל מחדש את השרת: npm run dev');
   } else {
-    console.log('   ✅ SMTP מופעל!');
+    console.log('   ✅ SendGrid מופעל!');
     console.log('   📬 המערכת מוכנה לשלוח מיילים.');
     console.log('   🧪 נסה להירשם כמשתמש חדש ובדוק שמגיע מייל אימות.');
   }

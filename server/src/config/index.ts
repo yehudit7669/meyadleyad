@@ -38,9 +38,17 @@ export const config = {
     redirectUri: process.env.GOOGLE_REDIRECT_URI || '',
   },
   
-  // SMTP Configuration (supports both new and legacy env vars)
+  // SendGrid Configuration
+  sendgrid: {
+    enabled: process.env.SENDGRID_ENABLED === 'true',
+    apiKey: process.env.SENDGRID_API_KEY || '',
+    fromEmail: process.env.SENDGRID_FROM_EMAIL || '',
+    fromName: process.env.SENDGRID_FROM_NAME || 'meyadleyad',
+  },
+  
+  // SMTP Configuration (supports both new and legacy env vars) - DEPRECATED
   smtp: {
-    enabled: process.env.SMTP_ENABLED !== 'false', // Default enabled unless explicitly disabled
+    enabled: process.env.SMTP_ENABLED === 'true', // Default disabled
     host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '587', 10),
     secure: process.env.SMTP_SECURE === 'true' || false,

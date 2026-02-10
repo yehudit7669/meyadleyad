@@ -1,68 +1,79 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import { config } from '../../config';
 import { unifiedEmailService } from './unified-email-template.service';
 import { EmailType } from './email-types.enum';
 
 export class EmailService {
-  private transporter;
   private enabled: boolean;
 
   constructor() {
-    this.enabled = config.smtp.enabled;
+    // Check if SendGrid is enabled (prioritized over SMTP)
+    this.enabled = config.sendgrid.enabled;
     
     if (!this.enabled) {
-      console.log('📧 SMTP disabled - emails will not be sent');
+      console.log('📧 SendGrid disabled - emails will not be sent');
+      console.log('   Set SENDGRID_ENABLED=true in .env to enable email sending');
       return;
     }
     
-    // Use new SMTP config with fallback to legacy email config
-    this.transporter = nodemailer.createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
-      secure: config.smtp.secure,
-      auth: {
-        user: config.smtp.user,
-        pass: config.smtp.pass,
-      },
-    });
-
-    // Verify SMTP connection on initialization
-    this.verifyConnection();
-  }
-
-  private async verifyConnection() {
-    if (!this.enabled) return;
-    
-    try {
-      await this.transporter!.verify();
-      console.log('✅ SMTP connection verified successfully');
-    } catch (error) {
-      console.error('❌ SMTP connection failed:', error);
-      console.error('Please check your SMTP configuration in .env file');
+    // Initialize SendGrid with API key
+    if (!config.sendgrid.apiKey) {
+      console.error('❌ SENDGRID_API_KEY is not configured');
+      this.enabled = false;
+      return;
     }
+
+    sgMail.setApiKey(config.sendgrid.apiKey);
+    console.log('✅ SendGrid initialized successfully');
   }
 
   /**
-   * Generic email sending function
+   * Generic email sending function - uses SendGrid API
    */
   async sendEmail(to: string, subject: string, html: string, attachments?: any[]) {
     if (!this.enabled) {
-      console.log(`📧 SMTP disabled - email not sent to ${to}: ${subject}`);
+      console.log(`📧 SendGrid disabled - email not sent to ${to}: ${subject}`);
       return;
     }
     
     try {
-      const info = await this.transporter!.sendMail({
-        from: config.smtp.from,
+      const msg: sgMail.MailDataRequired = {
         to,
+        from: {
+          email: config.sendgrid.fromEmail,
+          name: config.sendgrid.fromName,
+        },
         subject,
         html,
-        attachments,
-      });
-      console.log('✅ Email sent successfully:', info.messageId);
-      return info;
-    } catch (error) {
-      console.error('❌ Email send error:', error);
+      };
+
+      // Add attachments if provided
+      if (attachments && attachments.length > 0) {
+        msg.attachments = attachments.map((att: any) => {
+          if (att.content && att.filename) {
+            // If content is Buffer, convert to base64 string
+            const contentBase64 = Buffer.isBuffer(att.content) 
+              ? att.content.toString('base64')
+              : att.content;
+            
+            return {
+              content: contentBase64,
+              filename: att.filename,
+              type: att.contentType || att.type || 'application/octet-stream',
+              disposition: att.disposition || 'attachment',
+            };
+          }
+          return att;
+        });
+      }
+
+      await sgMail.send(msg);
+      console.log(`✅ Email sent successfully via SendGrid to ${to}`);
+    } catch (error: any) {
+      console.error('❌ SendGrid email send error:', error);
+      if (error.response) {
+        console.error('SendGrid error details:', error.response.body);
+      }
       throw new Error('EMAIL_SEND_FAILED');
     }
   }

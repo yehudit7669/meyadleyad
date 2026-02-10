@@ -263,40 +263,8 @@ export class AdminService {
       // לא לזרוק שגיאה - כשלון בהוספה לגיליון לא צריך לחסום את האישור
     }
 
-    // שליחת מייל אישור (ללא PDF - המשתמש כבר קיבל PDF בזמן הפרסום)
-    try {
-      console.log('📧 Attempting to send approval email...', {
-        adId: ad.id,
-        adNumber: ad.adNumber,
-        userEmail: ad.User.email,
-        isEmailVerified: ad.User.isEmailVerified,
-      });
-      
-      if (ad.User.isEmailVerified) {
-        await this.emailService.sendAdApprovedEmail(
-          ad.User.email,
-          ad.title,
-          ad.id,
-          ad.adNumber?.toString()
-        );
-        console.log('✅ Approval email sent successfully', { 
-          adId: updatedAd.id,
-          adNumber: ad.adNumber,
-          to: ad.User.email 
-        });
-      } else {
-        console.log('⚠️ Approval email NOT sent - user email not verified', {
-          adId: ad.id,
-          email: ad.User.email,
-        });
-      }
-    } catch (error) {
-      console.error('❌ Failed to send approval email:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      });
-    }
+    // הערה: מייל אישור עם PDF נשלח דרך emailOperationsFormController.handleAdApproved
+    // (שורה 199) ולכן לא צריך לשלוח מייל נוסף כאן
 
     return updatedAd;
   }
@@ -342,15 +310,24 @@ export class AdminService {
 
     // שליחת מייל דחייה
     try {
-      if (ad.User.isEmailVerified) {
-        await this.emailService.sendAdRejectedEmail(
-          ad.User.email,
-          ad.title,
-          reason
-        );
-      }
+      console.log('📧 Attempting to send rejection email...', {
+        adId: ad.id,
+        userEmail: ad.User.email,
+        reason: reason,
+      });
+      
+      await this.emailService.sendAdRejectedEmail(
+        ad.User.email,
+        ad.title,
+        reason
+      );
+      
+      console.log('✅ Rejection email sent successfully', { 
+        adId: updatedAd.id,
+        to: ad.User.email 
+      });
     } catch (error) {
-      console.error('Failed to send rejection email:', error);
+      console.error('❌ Failed to send rejection email:', error);
     }
 
     return updatedAd;

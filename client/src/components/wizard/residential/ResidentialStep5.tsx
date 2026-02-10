@@ -3,15 +3,26 @@ import { ResidentialStep5Data } from '../../../types/wizard';
 import { residentialStep5Schema } from '../../../types/wizard';
 import { WizardStepProps } from '../../../types/wizard';
 import { useAuth } from '../../../hooks/useAuth';
-import { useBrokerTeam, useBrokerProfile } from '../../../hooks/useBroker';
+import { useQuery } from '@tanstack/react-query';
+import { brokerService } from '../../../services/brokerService';
 
 const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) => {
   const { user } = useAuth();
   const isBroker = user?.role === 'BROKER' || user?.isBroker === true;
   
   // Fetch team members only if user is a broker
-  const { data: teamMembers } = useBrokerTeam();
-  const { data: brokerProfile } = useBrokerProfile();
+  const { data: teamMembers } = useQuery({
+    queryKey: ['broker', 'team'],
+    queryFn: brokerService.getTeamMembers,
+    enabled: isBroker,
+  });
+  
+  const { data: brokerProfile } = useQuery({
+    queryKey: ['broker', 'profile'],
+    queryFn: brokerService.getProfile,
+    enabled: isBroker,
+  });
+  
   const brokerTeam = isBroker && teamMembers ? teamMembers : [];
 
   const [formData, setFormData] = useState<ResidentialStep5Data>(

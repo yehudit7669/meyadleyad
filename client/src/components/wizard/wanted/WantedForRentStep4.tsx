@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { WantedForRentStep4Data, wantedForRentStep4Schema } from '../../../types/wizard';
 import { useAuth } from '../../../hooks/useAuth';
-import { useBrokerTeam, useBrokerProfile } from '../../../hooks/useBroker';
+import { useQuery } from '@tanstack/react-query';
+import { brokerService } from '../../../services/brokerService';
 
 interface Props {
   data?: WantedForRentStep4Data;
@@ -14,8 +15,19 @@ interface Props {
 const WantedForRentStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }) => {
   const { user } = useAuth();
   const isBroker = user?.role === 'BROKER' || user?.isBroker === true;
-  const { data: teamMembers } = useBrokerTeam();
-  const { data: brokerProfile } = useBrokerProfile();
+  
+  const { data: teamMembers } = useQuery({
+    queryKey: ['broker', 'team'],
+    queryFn: brokerService.getTeamMembers,
+    enabled: isBroker,
+  });
+  
+  const { data: brokerProfile } = useQuery({
+    queryKey: ['broker', 'profile'],
+    queryFn: brokerService.getProfile,
+    enabled: isBroker,
+  });
+  
   const brokerTeam = isBroker && teamMembers ? teamMembers : [];
 
   const [contactName, setContactName] = useState(data?.contactName || '');

@@ -168,8 +168,22 @@ export class AdsService {
         console.log('ADS SERVICE - WANTED ads are not added to newspaper sheets (no specific cityId)');
       }
 
-      // Note: Email will be sent after images are uploaded
-      // Wanted ads can have optional images
+      // שליחת מייל למשתמש שהמודעה נוצרה וממתינה לאישור
+      if (ad.status === AdStatus.PENDING && user?.email) {
+        try {
+          await this.emailService.sendAdCreatedEmail(user.email, ad.title);
+          console.log('✅ ADS SERVICE - Pending approval email sent', {
+            adId: ad.id,
+            email: user.email,
+          });
+        } catch (emailError) {
+          console.error('❌ ADS SERVICE - Failed to send pending approval email', {
+            adId: ad.id,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+          });
+          // לא לזרוק שגיאה - כשלון במייל לא צריך לחסום יצירת מודעה
+        }
+      }
 
       return this.transformAdForResponse(ad);
     } catch (error) {
@@ -347,8 +361,22 @@ export class AdsService {
         }
       }
       
-      // Note: Do NOT send email here - images haven't been uploaded yet
-      // Email will be sent after images are uploaded via uploadImages endpoint
+      // שליחת מייל למשתמש שהמודעה נוצרה וממתינה לאישור
+      if (ad.status === AdStatus.PENDING && user?.email) {
+        try {
+          await this.emailService.sendAdCreatedEmail(user.email, ad.title);
+          console.log('✅ ADS SERVICE - Pending approval email sent', {
+            adId: ad.id,
+            email: user.email,
+          });
+        } catch (emailError) {
+          console.error('❌ ADS SERVICE - Failed to send pending approval email', {
+            adId: ad.id,
+            error: emailError instanceof Error ? emailError.message : String(emailError),
+          });
+          // לא לזרוק שגיאה - כשלון במייל לא צריך לחסום יצירת מודעה
+        }
+      }
 
       // If auto-approved (for admins/brokers), send to WhatsApp group
       if (ad.status === AdStatus.APPROVED) {

@@ -1,10 +1,10 @@
 import { EmailService } from './email.service';
 import { config } from '../../config';
-import * as nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
-// Mock nodemailer for safe testing
-jest.mock('nodemailer');
-const mockedNodemailer = nodemailer as jest.Mocked<typeof nodemailer>;
+// Mock @sendgrid/mail for safe testing
+jest.mock('@sendgrid/mail');
+const mockedSgMail = sgMail as jest.Mocked<typeof sgMail>;
 
 /**
  * Email Integration Tests
@@ -15,52 +15,49 @@ const mockedNodemailer = nodemailer as jest.Mocked<typeof nodemailer>;
  * Mock Mode (default):
  * - בודק יצירת מייל
  * - בודק בחירת template
- * - בודק קריאה ל-sendMail עם הנתונים הנכונים
+ * - בודק קריאה ל-send עם הנתונים הנכונים
  * 
  * Real Mode (optional):
- * 1. הסר את jest.mock('nodemailer')
+ * 1. הסר את jest.mock('@sendgrid/mail')
  * 2. הגדר משתני סביבה:
- *    - EMAIL_HOST (default: smtp.gmail.com)
- *    - EMAIL_PORT (default: 587)
- *    - EMAIL_USER (required)
- *    - EMAIL_PASSWORD (required - App Password אם Gmail)
- *    - EMAIL_FROM (optional)
+ *    - SENDGRID_ENABLED=true
+ *    - SENDGRID_API_KEY (required)
+ *    - SENDGRID_FROM_EMAIL (required)
+ *    - SENDGRID_FROM_NAME (optional)
  * 3. הרץ: npm test -- email.integration.test.ts
  */
 
 describe('Email Service - Integration Tests', () => {
   let emailService: EmailService;
-  let mockSendMail: jest.Mock;
+  let mockSend: jest.Mock;
 
   beforeEach(() => {
-    // Create mock transporter
-    mockSendMail = jest.fn().mockResolvedValue({
-      accepted: ['test@example.com'],
-      rejected: [],
-      messageId: '<test-message-id@example.com>',
-    });
+    // Create mock send function
+    mockSend = jest.fn().mockResolvedValue([
+      {
+        statusCode: 202,
+        headers: {},
+        body: {},
+      },
+    ]);
 
-    const mockTransporter = {
-      sendMail: mockSendMail,
-    };
-
-    mockedNodemailer.createTransport.mockReturnValue(mockTransporter as any);
+    mockedSgMail.send = mockSend;
+    mockedSgMail.setApiKey = jest.fn();
 
     emailService = new EmailService();
     jest.clearAllMocks();
   });
 
-  describe('SMTP Configuration', () => {
-    it('should have valid SMTP configuration', () => {
-      expect(config.email.host).toBeTruthy();
-      expect(config.email.port).toBeGreaterThan(0);
-      expect(config.email.from).toBeTruthy();
+  describe('SendGrid Configuration', () => {
+    it('should have valid SendGrid configuration', () => {
+      expect(config.sendgrid.apiKey).toBeTruthy();
+      expect(config.sendgrid.fromEmail).toBeTruthy();
       
-      console.log('✅ SMTP Configuration:');
-      console.log(`   Host: ${config.email.host}`);
-      console.log(`   Port: ${config.email.port}`);
-      console.log(`   From: ${config.email.from}`);
-      console.log('   Transporter: Mocked (nodemailer)');
+      console.log('✅ SendGrid Configuration:');
+      console.log(`   API Key: ${config.sendgrid.apiKey ? '***configured***' : 'not set'}`);
+      console.log(`   From Email: ${config.sendgrid.fromEmail}`);
+      console.log(`   From Name: ${config.sendgrid.fromName}`);
+      console.log('   Service: SendGrid (@sendgrid/mail)');
     });
   });
 
@@ -73,7 +70,7 @@ describe('Email Service - Integration Tests', () => {
       
       await emailService.sendVerificationEmail(testEmail, testToken);
 
-      expect(mockSendMail).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: testEmail,
           subject: expect.stringContaining('אימות'),
@@ -82,7 +79,7 @@ describe('Email Service - Integration Tests', () => {
       );
 
       // Verify RTL HTML
-      const callArgs = mockSendMail.mock.calls[0][0];
+      const callArgs = mockSend.mock.calls[0][0];
       expect(callArgs.html).toContain('dir="rtl"');
 
       console.log('✅ Verification email template validated');
@@ -97,7 +94,7 @@ describe('Email Service - Integration Tests', () => {
       
       await emailService.sendPasswordResetEmail(testEmail, testToken);
 
-      expect(mockSendMail).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: testEmail,
           subject: expect.stringContaining('איפוס'),
@@ -106,7 +103,7 @@ describe('Email Service - Integration Tests', () => {
       );
 
       // Verify RTL HTML
-      const resetCallArgs = mockSendMail.mock.calls[0][0];
+      const resetCallArgs = mockSend.mock.calls[0][0];
       expect(resetCallArgs.html).toContain('dir="rtl"');
 
       console.log('✅ Password reset email template validated');
@@ -120,7 +117,7 @@ describe('Email Service - Integration Tests', () => {
       
       await emailService.sendAdCreatedEmail(testEmail, adTitle);
 
-      expect(mockSendMail).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: testEmail,
           subject: expect.stringContaining('מודעה'),
@@ -140,7 +137,7 @@ describe('Email Service - Integration Tests', () => {
       
       await emailService.sendAdApprovedEmail(testEmail, adTitle, adId);
 
-      expect(mockSendMail).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: testEmail,
           subject: expect.stringContaining('אושרה'),
@@ -160,7 +157,7 @@ describe('Email Service - Integration Tests', () => {
       
       await emailService.sendAdRejectedEmail(testEmail, adTitle, reason);
 
-      expect(mockSendMail).toHaveBeenCalledWith(
+      expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           to: testEmail,
           subject: expect.stringContaining('נדחתה'),
@@ -179,7 +176,7 @@ describe('Email Service - Integration Tests', () => {
       
       await emailService.sendAdCreatedEmail(testEmail, hebrewTitle);
 
-      const callArgs = mockSendMail.mock.calls[0][0];
+      const callArgs = mockSend.mock.calls[0][0];
       
       // Verify RTL and Hebrew support
       expect(callArgs.html).toContain('dir="rtl"');
@@ -195,7 +192,7 @@ describe('Email Service - Integration Tests', () => {
 
       await emailService.sendVerificationEmail(testEmail, titleWithEmojis);
 
-      const callArgs = mockSendMail.mock.calls[0][0];
+      const callArgs = mockSend.mock.calls[0][0];
       expect(callArgs.html).toContain('🏠');
       expect(callArgs.html).toContain('🌊');
 
@@ -206,11 +203,11 @@ describe('Email Service - Integration Tests', () => {
   describe('Email Error Handling', () => {
     it('should handle sendMail errors gracefully', async () => {
       // Simulate email sending error
-      mockSendMail.mockRejectedValueOnce(new Error('SMTP connection failed'));
+      mockSend.mockRejectedValueOnce(new Error('SendGrid API error'));
 
       await expect(
         emailService.sendVerificationEmail('user@example.com', 'token')
-      ).rejects.toThrow('SMTP connection failed');
+      ).rejects.toThrow();
 
       console.log('✅ Error handling validated');
     });
