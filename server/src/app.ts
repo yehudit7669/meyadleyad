@@ -58,6 +58,8 @@ app.use(
 // CORS - Production-ready configuration
 const allowedOrigins = [
   config.clientUrl,
+  'http://161.97.75.192',
+  'https://161.97.75.192',
   'http://localhost:3000', // Development
   'http://localhost:3001', // Vite dev server (alternative port)
   'http://localhost:5173', // Vite dev server
