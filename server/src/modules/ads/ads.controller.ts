@@ -103,7 +103,25 @@ export class AdsController {
 
   async uploadImages(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+      console.log('🎯 [ADS_CONTROLLER] uploadImages called');
+      console.log('🎯 [ADS_CONTROLLER] req.files:', req.files);
+      console.log('🎯 [ADS_CONTROLLER] req.file:', req.file);
+      
       const files = req.files as Express.Multer.File[];
+      
+      console.log('🎯 [ADS_CONTROLLER] Files array:', files);
+      console.log('🎯 [ADS_CONTROLLER] Number of files:', files?.length || 0);
+      
+      if (files && files.length > 0) {
+        console.log('🎯 [ADS_CONTROLLER] First file details:', {
+          filename: files[0].filename,
+          originalname: files[0].originalname,
+          mimetype: files[0].mimetype,
+          size: files[0].size,
+          hasBuffer: !!files[0].buffer,
+          hasPath: !!files[0].path,
+        });
+      }
       
       // עבור כל תמונה, הוסף watermark
       const imagesWithWatermark = await Promise.all(

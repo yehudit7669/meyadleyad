@@ -27,6 +27,28 @@ const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
   const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 🔒 Validate file type using magic bytes
+  const validateFileType = async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const arr = new Uint8Array(reader.result as ArrayBuffer).subarray(0, 4);
+        let header = '';
+        for (let i = 0; i < arr.length; i++) {
+          header += arr[i].toString(16).padStart(2, '0');
+        }
+        
+        // Check magic bytes
+        const isJPEG = header.startsWith('ffd8ff'); // JPEG
+        const isPNG = header.startsWith('89504e47'); // PNG
+        
+        resolve(isJPEG || isPNG);
+      };
+      reader.onerror = () => resolve(false);
+      reader.readAsArrayBuffer(file.slice(0, 4));
+    });
+  };
+
   const handleFileSelect = async (files: FileList | null) => {
     if (!files) return;
 
@@ -46,6 +68,13 @@ const PropertyImagesUpload: React.FC<PropertyImagesUploadProps> = ({
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
       if (!allowedTypes.includes(file.type)) {
         errors.push(`${file.name}: פורמט לא נתמך (רק JPG, JPEG, PNG)`);
+        continue;
+      }
+
+      // 🔒 SECURITY: Validate real file type using magic bytes
+      const isValidImage = await validateFileType(file);
+      if (!isValidImage) {
+        errors.push(`${file.name}: ⚠️ הקובץ אינו תמונה אמיתית! (זוהה כקובץ מזויף)`);
         continue;
       }
 

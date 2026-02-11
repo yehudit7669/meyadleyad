@@ -4,6 +4,9 @@ import multer from 'multer';
 import * as XLSX from 'xlsx';
 import * as fs from 'fs/promises';
 import { authenticate, authorize } from '../../middlewares/auth';
+import { validateUploadedFile } from '../../utils/fileValidation';
+import { securityLogger } from '../../utils/securityLogger';
+import { validateAndSaveFile } from '../../middlewares/upload';
 
 const router = Router();
 
@@ -11,9 +14,9 @@ const router = Router();
 router.use(authenticate);
 router.use(authorize('ADMIN'));
 
-// Configure multer for file uploads
+// Configure multer for file uploads (use memory storage for validation)
 const upload = multer({
-  dest: 'uploads/imports/',
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (_req: any, file: any, cb: any) => {
     if (file.mimetype === 'text/csv' || 
@@ -26,10 +29,13 @@ const upload = multer({
   },
 });
 
+// Note: validateAndSaveFile from upload middleware handles magic bytes validation
+// and file saving, so we don't need a separate validateImportFile function
+
 // ========================================
 // CITIES & STREETS IMPORT - PREVIEW
 // ========================================
-router.post('/cities-streets/preview', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+router.post('/cities-streets/preview', upload.single('file'), validateAndSaveFile, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded' });
@@ -393,7 +399,7 @@ router.post('/cities-streets/commit', async (req: Request, res: Response): Promi
 // ========================================
 // PROPERTIES IMPORT - PREVIEW
 // ========================================
-router.post('/properties/preview', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+router.post('/properties/preview', upload.single('file'), validateAndSaveFile, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded' });
@@ -675,7 +681,7 @@ router.post('/properties/commit', async (req: Request, res: Response): Promise<v
 // ========================================
 // PROPERTIES FROM FILE - PREVIEW
 // ========================================
-router.post('/properties-file/preview', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
+router.post('/properties-file/preview', upload.single('file'), validateAndSaveFile, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded' });

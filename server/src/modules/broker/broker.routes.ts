@@ -1,29 +1,14 @@
 import { Router } from 'express';
 import { brokerController } from './broker.controller';
 import { authenticate, authorize } from '../../middlewares/auth';
+import { validateAndSaveFile } from '../../middlewares/upload';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure upload directory exists
-const uploadDir = 'uploads/temp';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Setup multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'import-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Setup multer for file uploads (use memory storage for validation)
 const upload = multer({ 
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
@@ -77,7 +62,7 @@ router.post('/account/delete-request', brokerController.createDeleteRequest.bind
 router.get('/audit-log', brokerController.getAuditLog.bind(brokerController));
 
 // Import routes - Re-use admin import logic but check permissions
-router.post('/import/properties-file/preview', upload.single('file'), brokerController.importPropertiesPreview.bind(brokerController));
+router.post('/import/properties-file/preview', upload.single('file'), validateAndSaveFile, brokerController.importPropertiesPreview.bind(brokerController));
 router.post('/import/properties-file/commit', brokerController.importPropertiesCommit.bind(brokerController));
 
 // Request import permission

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { UploadController } from './upload.controller';
 import { authenticate } from '../../middlewares/auth';
-import { upload, uploadFile } from '../../middlewares/upload';
+import { upload, uploadFile, validateAndSaveFile } from '../../middlewares/upload';
 
 const router = Router();
 
@@ -11,12 +11,12 @@ const router = Router();
  */
 
 // העלאת תמונה בודדת
-router.post('/image', authenticate, upload.single('image'), UploadController.uploadImage);
+router.post('/image', authenticate, upload.single('image'), validateAndSaveFile, UploadController.uploadImage);
 
 // העלאת מספר תמונות
-router.post('/images', authenticate, upload.array('images', 15), UploadController.uploadImages);
+router.post('/images', authenticate, upload.array('images', 15), validateAndSaveFile, UploadController.uploadImages);
 
 // העלאת קובץ כללי (PDF או תמונה)
-router.post('/file', authenticate, uploadFile.single('file'), UploadController.uploadFile);
+router.post('/file', authenticate, uploadFile.single('file'), validateAndSaveFile, UploadController.uploadFile);
 
 export default router;

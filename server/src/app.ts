@@ -15,6 +15,9 @@ import { logger } from './utils/logger';
 
 const app: Application = express();
 
+// 🔥🔥🔥 TIMESTAMP TO VERIFY RELOAD
+console.log('🔥🔥🔥 APP.TS LOADED AT:', new Date().toLocaleTimeString('he-IL'));
+
 // Initialize error tracking (Sentry)
 initErrorTracking(app);
 
@@ -119,6 +122,23 @@ app.use(performanceMonitor);
 // Request logging with sensitive data sanitization
 // Apply after body parsers so we can log request bodies
 app.use(requestLogger);
+
+// 🔍 DEBUG: Log ALL POST/PUT requests
+app.use((req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log('🔍 POST/PUT REQUEST:');
+    console.log('   Method:', req.method);
+    console.log('   Path:', req.path);
+    console.log('   URL:', req.url);
+    console.log('   Content-Type:', req.get('content-type') || 'NONE');
+    
+    const contentType = req.get('content-type') || '';
+    if (contentType.includes('multipart/form-data')) {
+      console.log('🔍🔍🔍 ✅ THIS IS MULTIPART!');
+    }
+  }
+  next();
+});
 
 // Static files - serve uploads from server/uploads
 // Use process.cwd() instead of __dirname to work correctly in production

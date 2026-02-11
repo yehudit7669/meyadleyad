@@ -15,6 +15,28 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const [previews, setPreviews] = useState<string[]>([]);
 
+  // 🔒 Validate file type using magic bytes
+  const validateFileType = async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const arr = new Uint8Array(reader.result as ArrayBuffer).subarray(0, 4);
+        let header = '';
+        for (let i = 0; i < arr.length; i++) {
+          header += arr[i].toString(16).padStart(2, '0');
+        }
+        
+        // Check magic bytes
+        const isJPEG = header.startsWith('ffd8ff'); // JPEG
+        const isPNG = header.startsWith('89504e47'); // PNG
+        
+        resolve(isJPEG || isPNG);
+      };
+      reader.onerror = () => resolve(false);
+      reader.readAsArrayBuffer(file.slice(0, 4));
+    });
+  };
+
   // עדכון previews כאשר images משתנה (כולל תמונות קיימות מהשרת)
   useEffect(() => {
     const newPreviews = images.map((img) => {
@@ -29,7 +51,7 @@ export default function ImageUpload({
     setPreviews(newPreviews);
   }, [images]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
     // Maximum 10MB per image
@@ -44,6 +66,20 @@ export default function ImageUpload({
     const oversizedFiles = files.filter(file => file.size > MAX_FILE_SIZE);
     if (oversizedFiles.length > 0) {
       alert(`חלק מהתמונות גדולות מדי (מקסימום 10MB לתמונה).\nאנא צמצם את התמונות או בחר תמונות קטנות יותר.`);
+      return;
+    }
+
+    // 🔒 SECURITY: Validate real file types using magic bytes
+    const invalidFiles: string[] = [];
+    for (const file of files) {
+      const isValid = await validateFileType(file);
+      if (!isValid) {
+        invalidFiles.push(file.name);
+      }
+    }
+    
+    if (invalidFiles.length > 0) {
+      alert(`⚠️ הקבצים הבאים אינם תמונות אמיתיות:\n${invalidFiles.join('\n')}\n\nזוהה ניסיון להעלות קובץ מזויף!`);
       return;
     }
 
