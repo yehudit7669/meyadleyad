@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -7,26 +7,45 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: meyadleyad
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
-      POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: meyaduser
+      POSTGRES_PASSWORD: strongpassword
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./server/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - meyadleyad-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U username -d meyadleyad"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - app-network
+
+  backend:
+    build: ./server
+    container_name: meyadleyad-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://meyaduser:strongpassword@postgres:5432/meyadleyad
+      PORT: 3000
+      JWT_SECRET: 86a8e36f0244448bf7c844f96319d5ac8abc3abba9117831936fd4728dcb2785
+      JWT_REFRESH_SECRET: feb2bcdecb403a7d313ef20ec4a4d303d31b768c59714e2768fdd18a33171ce1a02c694fef4262613d39c7ddbeba9dd00ecbf0f4041c8658c330c6101a13e584
+      SMTP_ENABLED: "false"
+    env_file: 
+      - .env
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+  frontend:
+    build: ./client
+    container_name: meyadleyad-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
-    driver: local
 
 networks:
-  meyadleyad-network:
-    driver: bridge
+  app-network:
