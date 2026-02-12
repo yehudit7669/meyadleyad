@@ -4,6 +4,7 @@
  */
 
 import { Router } from 'express';
+import multer from 'multer';
 import { emailInboundController } from './email-inbound.controller';
 import { emailOperationsFormController } from './email-operations-form.controller';
 import { emailRateLimiter } from './email-rate-limiter.service';
@@ -12,6 +13,15 @@ import { authenticate } from '../../middlewares/auth';
 import { requireRole } from '../../middleware/rbac.middleware';
 
 const router = Router();
+
+// Multer configuration for SendGrid Inbound Parse (multipart/form-data)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB per file
+    files: 10, // max 10 attachments
+  },
+});
 
 // ===============================================
 // Inbound Email Endpoints
@@ -22,9 +32,11 @@ const router = Router();
  * POST /api/email-operations/inbound/webhook
  * 
  * נקרא ע"י ספק האימייל (SendGrid, Mailgun, etc.)
+ * תומך ב-multipart/form-data (SendGrid) ו-JSON (Mailgun/Generic)
  */
 router.post(
   '/inbound/webhook',
+  upload.any(),
   (req, res) => emailInboundController.handleInboundWebhook(req, res)
 );
 

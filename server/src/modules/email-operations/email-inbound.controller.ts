@@ -17,15 +17,34 @@ export class EmailInboundController {
    */
   async handleInboundWebhook(req: Request, res: Response) {
     try {
+      // 🔒 Webhook Security: בדיקת token
+      const webhookToken = req.query.token || req.headers['x-webhook-token'];
+      const expectedToken = process.env.EMAIL_WEBHOOK_SECRET;
+
+      if (expectedToken && webhookToken !== expectedToken) {
+        console.warn('⚠️ Unauthorized webhook attempt - invalid token');
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      // 📊 Log incoming webhook
+      const attachmentsCount = (req.files as any[])?.length || 0;
       console.log('📨 Received inbound email webhook');
+      console.log(`   From: ${req.body.from || req.body.sender || 'unknown'}`);
+      console.log(`   Subject: ${req.body.subject || req.body.Subject || 'no subject'}`);
+      console.log(`   Attachments: ${attachmentsCount} file(s)`);
+      console.log(`   Content-Type: ${req.headers['content-type'] || 'unknown'}`);
 
       // ניתוח הנתונים מהספק (SendGrid/Mailgun/etc.)
-      const emailData = this.parseWebhookPayload(req.body, req.headers);
+      const emailData = this.parseWebhookPayload(req.body, req.headers, req.files as any[]);
 
       if (!emailData) {
+        console.warn('⚠️ Invalid webhook payload');
         res.status(400).json({ error: 'Invalid webhook payload' });
         return;
       }
+
+      console.log(`✅ Email parsed successfully - MessageID: ${emailData.messageId}`);
 
       // עיבוד אסינכרוני (לא לחסום את ה-webhook)
       this.processEmailAsync(emailData);
@@ -33,7 +52,9 @@ export class EmailInboundController {
       // תשובה מיידית לספק האימייל
       res.status(200).json({ 
         success: true, 
-        message: 'Email received and queued for processing' 
+        message: 'Email received and queued for processing',
+        messageId: emailData.messageId,
+        attachments: attachmentsCount
       });
     } catch (error) {
       console.error('❌ Error in inbound webhook:', error);
@@ -59,14 +80,16 @@ export class EmailInboundController {
    */
   private parseWebhookPayload(
     body: any,
-    headers: any
+    headers: any,
+    files?: any[]
   ): InboundEmailData | null {
     // בדיקת ספק לפי headers
     const userAgent = headers['user-agent'] || '';
+    const contentType = headers['content-type'] || '';
     
-    // SendGrid Inbound Parse Webhook
-    if (userAgent.includes('SendGrid') || body.from) {
-      return this.parseSendGridPayload(body);
+    // SendGrid Inbound Parse Webhook (multipart/form-data)
+    if (userAgent.includes('SendGrid') || contentType.includes('multipart/form-data') || body.from) {
+      return this.parseSendGridPayload(body, files);
     }
 
     // Mailgun
@@ -80,19 +103,39 @@ export class EmailInboundController {
 
   /**
    * ניתוח SendGrid Inbound Parse
+   * תומך ב-multipart/form-data עם קבצים מצורפים
    */
-  private parseSendGridPayload(body: any): InboundEmailData {
+  private parseSendGridPayload(body: any, files?: any[]): InboundEmailData {
+    // SendGrid שולח headers כJSON string או כאובייקט
+    let headers = body.headers || {};
+    if (typeof headers === 'string') {
+      try {
+        headers = JSON.parse(headers);
+      } catch (e) {
+        console.warn('⚠️ Failed to parse headers JSON:', e);
+        headers = {};
+      }
+    }
+
+    // המרת קבצים מצורפים לפורמט המערכת
+    const attachments = files?.map((file: any) => ({
+      filename: file.originalname,
+      contentType: file.mimetype,
+      size: file.size,
+      content: file.buffer,
+    })) || [];
+
     return {
-      messageId: body.headers?.['Message-ID'] || body.messageId || `sendgrid-${Date.now()}`,
-      from: this.extractEmail(body.from),
+      messageId: headers['Message-ID'] || body.messageId || `sendgrid-${Date.now()}`,
+      from: this.extractEmail(body.from || body.email),
       to: this.extractEmail(body.to),
       subject: body.subject || '',
       bodyText: body.text || '',
       bodyHtml: body.html || '',
-      headers: body.headers || {},
-      attachments: body.attachments || [],
-      inReplyTo: body.headers?.['In-Reply-To'],
-      references: body.headers?.['References'],
+      headers: headers,
+      attachments: attachments,
+      inReplyTo: headers['In-Reply-To'],
+      references: headers['References'],
     };
   }
 
