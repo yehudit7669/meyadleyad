@@ -38,6 +38,7 @@ import pendingApprovalsRoutes from '../modules/admin/pending-approvals.routes';
 import notificationsRoutes from '../modules/notifications/notifications.routes';
 import supportRoutes from '../modules/support/support.routes';
 import adminSupportRoutes from '../modules/support/admin-support.routes';
+import whatsappRoutes from '../modules/whatsapp/whatsapp.routes';
 
 const router = Router();
 
@@ -81,5 +82,6 @@ router.use('/admin/pending-approvals', pendingApprovalsRoutes); // Pending appro
 router.use('/notifications', notificationsRoutes); // Notifications system
 router.use('/', supportRoutes); // Support/Contact system (user-facing)
 router.use('/admin/conversations', adminSupportRoutes); // Support admin panel
+router.use('/admin/whatsapp', whatsappRoutes); // WhatsApp distribution system
 
 export default router;

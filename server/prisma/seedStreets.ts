@@ -83,22 +83,45 @@ async function seedStreets() {
     const neighborhoodMap = new Map<string, string>(); // name -> id
     
     for (const neighborhoodName of uniqueNeighborhoods) {
-      const neighborhood = await prisma.neighborhood.upsert({
-        where: {
-          cityId_name: {
+      try {
+        // Try to find existing first
+        let neighborhood = await prisma.neighborhood.findFirst({
+          where: {
             cityId: city.id,
             name: neighborhoodName,
           },
-        },
-        update: {},
-        create: {
-          id: createId(),
-          name: neighborhoodName,
-          cityId: city.id,
-          updatedAt: new Date(),
-        },
-      });
-      neighborhoodMap.set(neighborhoodName, neighborhood.id);
+        });
+
+        // If not exists, create
+        if (!neighborhood) {
+          neighborhood = await prisma.neighborhood.create({
+            data: {
+              id: createId(),
+              name: neighborhoodName,
+              cityId: city.id,
+              updatedAt: new Date(),
+            },
+          });
+          console.log(`  ✓ Neighborhood: ${neighborhoodName}`);
+        }
+
+        neighborhoodMap.set(neighborhoodName, neighborhood.id);
+      } catch (error: any) {
+        // If duplicate error, just find it and continue
+        if (error.code === 'P2002') {
+          const existing = await prisma.neighborhood.findFirst({
+            where: {
+              cityId: city.id,
+              name: neighborhoodName,
+            },
+          });
+          if (existing) {
+            neighborhoodMap.set(neighborhoodName, existing.id);
+          }
+        } else {
+          throw error;
+        }
+      }
       console.log(`  ✓ Neighborhood: ${neighborhoodName}`);
     }
     

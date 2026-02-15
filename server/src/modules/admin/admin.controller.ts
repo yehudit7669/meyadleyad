@@ -54,6 +54,20 @@ export class AdminController {
     }
   }
 
+  async approveAdAndWhatsApp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const adminId = (req as any).user.id;
+      const ad = await adminService.approveAdAndWhatsApp(req.params.id, adminId);
+      res.json({
+        status: 'success',
+        data: ad,
+        message: 'המודעה אושרה ונשלחה לתור WhatsApp',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async rejectAd(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { reason } = req.body;

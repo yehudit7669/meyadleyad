@@ -52,40 +52,53 @@ export class AdminService {
   ) {
     const skip = (page - 1) * limit;
 
-    const where: any = { status: 'PENDING' };
+    // תנאי סטטוס: רק PENDING
+    const statusCondition = {
+      status: 'PENDING'
+    };
+
+    // בניית תנאי where עם כל הפילטרים
+    const where: any = {
+      AND: [statusCondition]
+    };
 
     // מסננים
     if (filters?.dateFrom || filters?.dateTo) {
-      where.createdAt = {};
+      const createdAt: any = {};
       if (filters.dateFrom) {
-        where.createdAt.gte = new Date(filters.dateFrom);
+        createdAt.gte = new Date(filters.dateFrom);
       }
       if (filters.dateTo) {
-        where.createdAt.lte = new Date(filters.dateTo);
+        createdAt.lte = new Date(filters.dateTo);
       }
+      where.AND.push({ createdAt });
     }
 
     if (filters?.cityId) {
-      where.cityId = filters.cityId;
+      where.AND.push({ cityId: filters.cityId });
     }
 
     if (filters?.cityName) {
-      where.City = {
-        name: {
-          contains: filters.cityName,
-          mode: 'insensitive',
+      where.AND.push({
+        City: {
+          name: {
+            contains: filters.cityName,
+            mode: 'insensitive',
+          },
         },
-      };
+      });
     }
 
     if (filters?.publisher) {
-      where.User = {
-        OR: [
-          { name: { contains: filters.publisher, mode: 'insensitive' } },
-          { email: { contains: filters.publisher, mode: 'insensitive' } },
-          { phone: { contains: filters.publisher } },
-        ],
-      };
+      where.AND.push({
+        User: {
+          OR: [
+            { name: { contains: filters.publisher, mode: 'insensitive' } },
+            { email: { contains: filters.publisher, mode: 'insensitive' } },
+            { phone: { contains: filters.publisher } },
+          ],
+        },
+      });
     }
 
     const [ads, total] = await Promise.all([
@@ -164,6 +177,12 @@ export class AdminService {
 
     if (!ad) {
       throw new Error('Ad not found');
+    }
+
+    // If already approved, just return it (idempotent)
+    if (ad.status === 'APPROVED' || ad.status === 'ACTIVE') {
+      console.log(`ℹ️ Ad ${adId} already approved, returning existing ad`);
+      return ad;
     }
 
     if (ad.status !== 'PENDING') {
@@ -267,6 +286,203 @@ export class AdminService {
     // (שורה 199) ולכן לא צריך לשלוח מייל נוסף כאן
 
     return updatedAd;
+  }
+
+  /**
+   * אישור מודעה + שליחה מיידית ל-WhatsApp (ללא אישור נוסף)
+   * המודעה מאושרת, פריטי הפצה נוצרים עם סטטוס SENT
+   */
+  async approveAdAndWhatsApp(adId: string, adminId: string) {
+    // בדיקה שהמודעה קיימת ו-PENDING
+    const ad = await prisma.ad.findUnique({
+      where: { id: adId },
+      include: {
+        Category: true,
+        City: true,
+        Street: true,
+        AdImage: {
+          orderBy: { order: 'asc' },
+        },
+      },
+    });
+
+    if (!ad) {
+      throw new Error('Ad not found');
+    }
+
+    if (ad.status !== 'PENDING') {
+      throw new Error('Only pending ads can be approved');
+    }
+
+    // אישור המודעה תחילה
+    const approvedAd = await prisma.ad.update({
+      where: { id: adId },
+      data: {
+        status: 'APPROVED',
+        publishedAt: new Date(),
+      },
+    });
+
+    // רישום לוג אישור
+    await this.logAdminAction(
+      adminId,
+      adId,
+      'approve',
+      `Approved ad #${ad.adNumber} and sending to WhatsApp`
+    );
+
+    // יצירת פריטי הפצה עם סטטוס SENT (שליחה מיידית)
+    if (process.env.WHATSAPP_MODULE_ENABLED === 'true') {
+      try {
+        const { routingEngine } = await import('../whatsapp/distribution/routing-engine.service.js');
+        const { messageBuilder } = await import('../whatsapp/distribution/message-builder.service.js');
+        const { auditService } = await import('../whatsapp/distribution/audit.service.js');
+
+        // Find matching groups
+        const matches = await routingEngine.findMatchingGroups(adId);
+        
+        console.log(`📊 Found ${matches.length} matching groups for ad ${adId}:`, matches.map(m => ({ groupId: m.groupId, groupName: m.groupName })));
+
+        // Build message payload
+        const payload = messageBuilder.buildAdMessage(ad);
+
+        // If no matches, create a placeholder item with null groupId
+        if (matches.length === 0) {
+          console.log(`⚠️ No matching WhatsApp groups found for ad ${adId}, creating placeholder`);
+          
+          const item = await prisma.distributionItem.create({
+            data: {
+              adId,
+              groupId: null,
+              status: 'PENDING',
+              priority: 0,
+              payloadSnapshot: payload as any,
+              dedupeKey: `${adId}-no-group`,
+            },
+          });
+
+          return {
+            ad: approvedAd,
+            items: [{ id: item.id, groupId: null, groupName: null, status: item.status }],
+            messageText: payload.messageText,
+            warning: 'לא נמצאה קבוצת WhatsApp תואמת למודעה זו. המודעה תמתין בתור עד שתיווצר קבוצה מתאימה.',
+          };
+        }
+
+        // Check if all matching groups are paused or archived
+        const activeMatches = matches.filter(m => m.groupStatus === 'ACTIVE');
+        if (activeMatches.length === 0) {
+          console.log(`⚠️ All matching groups are paused/archived for ad ${adId}`);
+          
+          const item = await prisma.distributionItem.create({
+            data: {
+              adId,
+              groupId: null,
+              status: 'PENDING',
+              priority: 0,
+              payloadSnapshot: payload as any,
+              dedupeKey: `${adId}-no-group`,
+            },
+          });
+
+          return {
+            ad: approvedAd,
+            items: [{ id: item.id, groupId: null, groupName: null, status: item.status }],
+            messageText: payload.messageText,
+            warning: 'כל הקבוצות התואמות מושהות או בארכיון. המודעה תמתין בתור עד שקבוצה תהיה פעילה.',
+          };
+        }
+
+        // Create distribution items with SENT status
+        const items = [];
+        for (const match of activeMatches) {
+          const dedupeKey = `${adId}-${match.groupId}`;
+          console.log(`🔍 Checking for existing item with dedupeKey: ${dedupeKey}`);
+          
+          // Check if item already exists
+          const existingItem = await prisma.distributionItem.findUnique({
+            where: { dedupeKey },
+          });
+
+          if (existingItem) {
+            console.log(`⏭️ Item already exists: ad ${adId} → group ${match.groupId}, status: ${existingItem.status}`);
+            items.push({
+              id: existingItem.id,
+              groupId: match.groupId,
+              groupName: match.groupName,
+              status: existingItem.status,
+            });
+            continue;
+          }
+          
+          console.log(`✨ Creating new item: ad ${adId} → group ${match.groupId}`);
+
+          // Create with SENT status
+          const item = await prisma.distributionItem.create({
+            data: {
+              adId,
+              groupId: match.groupId,
+              status: 'SENT',
+              priority: match.priority,
+              payloadSnapshot: payload as any,
+              dedupeKey,
+              sentAt: new Date(),
+            },
+          });
+          
+          console.log(`✅ Created item ${item.id} with dedupeKey: ${dedupeKey}`);
+
+          items.push({
+            id: item.id,
+            groupId: match.groupId,
+            groupName: match.groupName,
+            status: item.status,
+          });
+
+          // Audit log
+          await auditService.log({
+            action: 'create_manual_distribution',
+            actorUserId: adminId,
+            entityType: 'distribution_item',
+            entityId: item.id,
+            payload: {
+              adId,
+              groupId: match.groupId,
+              priority: match.priority,
+              status: 'SENT',
+              sentImmediately: true,
+            },
+          });
+        }
+
+        console.log(`✅ Created ${items.length} WhatsApp distribution items with SENT status for ad ${adId}`);
+
+        return {
+          ad: approvedAd,
+          items,
+          messageText: payload.messageText,
+        };
+      } catch (error) {
+        console.error('❌ Failed to create WhatsApp distribution items:', error);
+        
+        // If error is about no groups or paused groups, throw it to the user
+        if (error instanceof Error && (
+          error.message.includes('לא נמצאה קבוצת WhatsApp') ||
+          error.message.includes('מושהות או בארכיון')
+        )) {
+          throw error;
+        }
+        
+        // For other errors, המודעה כבר אושרה, לא זורק שגיאה
+        return {
+          ad: approvedAd,
+          items: [],
+          messageText: '',
+        };
+      }
+    }
+
+    return { ad: approvedAd, items: [], messageText: '' };
   }
 
   async rejectAd(adId: string, reason: string, adminId: string) {

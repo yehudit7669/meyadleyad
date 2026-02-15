@@ -400,22 +400,20 @@ export class AdsService {
     }
   }
 
+  /**
+   * Send ad to WhatsApp (using new distribution system)
+   * This is deprecated in favor of the new WhatsApp distribution module
+   */
   private async sendToWhatsAppGroup(ad: any) {
     try {
-      const whatsappGroup = await prisma.whatsAppGroup.findUnique({
-        where: { categoryId: ad.categoryId },
-      });
-
-      if (whatsappGroup && whatsappGroup.isActive) {
-        const adUrl = `${config.clientUrl}/ads/${ad.id}`;
-        await this.whatsappService.sendAdToGroup(whatsappGroup.groupId, {
-          title: ad.title,
-          description: ad.description,
-          price: ad.price,
-          category: ad.Category.nameHe,
-          city: ad.City?.nameHe,
-          url: adUrl,
-        });
+      // NEW: Use WhatsApp distribution system if enabled
+      if (process.env.WHATSAPP_MODULE_ENABLED === 'true') {
+        const { distributionService } = await import('../whatsapp/distribution/distribution.service.js');
+        await distributionService.createDistributionItems(ad.id, 'system');
+        console.log(`📲 Created WhatsApp distribution items for ad ${ad.id}`);
+      } else {
+        // Legacy: Old WhatsApp integration (if any)
+        console.log('⚠️ WhatsApp module is disabled');
       }
     } catch (error) {
       console.error('Failed to send ad to WhatsApp group:', error);

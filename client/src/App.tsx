@@ -78,6 +78,10 @@ import AdminConversations from './components/admin/AdminConversations';
 import AdminConversationDetail from './components/admin/AdminConversationDetail';
 import UserConversations from './pages/UserConversations';
 import PendingChangesPage from './pages/admin/PendingChangesPage';
+// WhatsApp Module
+import WhatsAppQueue from './pages/admin/WhatsAppQueue';
+import WhatsAppGroups from './pages/admin/WhatsAppGroups';
+import WhatsAppDashboard from './pages/admin/WhatsAppDashboard';
 import './styles/index.css';
 
 const queryClient = new QueryClient({
@@ -190,6 +194,11 @@ const App: React.FC = () => {
                   <Route path="/admin/backups" element={<AdminRoute><AdminLayout><BackupsPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettingsPage /></AdminLayout></AdminRoute>} />
                   <Route path="/admin/notifications" element={<AdminRoute><AdminLayout><NotificationsAdminPage /></AdminLayout></AdminRoute>} />
+                  
+                  {/* WhatsApp Distribution Routes */}
+                  <Route path="/admin/whatsapp/queue" element={<AdminRoute><AdminLayout><WhatsAppQueue /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/whatsapp/groups" element={<AdminRoute><AdminLayout><WhatsAppGroups /></AdminLayout></AdminRoute>} />
+                  <Route path="/admin/whatsapp/dashboard" element={<AdminRoute><AdminLayout><WhatsAppDashboard /></AdminLayout></AdminRoute>} />
                   
                   {/* Support/Messages Routes */}
                   <Route path="/admin/conversations" element={<AdminRoute><AdminLayout><AdminConversations /></AdminLayout></AdminRoute>} />

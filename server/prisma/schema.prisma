@@ -25,6 +25,7 @@ model Ad {
   contactClicks         Int                     @default(0)
   whatsappSent          Boolean                 @default(false)
   whatsappSentAt        DateTime?
+  whatsappSentBy        String?
   expiresAt             DateTime?
   publishedAt           DateTime?
   createdAt             DateTime                @default(now())
@@ -48,6 +49,7 @@ model Ad {
   AdminAdLog            AdminAdLog[]
   Appointment           Appointment[]
   AvailabilitySlot      AvailabilitySlot[]
+  DistributionItem      DistributionItem[]
   EmailLog              EmailLog[]
   Favorite              Favorite[]
   NewspaperAd           NewspaperAd[]
@@ -304,15 +306,128 @@ model User {
 }
 
 model WhatsAppGroup {
-  id         String   @id
-  categoryId String   @unique
-  name       String
-  groupId    String
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime
+  id               String               @id @default(cuid())
+  name             String
+  internalCode     String               @unique
+  status           WhatsAppGroupStatus  @default(ACTIVE)
+  cityScopes       Json?                // Array of city IDs
+  regionScopes     Json?                // Array of regions
+  categoryScopes   Json?                // Array of category IDs
+  dailyQuota       Int                  @default(10)
+  allowDigest      Boolean              @default(true)
+  inviteLink       String?              // Optional WhatsApp group invite link
+  metadata         Json?                // For future extensions
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  createdById      String?
+  
+  DistributionItem DistributionItem[]
+  GroupSuggestion  WhatsAppGroupSuggestion[]
+  
+  @@index([status])
+  @@index([internalCode])
+}
 
-  @@index([categoryId])
+model DistributionChannel {
+  id               String                  @id @default(cuid())
+  name             String
+  strategy         DistributionStrategy    @default(ROUND_ROBIN)
+  status           DistributionChannelStatus @default(ACTIVE)
+  routingRules     Json?                   // City/category routing rules
+  metadata         Json?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  
+  DistributionItem DistributionItem[]
+  
+  @@index([status])
+}
+
+model DistributionItem {
+  id               String                  @id @default(cuid())
+  adId             String
+  groupId          String?
+  channelId        String?
+  status           DistributionItemStatus  @default(PENDING)
+  priority         Int                     @default(0)
+  scheduledFor     DateTime?
+  sentAt           DateTime?
+  sentBy           String?
+  dedupeKey        String?                 @unique
+  attemptCount     Int                     @default(0)
+  lastError        String?
+  payloadSnapshot  Json?                   // Message text, image, link
+  digestId         String?                 // If part of digest
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  
+  Ad               Ad                      @relation(fields: [adId], references: [id], onDelete: Cascade)
+  Group            WhatsAppGroup?          @relation(fields: [groupId], references: [id])
+  Channel          DistributionChannel?    @relation(fields: [channelId], references: [id])
+  Digest           DistributionDigest?     @relation(fields: [digestId], references: [id])
+  
+  @@index([status])
+  @@index([adId])
+  @@index([groupId])
+  @@index([channelId])
+  @@index([scheduledFor])
+  @@index([sentAt])
+}
+
+model DistributionDigest {
+  id               String                 @id @default(cuid())
+  groupId          String
+  title            String
+  itemCount        Int                    @default(0)
+  status           DistributionItemStatus @default(PENDING)
+  payloadSnapshot  Json?
+  sentAt           DateTime?
+  sentBy           String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  
+  Items            DistributionItem[]
+  
+  @@index([groupId])
+  @@index([status])
+}
+
+model WhatsAppAuditLog {
+  id               String   @id @default(cuid())
+  action           String   // approve_listing, create_distribution_items, mark_sent, etc.
+  actorUserId      String
+  entityType       String   // ad, distribution_item, group, etc.
+  entityId         String
+  payload          Json?
+  createdAt        DateTime @default(now())
+  
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model WhatsAppGroupSuggestion {
+  id               String                      @id @default(cuid())
+  name             String
+  internalCode     String
+  cityScopes       Json?
+  regionScopes     Json?
+  categoryScopes   Json?
+  dailyQuota       Int                         @default(10)
+  allowDigest      Boolean                     @default(true)
+  status           WhatsAppSuggestionStatus    @default(PENDING)
+  suggestedBy      String
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  reviewNotes      String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  approvedGroupId  String?
+  
+  ApprovedGroup    WhatsAppGroup?              @relation(fields: [approvedGroupId], references: [id])
+  
+  @@index([status])
+  @@index([suggestedBy])
 }
 
 model EmailLog {
@@ -1252,4 +1367,35 @@ enum EmailDeliveryStatus {
 enum SupportNotificationType {
   ADMIN_REPLY
   NEW_MESSAGE
+}
+
+enum WhatsAppGroupStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum DistributionStrategy {
+  ROUND_ROBIN
+  LEAST_LOADED
+  MANUAL
+}
+
+enum DistributionChannelStatus {
+  ACTIVE
+  PAUSED
+}
+
+enum DistributionItemStatus {
+  PENDING
+  IN_PROGRESS
+  SENT
+  DEFERRED
+  FAILED
+}
+
+enum WhatsAppSuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

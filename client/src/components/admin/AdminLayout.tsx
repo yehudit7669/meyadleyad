@@ -161,6 +161,32 @@ const menuItems: MenuItem[] = [
     requiredRoles: ['ADMIN', 'SUPER_ADMIN']
   },
   {
+    id: 'whatsapp',
+    title: 'הפצת WhatsApp',
+    icon: <MessageCircle className="w-5 h-5" />,
+    requiredRoles: ['ADMIN', 'SUPER_ADMIN'],
+    children: [
+      {
+        id: 'whatsapp-queue',
+        title: 'תור הפצה',
+        path: '/admin/whatsapp/queue',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+      },
+      {
+        id: 'whatsapp-groups',
+        title: 'ניהול קבוצות',
+        path: '/admin/whatsapp/groups',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+      },
+      {
+        id: 'whatsapp-dashboard',
+        title: 'Dashboard',
+        path: '/admin/whatsapp/dashboard',
+        requiredRoles: ['ADMIN', 'SUPER_ADMIN']
+      }
+    ]
+  },
+  {
     id: 'support-messages',
     title: 'הודעות משתמשים',
     path: '/admin/conversations',

@@ -429,6 +429,22 @@ export const adminService = {
     return response.data as any;
   },
 
+  // Approve ad and create distribution items (PENDING status)
+  approveAdWithPendingDistribution: async (id: string) => {
+    // First approve
+    await api.post(`/admin/ads/${id}/approve`);
+    // Then create distribution with PENDING status
+    const response = await api.post(`/admin/whatsapp/listings/${id}/create-distribution`, { status: 'PENDING' });
+    return response.data as any;
+  },
+
+  // Approve ad and create distribution items (IN_PROGRESS status for manual sending)
+  approveAdWithInProgressDistribution: async (id: string) => {
+    // Approve and create SENT distribution items in one call
+    const response = await api.post(`/admin/ads/${id}/approve-and-whatsapp`);
+    return response.data as any;
+  },
+
   rejectAd: async (id: string, reason: string) => {
     const response = await api.post(`/admin/ads/${id}/reject`, { reason });
     return response.data as any;
@@ -960,6 +976,151 @@ export const pendingApprovalsService = {
   // Get pending count
   getPendingCount: async () => {
     const response = await api.get('/admin/pending-approvals/pending-count');
+    return (response.data as any).data;
+  },
+};
+
+// WhatsApp Distribution Service
+export const whatsappService = {
+  // Distribution Queue
+  getQueue: async (filters?: { status?: string; categoryId?: string; cityId?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+    if (filters?.cityId) params.append('cityId', filters.cityId);
+    const response = await api.get(`/admin/whatsapp/queue?${params.toString()}`);
+    return (response.data as any).data;
+  },
+
+  startSending: async () => {
+    const response = await api.post('/admin/whatsapp/start-sending');
+    return (response.data as any).data;
+  },
+
+  markItemAsInProgress: async (itemId: string) => {
+    const response = await api.post(`/admin/whatsapp/queue/${itemId}/mark-in-progress`);
+    return (response.data as any).data;
+  },
+
+  cancelSending: async (itemId: string) => {
+    const response = await api.post(`/admin/whatsapp/queue/${itemId}/cancel-sending`);
+    return (response.data as any).data;
+  },
+
+  markItemAsSent: async (itemId: string) => {
+    const response = await api.post(`/admin/whatsapp/queue/${itemId}/mark-sent`);
+    return (response.data as any).data;
+  },
+
+  // Get message text for an ad
+  getAdMessageText: async (adId: string) => {
+    const response = await api.get(`/admin/whatsapp/listings/${adId}/message-text`);
+    return (response.data as any).data;
+  },
+
+  copyMessage: async (itemId: string) => {
+    const response = await api.post(`/admin/whatsapp/items/${itemId}/copy`);
+    return (response.data as any).data;
+  },
+
+  deferItem: async (itemId: string, hours: number) => {
+    const response = await api.post(`/admin/whatsapp/items/${itemId}/defer`, { hours });
+    return (response.data as any).data;
+  },
+
+  resendItem: async (itemId: string, groupId?: string) => {
+    const response = await api.post(`/admin/whatsapp/items/${itemId}/override-resend`, { groupId });
+    return (response.data as any).data;
+  },
+
+  // Groups Management
+  getGroups: async (filters?: { status?: string; categoryId?: string; cityId?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+    if (filters?.cityId) params.append('cityId', filters.cityId);
+    const response = await api.get(`/admin/whatsapp/groups?${params.toString()}`);
+    return (response.data as any).data;
+  },
+
+  createGroup: async (groupData: {
+    name: string;
+    inviteLink?: string;
+    categoryScopes?: string[];
+    cityScopes?: string[];
+    dailyQuota?: number;
+    status?: string;
+  }) => {
+    const response = await api.post('/admin/whatsapp/groups', groupData);
+    return (response.data as any).data;
+  },
+
+  updateGroup: async (groupId: string, groupData: Partial<{
+    name: string;
+    inviteLink?: string;
+    categoryScopes?: string[];
+    cityScopes?: string[];
+    dailyQuota?: number;
+    status: string;
+  }>) => {
+    const response = await api.patch(`/admin/whatsapp/groups/${groupId}`, groupData);
+    return (response.data as any).data;
+  },
+
+  deleteGroup: async (groupId: string) => {
+    const response = await api.delete(`/admin/whatsapp/groups/${groupId}`);
+    return response.data as any;
+  },
+
+  // Group Suggestions
+  getSuggestions: async () => {
+    const response = await api.get('/admin/whatsapp/groups/suggestions');
+    return (response.data as any).data;
+  },
+
+  suggestGroup: async (suggestionData: {
+    groupName: string;
+    phoneNumber?: string;
+    inviteLink?: string;
+    description?: string;
+    categoryId?: string;
+    cityId?: string;
+  }) => {
+    const response = await api.post('/admin/whatsapp/suggestions', suggestionData);
+    return (response.data as any).data;
+  },
+
+  approveSuggestion: async (suggestionId: string) => {
+    const response = await api.post(`/admin/whatsapp/suggestions/${suggestionId}/approve`);
+    return (response.data as any).data;
+  },
+
+  rejectSuggestion: async (suggestionId: string, reason?: string) => {
+    const response = await api.post(`/admin/whatsapp/suggestions/${suggestionId}/reject`, { reason });
+    return (response.data as any).data;
+  },
+
+  // Dashboard & Reports
+  getDashboard: async () => {
+    const response = await api.get('/admin/whatsapp/dashboard');
+    return (response.data as any).data;
+  },
+
+  getDailyReport: async (date?: string) => {
+    const params = date ? `?date=${date}` : '';
+    const response = await api.get(`/admin/whatsapp/reports/daily${params}`);
+    return (response.data as any).data;
+  },
+
+  // Digest Management
+  createDigest: async (date: string, categoryId?: string) => {
+    const response = await api.post('/admin/whatsapp/digest', { date, categoryId });
+    return (response.data as any).data;
+  },
+
+  // Approve ad and send to WhatsApp
+  approveAdAndWhatsApp: async (adId: string) => {
+    const response = await api.post(`/admin/ads/${adId}/approve-and-whatsapp`);
     return (response.data as any).data;
   },
 };

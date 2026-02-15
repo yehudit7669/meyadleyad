@@ -35,6 +35,7 @@ router.get('/ads', adminController.getAllAds);
 // Routes עם :id parameters - חייבים להיות אחרונים!
 router.get('/ads/:id', adminController.getAdById);
 router.post('/ads/:id/approve', requireAdminOrSuper, adminController.approveAd);
+router.post('/ads/:id/approve-and-whatsapp', requireAdminOrSuper, adminController.approveAdAndWhatsApp);
 router.post('/ads/:id/reject', requireAdminOrSuper, adminController.rejectAd);
 router.patch('/ads/:id/status', requireAdminOrSuper, adminController.updateAdStatus);
 

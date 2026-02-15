@@ -58,10 +58,61 @@ export default function PendingAds() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) => adminService.approveAd(id),
+    mutationFn: (id: string) => adminService.approveAdWithPendingDistribution(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-ads'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-queue'] });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message;
+      // Don't show error if it's about no matching groups - ad is still approved
+      if (errorMessage && !errorMessage.includes('לא נמצאו קבוצות') && !errorMessage.includes('קבוצה')) {
+        alert(`❌ שגיאה: ${errorMessage}`);
+      }
+      // Always refresh the lists even if there was an error
+      queryClient.invalidateQueries({ queryKey: ['pending-ads'] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-queue'] });
+    },
+  });
+
+  const approveAndWhatsappMutation = useMutation({
+    mutationFn: async (id: string) => {
+      console.log(`🔵 Calling approve-and-whatsapp for ad: ${id}`);
+      
+      // Call the API that approves + creates SENT distribution items + returns message text
+      const result = await adminService.approveAdWithInProgressDistribution(id);
+      
+      console.log(`✅ Received result:`, result);
+      
+      // Show warning if exists (but not as error - ad is still approved)
+      if (result.data?.warning) {
+        alert(`⚠️ ${result.data.warning}\n\nהמודעה אושרה ותופיע בתור הפצה.`);
+      }
+      
+      // Copy message text to clipboard
+      if (result.data?.messageText) {
+        await navigator.clipboard.writeText(result.data.messageText);
+      }
+      
+      // Open WhatsApp Web with first group's phone (or just WhatsApp if no groups)
+      if (result.data?.items?.[0]) {
+        // Items now have groupId, try to open WhatsApp Web
+        window.open('https://web.whatsapp.com', '_blank');
+      } else {
+        window.open('https://web.whatsapp.com', '_blank');
+      }
+      
+      return result;
+    },
+    onSuccess: async () => {
+      // Use refetch to prevent flash
+      await queryClient.refetchQueries({ queryKey: ['pending-ads'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-queue'] });
+    },
+    onError: (error: any) => {
+      alert(`❌ שגיאה: ${error.response?.data?.message || error.message}`);
     },
   });
 
@@ -377,6 +428,14 @@ export default function PendingAds() {
                                 ✅
                               </button>
                               <button
+                                onClick={() => approveAndWhatsappMutation.mutate(ad.id)}
+                                disabled={approveAndWhatsappMutation.isPending}
+                                title="אשר ושלח ל-WhatsApp"
+                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition disabled:opacity-50"
+                              >
+                                📱✅
+                              </button>
+                              <button
                                 onClick={() => setRejectingAdId(ad.id)}
                                 title="דחה מודעה"
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
@@ -536,6 +595,14 @@ export default function PendingAds() {
                           className="flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
                         >
                           ✅ אשר
+                        </button>
+                        <button
+                          onClick={() => approveAndWhatsappMutation.mutate(ad.id)}
+                          disabled={approveAndWhatsappMutation.isPending}
+                          className="flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                          title="אשר ושלח ל-WhatsApp"
+                        >
+                          📱✅
                         </button>
                         <button
                           onClick={() => setRejectingAdId(ad.id)}
@@ -989,6 +1056,16 @@ export default function PendingAds() {
                         className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:bg-gray-400 transition"
                       >
                         ✅ אשר מודעה
+                      </button>
+                      <button
+                        onClick={() => {
+                          approveAndWhatsappMutation.mutate(previewAd.id);
+                          setPreviewAdId(null);
+                        }}
+                        disabled={approveAndWhatsappMutation.isPending || previewAd.status !== 'PENDING'}
+                        className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:bg-gray-400 transition"
+                      >
+                        📱✅ אשר ושלח ל-WhatsApp
                       </button>
                       <button
                         onClick={() => {
