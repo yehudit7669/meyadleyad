@@ -80,6 +80,10 @@ export default function EditAd() {
         { key: 'masterUnit', label: 'יחידת הורים' },
         { key: 'housingUnit', label: 'יחידת דיור' },
         { key: 'yard', label: 'חצר' },
+        { key: 'garden', label: 'גינה' },
+        { key: 'frontFacing', label: 'חזית' },
+        { key: 'upgradedKitchen', label: 'מטבח משודרג' },
+        { key: 'accessibleForDisabled', label: 'נגיש לנכים' },
         { key: 'hasOption', label: 'אופציה' },
       ];
     }
@@ -96,6 +100,10 @@ export default function EditAd() {
       { key: 'masterUnit', label: 'יחידת הורים' },
       { key: 'housingUnit', label: 'יחידת דיור' },
       { key: 'yard', label: 'חצר' },
+      { key: 'garden', label: 'גינה' },
+      { key: 'frontFacing', label: 'חזית' },
+      { key: 'upgradedKitchen', label: 'מטבח משודרג' },
+      { key: 'accessibleForDisabled', label: 'נגיש לנכים' },
     ];
   };
 
@@ -349,9 +357,15 @@ export default function EditAd() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // ולידציה - שדות חובה
-    if (!formData.title || !formData.categoryId || !formData.streetId) {
-      alert('נא למלא את כל השדות החובה: כותרת, קטגוריה ורחוב');
+    // ולידציה - שדות חובה: כותרת, קטגוריה, ורחוב או שכונה
+    if (!formData.title || !formData.categoryId) {
+      alert('נא למלא את כל השדות החובה: כותרת וקטגוריה');
+      return;
+    }
+
+    // Validate either streetId or neighborhood is provided
+    if (!formData.streetId && !formData.neighborhood) {
+      alert('נא למלא רחוב או שכונה');
       return;
     }
     
@@ -494,7 +508,7 @@ export default function EditAd() {
 
             {/* רחוב */}
             <div ref={streetDropdownRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">רחוב *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">רחוב (אופציונלי)</label>
               <div className="relative">
                 <input
                   type="text"
@@ -526,6 +540,26 @@ export default function EditAd() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* שכונה - מופעל רק אם לא נבחר רחוב */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                שכונה {!formData.streetId && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type="text"
+                value={formData.neighborhood}
+                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                disabled={!!formData.streetId}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
+                placeholder={formData.streetId ? 'מתמלא אוטומטית מהרחוב' : 'הזן שם שכונה'}
+              />
+              {formData.streetId && (
+                <p className="text-sm text-gray-500 mt-1">השכונה מתמלאת אוטומטית מהרחוב שנבחר</p>
+              )}
             </div>
 
             {/* מחיר */}
@@ -621,14 +655,16 @@ export default function EditAd() {
                   >
                     <option value="">בחר סוג</option>
                     <option value="APARTMENT">דירה</option>
-                    <option value="HOUSE">בית פרטי</option>
-                    <option value="GARDEN_APARTMENT">דירת גן</option>
-                    <option value="PENTHOUSE">פנטהאוז</option>
                     <option value="DUPLEX">דופלקס</option>
+                    <option value="PENTHOUSE">פנטהאוז</option>
+                    <option value="TWO_STORY">דו קומתי</option>
+                    <option value="SEMI_DETACHED">דו משפחתי</option>
+                    <option value="GARDEN_APARTMENT">דירת גן</option>
+                    <option value="PRIVATE_HOUSE">בית פרטי</option>
                     <option value="STUDIO">סטודיו</option>
                     <option value="COTTAGE">קוטג'</option>
                     <option value="VILLA">וילה</option>
-                    <option value="TOWNHOUSE">בית טורי</option>
+                    <option value="UNIT">יחידת דיור</option>
                   </select>
                 </div>
 

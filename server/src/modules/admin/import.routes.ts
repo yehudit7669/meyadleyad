@@ -1111,16 +1111,17 @@ function getApartmentsForSaleSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
     { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
-    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: true, parser: requiredString },
-    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: true, parser: requiredString },
-    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
+    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
-    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: true, parser: parseRequiredNumber },
-    { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: true, parser: requiredString },
-    { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: true, parser: parseFloorRequired },
-    { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: true, parser: parseRequiredInt },
-    { name: 'furniture', hebrewName: 'ריהוט', aliases: ['ריהוט'], required: true, parser: parseFurnitureRequired },
-    { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: true, parser: parseDateRequired },
+    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumberWithDecimals },
+    { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: false, parser: optionalString },
+    { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: false, parser: parseFloorOptionalOrText },
+    { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: false, parser: parseOptionalInt },
+    { name: 'furniture', hebrewName: 'ריהוט', aliases: ['ריהוט'], required: false, parser: parseFurnitureOptional },
+    { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseEntryDateOptional },
     { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: true, parser: parseRequiredNumber },
     { name: 'arnona', hebrewName: 'ארנונה', aliases: ['ארנונה'], required: false, parser: parseOptionalNumber },
     { name: 'vaad', hebrewName: 'ועד בית', aliases: ['ועד בית'], required: false, parser: parseOptionalNumber },
@@ -1133,6 +1134,10 @@ function getApartmentsForSaleSchema(): CategorySchema {
     { name: 'parentalUnit', hebrewName: 'יחידת הורים', aliases: ['יחידת הורים'], required: false, parser: normalizeBoolean },
     { name: 'housingUnit', hebrewName: 'יחידת דיור', aliases: ['יחידת דיור'], required: false, parser: normalizeBoolean },
     { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
+    { name: 'garden', hebrewName: 'גינה', aliases: ['גינה'], required: false, parser: normalizeBoolean },
+    { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
+    { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
     { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
     { name: 'hasOption', hebrewName: 'אופציה', aliases: ['אופציה'], required: false, parser: normalizeBoolean },
     { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: true, parser: requiredString },
@@ -1155,16 +1160,17 @@ function getApartmentsForRentSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
     { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
-    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: true, parser: requiredString },
-    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: true, parser: requiredString },
-    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
+    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
-    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: true, parser: parseRequiredNumber },
-    { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: true, parser: requiredString },
-    { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: true, parser: parseFloorRequired },
-    { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: true, parser: parseRequiredInt },
-    { name: 'furniture', hebrewName: 'ריהוט', aliases: ['ריהוט'], required: true, parser: parseFurnitureRequired },
-    { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: true, parser: parseDateRequired },
+    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumberWithDecimals },
+    { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: false, parser: optionalString },
+    { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: false, parser: parseFloorOptionalOrText },
+    { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: false, parser: parseOptionalInt },
+    { name: 'furniture', hebrewName: 'ריהוט', aliases: ['ריהוט'], required: false, parser: parseFurnitureOptional },
+    { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseEntryDateOptional },
     { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: true, parser: parseRequiredNumber },
     { name: 'arnona', hebrewName: 'ארנונה', aliases: ['ארנונה'], required: false, parser: parseOptionalNumber },
     { name: 'vaad', hebrewName: 'ועד בית', aliases: ['ועד בית'], required: false, parser: parseOptionalNumber },
@@ -1177,6 +1183,10 @@ function getApartmentsForRentSchema(): CategorySchema {
     { name: 'parentalUnit', hebrewName: 'יחידת הורים', aliases: ['יחידת הורים'], required: false, parser: normalizeBoolean },
     { name: 'housingUnit', hebrewName: 'יחידת דיור', aliases: ['יחידת דיור'], required: false, parser: normalizeBoolean },
     { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
+    { name: 'garden', hebrewName: 'גינה', aliases: ['גינה'], required: false, parser: normalizeBoolean },
+    { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
+    { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
     { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
     { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: true, parser: requiredString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
@@ -1567,6 +1577,81 @@ function parseUrl(value: any): string | null {
   return null;
 }
 
+// ========================================
+// NEW PARSERS FOR UPDATED REQUIREMENTS
+// ========================================
+
+// Parse property type with new types (פנטהאוז, דו קומתי, דו משפחתי)
+function parsePropertyType(value: any): string {
+  if (!value || !value.toString().trim()) throw new Error('סוג נכס חובה');
+  const str = value.toString().trim();
+  const validTypes = [
+    'דירה',
+    'דירת גן',
+    'בית פרטי',
+    'פנטהאוז',
+    'דו קומתי',
+    'דו משפחתי',
+    'דופלקס',
+    'מיני פנטהאוז',
+    'סטודיו',
+    'קוטג\'',
+    'וילה',
+    'משק עזר'
+  ];
+  
+  // Try exact match first
+  if (validTypes.includes(str)) return str;
+  
+  // Try case-insensitive match
+  const lowerStr = str.toLowerCase();
+  const found = validTypes.find(t => t.toLowerCase() === lowerStr);
+  if (found) return found;
+  
+  // Return as-is if not in list (allow custom types)
+  return str;
+}
+
+// Parse optional number with decimals (for rooms and area)
+function parseOptionalNumberWithDecimals(value: any): number | null {
+  if (!value) return null;
+  const str = value.toString().replace(',', '.').replace(/[^\d.-]/g, '');
+  const num = parseFloat(str);
+  return isNaN(num) ? null : num;
+}
+
+// Parse floor - can be number or "ללא"
+function parseFloorOptionalOrText(value: any): string | null {
+  if (!value && value !== 0) return null;
+  const str = value.toString().trim();
+  
+  // Check if it's "ללא" or similar
+  if (str === 'ללא' || str.toLowerCase() === 'none' || str === '') return null;
+  
+  // Check if it's ground floor
+  if (str.toLowerCase().includes('קרקע') || str.toLowerCase().includes('ground')) return '0';
+  
+  // Try to parse as number
+  const num = parseInt(str);
+  if (!isNaN(num)) return num.toString();
+  
+  // Return as text if not a number
+  return str;
+}
+
+// Parse entry date with flexible/immediate options
+function parseEntryDateOptional(value: any): string | null {
+  if (!value || !value.toString().trim()) return null;
+  const str = value.toString().trim();
+  
+  // Check for special values
+  if (str === 'גמיש' || str.toLowerCase() === 'flexible') return 'גמיש';
+  if (str === 'מיידי' || str.toLowerCase() === 'immediate') return 'מיידי';
+  
+  // Try to parse as date
+  return parseDate(value);
+}
+
 function buildCustomFields(row: any, categorySlug: string, adType?: string): any {
   const customFields: any = {};
   const isWanted = adType && adType.includes('WANTED');
@@ -1613,7 +1698,7 @@ function buildCustomFields(row: any, categorySlug: string, adType?: string): any
     if (row.rooms) customFields.rooms = row.rooms;
     if (row.squareMeters) customFields.squareMeters = row.squareMeters;
     if (row.condition) customFields.condition = row.condition;
-    if (row.floor !== null) customFields.floor = row.floor;
+    if (row.floor !== null && row.floor !== undefined) customFields.floor = row.floor;
     if (row.balconies) customFields.balconies = row.balconies;
     if (row.furniture) customFields.furniture = row.furniture;
     if (row.entryDate) customFields.entryDate = row.entryDate;
@@ -1635,6 +1720,10 @@ function buildCustomFields(row: any, categorySlug: string, adType?: string): any
     if (row.parentalUnit !== null) features.parentalUnit = row.parentalUnit;
     if (row.housingUnit !== null) features.housingUnit = row.housingUnit;
     if (row.yard !== null) features.yard = row.yard;
+    if (row.garden !== null) features.garden = row.garden;
+    if (row.frontFacing !== null) features.frontFacing = row.frontFacing;
+    if (row.upgradedKitchen !== null) features.upgradedKitchen = row.upgradedKitchen;
+    if (row.accessibleForDisabled !== null) features.accessibleForDisabled = row.accessibleForDisabled;
     if (row.airConditioning !== null) features.airConditioning = row.airConditioning;
     
     if (Object.keys(features).length > 0) {

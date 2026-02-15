@@ -4,7 +4,6 @@ import { HolidayRentStep3Data, holidayRentStep3Schema, PropertyType } from '../.
 import { parashaService } from '../../../services/api';
 import {
   PROPERTY_TYPE_OPTIONS,
-  ROOMS_OPTIONS,
   PURPOSE_OPTIONS,
   BALCONIES_COUNT_OPTIONS,
 } from '../../../constants/adTypes';
@@ -20,10 +19,11 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
   const [formData, setFormData] = useState<Partial<HolidayRentStep3Data>>({
     parasha: data.parasha || '',
     propertyType: data.propertyType || PropertyType.APARTMENT,
-    rooms: data.rooms || 3,
+    rooms: data.rooms,
     purpose: data.purpose || 'HOSTING',
-    floor: data.floor || 0,
+    floor: data.floor,
     balconiesCount: data.balconiesCount || 0,
+    beds: data.beds,
     priceRequested: data.priceRequested,
     features: data.features || {
       plata: false,
@@ -38,6 +38,7 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
       babyBed: false,
       masterUnit: false,
       sleepingOnly: false,
+      accessibleForDisabled: false,
     },
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -92,8 +93,7 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
     { key: 'kidsGames', label: 'משחקי ילדים', icon: '🎮' },
     { key: 'babyBed', label: 'מיטת תינוק', icon: '👶' },
     { key: 'masterUnit', label: 'יחידת הורים', icon: '🚪' },
-    { key: 'sleepingOnly', label: 'לינה בלבד', icon: '😴' },
-  ];
+    { key: 'sleepingOnly', label: 'לינה בלבד', icon: '😴' },    { key: 'accessibleForDisabled', label: 'נגישה לנכים', icon: '♿' },  ];
 
   return (
     <div className="space-y-6">
@@ -151,19 +151,20 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
           <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
             מספר חדרים <span className="text-red-500">*</span>
           </label>
-          <select
-            value={formData.rooms}
-            onChange={(e) => handleInputChange('rooms', parseInt(e.target.value))}
+          <input
+            type="number"
+            step="0.5"
+            min="0.5"
+            value={formData.rooms || ''}
+            onChange={(e) => {
+              const value = parseFloat(e.target.value);
+              handleInputChange('rooms', isNaN(value) ? undefined : value);
+            }}
+            placeholder="לדוגמה: 3.5"
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.rooms ? 'border-red-500' : 'border-gray-300'
             }`}
-          >
-            {ROOMS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
           {errors.rooms && <p className="text-red-500 text-sm mt-1">{errors.rooms}</p>}
         </div>
       </div>
@@ -195,15 +196,24 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
       {/* Floor & Balconies */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#1F3F3A] mb-2">קומה</label>
+          <label className="block text-sm font-medium text-[#1F3F3A] mb-2">קומה (אופציונלי)</label>
           <input
             type="number"
-            value={formData.floor}
-            onChange={(e) => handleInputChange('floor', parseInt(e.target.value) || 0)}
+            step="0.5"
+            value={typeof formData.floor === 'number' ? formData.floor : formData.floor || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '') {
+                handleInputChange('floor', undefined);
+              } else {
+                const numValue = parseFloat(value);
+                handleInputChange('floor', isNaN(numValue) ? undefined : numValue);
+              }
+            }}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.floor ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="קומה (מותר ערכים שליליים)"
+            placeholder="לדוגמה: 2.5 (מותר ערכים שליליים)"
           />
           {errors.floor && <p className="text-red-500 text-sm mt-1">{errors.floor}</p>}
         </div>
@@ -222,6 +232,27 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Beds (Optional) */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
+          מספר מיטות (אופציונלי)
+        </label>
+        <input
+          type="number"
+          min="1"
+          value={formData.beds || ''}
+          onChange={(e) => {
+            const value = e.target.value;
+            handleInputChange('beds', value === '' ? undefined : parseInt(value));
+          }}
+          placeholder="הזן מספר מיטות"
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
+            errors.beds ? 'border-red-500' : 'border-gray-300'
+          }`}
+        />
+        {errors.beds && <p className="text-red-500 text-sm mt-1">{errors.beds}</p>}
       </div>
 
       {/* Features */}

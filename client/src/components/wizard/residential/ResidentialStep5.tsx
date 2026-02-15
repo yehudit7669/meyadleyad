@@ -30,6 +30,7 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
       contactName: '',
       contactPhone: '',
       agreeToTerms: true, // Always true since we removed the checkbox
+      weeklyDigestOptIn: false,
     }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -180,6 +181,26 @@ const ResidentialStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
           <p className="mt-1 text-xs text-gray-500">
             מספר טלפון ישראלי תקין (נייד או קווי)
           </p>
+        </div>
+
+        {/* Weekly Digest Opt-in */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.weeklyDigestOptIn || false}
+              onChange={(e) => handleChange('weeklyDigestOptIn', e.target.checked)}
+              className="mt-1 w-5 h-5 text-[#C9A24D] border-gray-300 rounded focus:ring-[#C9A24D] cursor-pointer"
+            />
+            <div className="flex-1">
+              <div className="font-medium text-[#1F3F3A]">
+                שלח לי את הלוח השבועי באימייל לאחר הפרסום
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+               קובץ PDF מסודר עם כל פרטי המודעה כפי שתפורסם באתר
+              </p>
+            </div>
+          </label>
         </div>
 
         {/* Info Box */}

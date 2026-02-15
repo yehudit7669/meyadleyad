@@ -29,14 +29,16 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
   const getPropertyTypeLabel = (type?: string) => {
     const types: Record<string, string> = {
       APARTMENT: 'דירה',
-      HOUSE: 'בית',
-      PENTHOUSE: 'פנטהאוז',
-      GARDEN_APARTMENT: 'דירת גן',
-      UNIT: 'יחידת דיור',
       DUPLEX: 'דופלקס',
-      TRIPLEX: 'טריפלקס',
+      PENTHOUSE: 'פנטהאוז',
+      TWO_STORY: 'דו קומתי',
+      SEMI_DETACHED: 'דו משפחתי',
+      GARDEN_APARTMENT: 'דירת גן',
+      PRIVATE_HOUSE: 'בית פרטי',
+      STUDIO: 'סטודיו',
       COTTAGE: 'קוטג׳',
-      MINI_PENTHOUSE: 'מיני פנטהאוז',
+      VILLA: 'וילה',
+      UNIT: 'יחידת דיור',
     };
     return types[type || ''] || type || '';
   };
@@ -94,11 +96,13 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
             </h3>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-lg font-semibold text-gray-900">
-                {step2?.streetName || 'לא צוין'} {step2?.houseNumber || ''}
+                {step2?.streetName 
+                  ? `${step2.streetName} ${step2.houseNumber || ''}`
+                  : step2?.neighborhoodName || 'לא צוין'}
                 {step2?.addressSupplement ? `, ${step2.addressSupplement}` : ''}
               </p>
               <p className="text-gray-600 mt-1">
-                {step2?.neighborhoodName ? `שכונת ${step2.neighborhoodName}, ` : ''}
+                {step2?.neighborhoodName && step2.streetName ? `שכונת ${step2.neighborhoodName}, ` : ''}
                 {step2?.cityName || 'לא צוין'}
               </p>
             </div>
@@ -120,7 +124,13 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
               </div>
               <div className="bg-purple-50 rounded-lg p-3 text-center">
                 <div className="text-2xl font-bold text-purple-900">
-                  {step3?.floor !== undefined ? (step3.floor === 0 ? 'קרקע' : step3.floor) : 'לא צוין'}
+                  {step3?.floor !== undefined && step3.floor !== null
+                    ? (step3.floor === 0 
+                        ? 'קרקע' 
+                        : step3.floor === 'ללא' 
+                          ? 'ללא' 
+                          : step3.floor)
+                    : 'לא צוין'}
                 </div>
                 <div className="text-sm text-gray-600">קומה</div>
               </div>
@@ -210,6 +220,18 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
                 )}
                 {step3.features.housingUnit && (
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">🏠 יחידת דיור</span>
+                )}
+                {step3.features.garden && (
+                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">🌻 גינה</span>
+                )}
+                {step3.features.frontFacing && (
+                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">🏢 חזית</span>
+                )}
+                {step3.features.upgradedKitchen && (
+                  <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">👨‍🍳 מטבח משודרג</span>
+                )}
+                {step3.features.accessibleForDisabled && (
+                  <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">♿ נגיש לנכים</span>
                 )}
                 {step3.features.hasOption && (
                   <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">🤝 אופציה</span>

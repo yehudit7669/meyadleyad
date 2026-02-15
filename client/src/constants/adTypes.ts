@@ -102,19 +102,32 @@ export const WANTED_TYPE_OPTIONS = [
 export const PROPERTY_TYPE_OPTIONS = [
   { value: 'APARTMENT', label: 'דירה' },
   { value: 'DUPLEX', label: 'דופלקס' },
+  { value: 'PENTHOUSE', label: 'פנטהאוז' },
+  { value: 'TWO_STORY', label: 'דו קומתי' },
+  { value: 'SEMI_DETACHED', label: 'דו משפחתי' },
   { value: 'GARDEN_APARTMENT', label: 'דירת גן' },
   { value: 'PRIVATE_HOUSE', label: 'בית פרטי' },
+  { value: 'STUDIO', label: 'סטודיו' },
+  { value: 'COTTAGE', label: 'קוטג׳' },
+  { value: 'VILLA', label: 'וילה' },
   { value: 'UNIT', label: 'יחידת דיור' },
 ];
 
 export const ROOMS_OPTIONS = [
   { value: 1, label: '1' },
+  { value: 1.5, label: '1.5' },
   { value: 2, label: '2' },
+  { value: 2.5, label: '2.5' },
   { value: 3, label: '3' },
+  { value: 3.5, label: '3.5' },
   { value: 4, label: '4' },
+  { value: 4.5, label: '4.5' },
   { value: 5, label: '5' },
+  { value: 5.5, label: '5.5' },
   { value: 6, label: '6' },
+  { value: 6.5, label: '6.5' },
   { value: 7, label: '7' },
+  { value: 7.5, label: '7.5' },
   { value: 8, label: '8' },
 ];
 

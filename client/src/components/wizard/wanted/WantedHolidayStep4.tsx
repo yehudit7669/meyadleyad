@@ -32,6 +32,7 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
 
   const [contactName, setContactName] = useState(data?.contactName || '');
   const [contactPhone, setContactPhone] = useState(data?.contactPhone || '');
+  const [sendCopyToEmail, setSendCopyToEmail] = useState(data?.sendCopyToEmail !== undefined ? data.sendCopyToEmail : false);
   const [selectedBrokerId, setSelectedBrokerId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -55,6 +56,7 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
     const formData: WantedHolidayStep4Data = {
       contactName: contactName.trim() || undefined,
       contactPhone: contactPhone.trim(),
+      sendCopyToEmail,
     };
 
     try {
@@ -161,6 +163,25 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
             <p className="text-sm text-red-500 mt-1">{errors.contactPhone}</p>
           )}
         </div>
+      </div>
+
+      {/* Send Copy to Email */}
+      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <input
+          type="checkbox"
+          id="sendCopyToEmail"
+          checked={sendCopyToEmail}
+          onChange={(e) => setSendCopyToEmail(e.target.checked)}
+          className="mt-1 w-4 h-4 text-[#C9A24D] border-gray-300 rounded focus:ring-[#C9A24D]"
+        />
+        <label htmlFor="sendCopyToEmail" className="flex-1 cursor-pointer">
+          <div className="font-medium text-[#1F3F3A]">
+            שלח לי את הלוח השבועי באימייל לאחר הפרסום
+          </div>
+          <div className="text-sm text-gray-600 mt-1">
+            קובץ PDF מסודר עם כל פרטי המודעה כפי שתפורסם באתר
+          </div>
+        </label>
       </div>
 
       {/* Info Box */}

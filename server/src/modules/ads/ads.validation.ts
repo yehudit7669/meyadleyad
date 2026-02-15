@@ -44,8 +44,10 @@ export const createAdSchema = z.object({
     categoryId: z.string().min(1, 'קטגוריה לא תקינה'),
     adType: z.string().optional(), // Optional for regular ads for backwards compatibility
     cityId: z.string().min(1, 'עיר לא תקינה'),
-    streetId: z.string().min(1, 'רחוב לא תקין'),
-    houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי'),
+    streetId: z.string().optional().or(z.literal('')), // Made optional - can use neighborhood instead
+    neighborhood: z.string().min(1, 'שכונה לא תקינה').optional(), // Neighborhood is now accepted
+    neighborhoodName: z.string().min(1, 'שכונה לא תקינה').optional(), // Support neighborhoodName as well
+    houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').nonnegative('מספר בית לא תקין').optional(), // Made optional, accept 0 or positive
     address: z.string().optional(),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
@@ -53,8 +55,22 @@ export const createAdSchema = z.object({
     contactName: z.string().optional(),
     contactPhone: z.string().min(9, 'טלפון חייב להכיל לפחות 9 ספרות').max(15, 'טלפון ארוך מדי'),
     sendCopyToEmail: z.boolean().optional().default(true),
+    weeklyDigestOptIn: z.boolean().optional(), // New field for weekly digest
   }),
 }).superRefine((data, ctx) => {
+  // Require either streetId or neighborhood/neighborhoodName (handle empty strings)
+  const hasStreet = data.body.streetId && data.body.streetId.trim() !== '';
+  const hasNeighborhood = (data.body.neighborhood && data.body.neighborhood.trim() !== '') || 
+                         (data.body.neighborhoodName && data.body.neighborhoodName.trim() !== '');
+  
+  if (!hasStreet && !hasNeighborhood) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'יש להזין רחוב או שכונה',
+      path: ['body', 'streetId'],
+    });
+  }
+  
   // Apply strict description validation for FOR_SALE and FOR_RENT ads only if description is provided
   if ((data.body.adType === 'FOR_SALE' || data.body.adType === 'FOR_RENT') && data.body.description) {
     const result = residentialDescriptionSchema.safeParse(data.body.description);
@@ -104,7 +120,9 @@ export const updateAdSchema = z.object({
     categoryId: z.string().min(1).optional(),
     adType: z.string().optional(),
     cityId: z.string().min(1).optional(),
-    streetId: z.string().min(1).optional(),
+    streetId: z.string().optional().or(z.literal('')), // Allow empty string
+    neighborhood: z.string().optional().or(z.literal('')), // Allow empty string
+    neighborhoodName: z.string().optional().or(z.literal('')), // Allow empty string
     houseNumber: z.number().int().positive().optional(),
     address: z.string().optional(),
     latitude: z.number().optional(),

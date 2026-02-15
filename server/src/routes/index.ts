@@ -5,6 +5,7 @@ import adsRoutes from '../modules/ads/ads.routes';
 import categoriesRoutes from '../modules/categories/categories.routes';
 import citiesRoutes from '../modules/cities/cities.routes';
 import streetsRoutes from '../modules/streets/streets.routes';
+import neighborhoodsRoutes from '../modules/neighborhoods/neighborhoods.routes';
 import adminRoutes from '../modules/admin/admin.routes';
 import pdfRoutes from '../modules/pdf/pdf.routes';
 import bannersRoutes from '../modules/admin/banners.routes';
@@ -48,6 +49,7 @@ router.use('/ads', adsRoutes);
 router.use('/categories', categoriesRoutes);
 router.use('/cities', citiesRoutes);
 router.use('/streets', streetsRoutes);
+router.use('/neighborhoods', neighborhoodsRoutes);
 router.use('/approvals', pendingApprovalsRoutes); // User-facing approvals (before /admin)
 router.use('/admin', adminRoutes);
 router.use('/admin/branding', brandingRoutes);

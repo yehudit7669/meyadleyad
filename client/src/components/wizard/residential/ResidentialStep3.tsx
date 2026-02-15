@@ -4,7 +4,6 @@ import { residentialStep3Schema } from '../../../types/wizard';
 import { WizardStepProps } from '../../../types/wizard';
 import {
   PROPERTY_TYPE_OPTIONS,
-  ROOMS_OPTIONS,
   CONDITION_OPTIONS,
   FURNITURE_OPTIONS,
 } from '../../../constants/adTypes';
@@ -18,15 +17,15 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
     data || {
       propertyType: PropertyType.APARTMENT,
       rooms: 3,
-      squareMeters: 0,
-      condition: PropertyCondition.MAINTAINED,
-      floor: 0,
+      squareMeters: undefined,
+      condition: undefined,
+      floor: undefined,
       balconies: 0,
-      furniture: FurnitureStatus.NONE,
-      entryDate: '',
-      price: 0,
-      arnona: 0,
-      vaad: 0,
+      furniture: undefined,
+      entryDate: undefined,
+      price: undefined,
+      arnona: undefined,
+      vaad: undefined,
       features: {
         parking: false,
         storage: false,
@@ -39,6 +38,10 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
         yard: false,
         airConditioning: false,
         hasOption: false,
+        garden: false,
+        frontFacing: false,
+        upgradedKitchen: false,
+        accessibleForDisabled: false,
       },
     }
   );
@@ -122,40 +125,35 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
             <label className="block text-sm font-medium text-gray-700 mb-2">
               מספר חדרים <span className="text-red-500">*</span>
             </label>
-            <select
+            <input
+              type="number"
+              step="0.5"
               value={formData.rooms}
-              onChange={(e) => handleChange('rooms', parseFloat(e.target.value))}
+              onChange={(e) => handleChange('rooms', e.target.value ? parseFloat(e.target.value) : 0)}
+              onWheel={(e) => e.currentTarget.blur()}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.rooms ? 'border-red-500' : 'border-gray-300'
               }`}
-            >
-              {ROOMS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              placeholder="לדוגמה: 3.5"
+              min="0.5"
+            />
             {errors.rooms && <p className="mt-1 text-sm text-red-500">{errors.rooms}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              שטח במ״ר <span className="text-red-500">*</span>
+              שטח במ״ר (אופציונלי)
             </label>
             <input
               type="number"
-              value={formData.squareMeters === 0 ? '' : formData.squareMeters}
-              onChange={(e) => handleChange('squareMeters', e.target.value ? parseInt(e.target.value, 10) : 0)}
-              onFocus={() => {
-                if (formData.squareMeters === 0) {
-                  handleChange('squareMeters', '');
-                }
-              }}
+              step="0.1"
+              value={formData.squareMeters || ''}
+              onChange={(e) => handleChange('squareMeters', e.target.value ? parseFloat(e.target.value) : undefined)}
               onWheel={(e) => e.currentTarget.blur()}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.squareMeters ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="לדוגמה: 90"
+              placeholder="לדוגמה: 90.5"
               min="1"
             />
             {errors.squareMeters && (
@@ -167,7 +165,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
         {/* Condition */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            מצב הנכס <span className="text-red-500">*</span>
+            מצב הנכס (אופציונלי)
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {CONDITION_OPTIONS.map((option) => (
@@ -193,16 +191,27 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              קומה <span className="text-red-500">*</span>
+              קומה (אופציונלי)
             </label>
             <input
-              type="number"
-              value={formData.floor}
-              onChange={(e) => handleChange('floor', e.target.value ? Number(e.target.value) : 0)}
-              onWheel={(e) => e.currentTarget.blur()}
+              type="text"
+              value={formData.floor !== undefined ? formData.floor : ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Try to parse as number, otherwise keep as string
+                const numValue = parseFloat(value);
+                if (value === '' || value === 'ללא') {
+                  handleChange('floor', value === '' ? undefined : 'ללא');
+                } else if (!isNaN(numValue)) {
+                  handleChange('floor', numValue);
+                } else {
+                  handleChange('floor', value);
+                }
+              }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
-              placeholder="לדוגמה: 2 (מספר שלילי למרתף)"
+              placeholder="לדוגמה: 2, 0 לקרקע, ללא"
             />
+            <p className="mt-1 text-sm text-gray-500">מספר (כולל 0 לקרקע) או \"ללא\"</p>
           </div>
 
           <div>
@@ -225,7 +234,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
         {/* Furniture */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            ריהוט <span className="text-red-500">*</span>
+            ריהוט (אופציונלי)
           </label>
           <div className="grid grid-cols-3 gap-3">
             {FURNITURE_OPTIONS.map((option) => (
@@ -248,18 +257,45 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
         {/* Entry Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            תאריך כניסה <span className="text-red-500">*</span>
+            תאריך כניסה (אופציונלי)
           </label>
-          <input
-            type="date"
-            value={formData.entryDate}
-            onChange={(e) => handleChange('entryDate', e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
-            max="2030-12-31"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
-              errors.entryDate ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => handleChange('entryDate', 'גמיש')}
+                className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                  formData.entryDate === 'גמיש'
+                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'
+                    : 'border-gray-300 hover:border-[#C9A24D] text-gray-700'
+                }`}
+              >
+                גמיש
+              </button>
+              <button
+                type="button"
+                onClick={() => handleChange('entryDate', 'מיידי')}
+                className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+                  formData.entryDate === 'מיידי'
+                    ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'
+                    : 'border-gray-300 hover:border-[#C9A24D] text-gray-700'
+                }`}
+              >
+                מיידי
+              </button>
+            </div>
+            <input
+              type="date"
+              value={formData.entryDate && formData.entryDate !== 'גמיש' && formData.entryDate !== 'מיידי' ? formData.entryDate : ''}
+              onChange={(e) => handleChange('entryDate', e.target.value || undefined)}
+              min={new Date().toISOString().split('T')[0]}
+              max="2030-12-31"
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+                errors.entryDate ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="או בחר תאריך ספציפי"
+            />
+          </div>
           {errors.entryDate && (
             <p className="mt-1 text-sm text-red-500">{errors.entryDate}</p>
           )}
@@ -271,17 +307,12 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              מחיר מבוקש (₪) <span className="text-red-500">*</span>
+              מחיר מבוקש (אופציונלי)
             </label>
             <input
               type="number"
-              value={formData.price === 0 ? '' : formData.price}
-              onChange={(e) => handleChange('price', e.target.value ? parseInt(e.target.value, 10) : 0)}
-              onFocus={() => {
-                if (formData.price === 0) {
-                  handleChange('price', '');
-                }
-              }}
+              value={formData.price || ''}
+              onChange={(e) => handleChange('price', e.target.value ? parseInt(e.target.value, 10) : undefined)}
               onWheel={(e) => e.currentTarget.blur()}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.price ? 'border-red-500' : 'border-gray-300'
@@ -295,17 +326,12 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                ארנונה (₪ לחודשיים)
+                ארנונה (₪ לחודשיים, אופציונלי)
               </label>
               <input
                 type="number"
-                value={formData.arnona === 0 ? '' : formData.arnona}
-                onChange={(e) => handleChange('arnona', e.target.value ? parseInt(e.target.value, 10) : 0)}
-                onFocus={() => {
-                  if (formData.arnona === 0) {
-                    handleChange('arnona', '');
-                  }
-                }}
+                value={formData.arnona || ''}
+                onChange={(e) => handleChange('arnona', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 placeholder="לדוגמה: 500"
@@ -315,17 +341,12 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                ועד בית (₪ לחודש)
+                ועד בית (₪ לחודש, אופציונלי)
               </label>
               <input
                 type="number"
-                value={formData.vaad === 0 ? '' : formData.vaad}
-                onChange={(e) => handleChange('vaad', e.target.value ? parseInt(e.target.value, 10) : 0)}
-                onFocus={() => {
-                  if (formData.vaad === 0) {
-                    handleChange('vaad', '');
-                  }
-                }}
+                value={formData.vaad || ''}
+                onChange={(e) => handleChange('vaad', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                 onWheel={(e) => e.currentTarget.blur()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
                 placeholder="לדוגמה: 300"
@@ -350,6 +371,10 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
               housingUnit: 'יחידת דיור',
               yard: 'חצר',
               airConditioning: 'מיזוג',
+              garden: 'גינה',
+              frontFacing: 'חזית',
+              upgradedKitchen: 'מטבח משודרג',
+              accessibleForDisabled: 'נגיש לנכים',
               ...(adType === 'for_sale' ? { hasOption: 'אופציה' } : {}),
             }).map(([key, label]) => (
               <button

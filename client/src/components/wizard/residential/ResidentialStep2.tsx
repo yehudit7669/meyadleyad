@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { citiesService, streetsService } from '../../../services/api';
+import { citiesService, streetsService, neighborhoodsService } from '../../../services/api';
 import { ResidentialStep2Data } from '../../../types/wizard';
 import { residentialStep2Schema } from '../../../types/wizard';
 import { WizardStepProps } from '../../../types/wizard';
@@ -10,11 +10,11 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
     data || {
       cityId: '',
       cityName: '',
-      streetId: '',
-      streetName: '',
+      streetId: undefined,
+      streetName: undefined,
       neighborhoodId: '',
       neighborhoodName: '',
-      houseNumber: 0,
+      houseNumber: undefined,
       addressSupplement: '',
     }
   );
@@ -29,6 +29,13 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
   const { data: cities } = useQuery({
     queryKey: ['cities'],
     queryFn: citiesService.getCities,
+  });
+
+  // Get neighborhoods for selected city
+  const { data: neighborhoods } = useQuery({
+    queryKey: ['neighborhoods', formData.cityId],
+    queryFn: () => neighborhoodsService.getNeighborhoods(formData.cityId!),
+    enabled: !!formData.cityId && formData.cityId.length > 10,
   });
 
   // Set city from data if exists
@@ -203,15 +210,27 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
         {/* Street */}
         <div className="relative" ref={streetDropdownRef}>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            רחוב <span className="text-red-500">*</span>
+            רחוב (אופציונלי)
           </label>
           <div className="relative">
             <input
               type="text"
               value={streetSearch}
               onChange={(e) => {
-                setStreetSearch(e.target.value);
-                setShowStreetDropdown(e.target.value.length >= 2 || e.target.value.length === 0);
+                const value = e.target.value;
+                setStreetSearch(value);
+                setShowStreetDropdown(value.length >= 2 || value.length === 0);
+                
+                // If user clears the street field, clear streetId and neighborhoodName to allow manual selection
+                if (value === '') {
+                  setFormData((prev) => ({
+                    ...prev,
+                    streetId: undefined,
+                    streetName: undefined,
+                    neighborhoodId: '',
+                    neighborhoodName: '',
+                  }));
+                }
               }}
               onFocus={() => setShowStreetDropdown(true)}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent pr-10 ${
@@ -298,33 +317,43 @@ const ResidentialStep2: React.FC<WizardStepProps> = ({ data, onNext, onPrev }) =
           )}
         </div>
 
-        {/* Neighborhood (Auto-filled, Read Only) */}
-        {formData.neighborhoodName && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">שכונה</label>
-            <input
-              type="text"
-              value={formData.neighborhoodName}
-              disabled
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed"
-            />
-          </div>
-        )}
+        {/* Neighborhood - Required, Auto-filled from street or manual input */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            שכונה <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.neighborhoodName}
+            onChange={(e) => handleChange('neighborhoodName', e.target.value)}
+            disabled={!!formData.streetId}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+              formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
+            } ${errors.neighborhoodName ? 'border-red-500' : 'border-gray-300'}`}
+          >
+            <option value="">בחר שכונה</option>
+            {neighborhoods?.map((neighborhood: any) => (
+              <option key={neighborhood.id} value={neighborhood.name}>
+                {neighborhood.name}
+              </option>
+            ))}
+          </select>
+          {formData.streetId && (
+            <p className="mt-1 text-sm text-gray-500">השכונה מתמלאת אוטומטית מהרחוב שנבחר</p>
+          )}
+          {errors.neighborhoodName && (
+            <p className="mt-1 text-sm text-red-500">{errors.neighborhoodName}</p>
+          )}
+        </div>
 
         {/* House Number */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            מספר בית <span className="text-red-500">*</span>
+            מספר בית (אופציונלי)
           </label>
           <input
             type="number"
-            value={formData.houseNumber === 0 ? '' : formData.houseNumber}
-            onChange={(e) => handleChange('houseNumber', e.target.value ? parseInt(e.target.value, 10) : 0)}
-            onFocus={() => {
-              if (formData.houseNumber === 0) {
-                handleChange('houseNumber', '');
-              }
-            }}
+            value={formData.houseNumber || ''}
+            onChange={(e) => handleChange('houseNumber', e.target.value ? parseInt(e.target.value, 10) : undefined)}
             onWheel={(e) => e.currentTarget.blur()}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
               errors.houseNumber ? 'border-red-500' : 'border-gray-300'

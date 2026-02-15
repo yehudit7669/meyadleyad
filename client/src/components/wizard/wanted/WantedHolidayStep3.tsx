@@ -8,7 +8,6 @@ import {
 import { parashaService } from '../../../services/api';
 import {
   PROPERTY_TYPE_OPTIONS,
-  ROOMS_OPTIONS,
   PURPOSE_OPTIONS,
   BALCONIES_COUNT_OPTIONS,
 } from '../../../constants/adTypes';
@@ -24,12 +23,14 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
   const [formData, setFormData] = useState<WantedHolidayStep3Data>(
     data || {
       parasha: '',
-      propertyType: PropertyType.APARTMENT,
-      rooms: 3,
+      propertyType: undefined,
+      rooms: undefined,
       purpose: 'HOSTING',
       floor: 0,
       balconiesCount: 0,
+      beds: undefined,
       priceRequested: undefined,
+      description: undefined,
       features: {
         plata: false,
         urn: false,
@@ -134,7 +135,7 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
       {/* Property Type */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          סוג הנכס <span className="text-red-500">*</span>
+          סוג הנכס
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {PROPERTY_TYPE_OPTIONS.map((option) => (
@@ -142,7 +143,7 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
               key={option.value}
               type="button"
               onClick={() => handleChange('propertyType', option.value as PropertyType)}
-              className={`p-4 rounded-lg border-2 transition-all text-center ${
+              className={`p-4 rounded-lg border-2 transition-all text-center text-black ${
                 formData.propertyType === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10 ring-2 ring-[#C9A24D]/30'
                   : 'border-gray-300 hover:border-[#C9A24D]'
@@ -154,25 +155,40 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
         </div>
       </div>
 
-      {/* Rooms */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          מספר חדרים <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={formData.rooms}
-          onChange={(e) => handleChange('rooms', parseFloat(e.target.value))}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
-            errors.rooms ? 'border-red-500' : 'border-gray-300'
-          }`}
-        >
-          {ROOMS_OPTIONS.filter(opt => opt.value <= 8).map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {errors.rooms && <p className="text-sm text-red-500">{errors.rooms}</p>}
+      {/* Rooms and Beds */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            מספר חדרים
+          </label>
+          <input
+            type="number"
+            step="0.5"
+            min="0.5"
+            max="10"
+            value={formData.rooms ?? ''}
+            onChange={(e) => handleChange('rooms', e.target.value ? parseFloat(e.target.value) : undefined)}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
+              errors.rooms ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="לדוגמה: 3.5"
+          />
+          {errors.rooms && <p className="text-sm text-red-500">{errors.rooms}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            מספר מיטות (אופציונלי)
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={formData.beds ?? ''}
+            onChange={(e) => handleChange('beds', e.target.value ? parseInt(e.target.value) : undefined)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
+            placeholder="מספר מיטות"
+          />
+        </div>
       </div>
 
       {/* Purpose */}
@@ -186,7 +202,7 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
               key={option.value}
               type="button"
               onClick={() => handleChange('purpose', option.value as 'HOSTING' | 'SLEEPING_ONLY')}
-              className={`p-4 rounded-lg border-2 transition-all ${
+              className={`p-4 rounded-lg border-2 transition-all text-black ${
                 formData.purpose === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10'
                   : 'border-gray-300 hover:border-[#C9A24D]'
@@ -251,7 +267,7 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
               className={`p-3 rounded-lg border-2 transition-all ${
                 formData.features[feature.key as keyof WantedHolidayStep3Data['features']]
                   ? 'border-[#C9A24D] bg-[#C9A24D] text-white'
-                  : 'border-gray-300 hover:border-[#C9A24D]'
+                  : 'border-gray-300 hover:border-[#C9A24D] text-black'
               }`}
             >
               {feature.label}
@@ -281,6 +297,24 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
           </p>
         </div>
       )}
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          תיאור חופשי (אופציונלי)
+        </label>
+        <textarea
+          value={formData.description ?? ''}
+          onChange={(e) => handleChange('description', e.target.value || undefined)}
+          maxLength={500}
+          rows={4}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] resize-none"
+          placeholder="תאר את הדירה המבוקשת בצורה חופשית (עד 500 תווים)"
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          {formData.description?.length || 0}/500 תווים
+        </p>
+      </div>
 
       {/* Navigation */}
       <div className="flex justify-between pt-6 border-t">

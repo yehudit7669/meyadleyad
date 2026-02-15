@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { HolidayRentStep1Data, holidayRentStep1Schema } from '../../../types/wizard';
-import { citiesService, streetsService } from '../../../services/api';
+import { citiesService, streetsService, neighborhoodsService } from '../../../services/api';
 
 interface HolidayRentStep1Props {
   data: Partial<HolidayRentStep1Data>;
@@ -13,11 +13,11 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
   const [formData, setFormData] = useState<Partial<HolidayRentStep1Data>>({
     cityId: data.cityId || '',
     cityName: data.cityName || '',
-    streetId: data.streetId || '',
-    streetName: data.streetName || '',
-    neighborhoodId: data.neighborhoodId || '',
+    streetId: data.streetId || undefined,
+    streetName: data.streetName || undefined,
+    neighborhoodId: data.neighborhoodId || undefined,
     neighborhoodName: data.neighborhoodName || '',
-    houseNumber: data.houseNumber || 0,
+    houseNumber: data.houseNumber || undefined,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [streetSearch, setStreetSearch] = useState(data.streetName || '');
@@ -30,6 +30,13 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
   const { data: cities } = useQuery({
     queryKey: ['cities'],
     queryFn: citiesService.getCities,
+  });
+
+  // Get neighborhoods for selected city
+  const { data: neighborhoods } = useQuery({
+    queryKey: ['neighborhoods', formData.cityId],
+    queryFn: () => neighborhoodsService.getNeighborhoods(formData.cityId!),
+    enabled: !!formData.cityId && formData.cityId.length > 10,
   });
 
   // Set city from data if exists
@@ -104,7 +111,7 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
       ...formData,
       streetId: street.id,
       streetName: street.name,
-      neighborhoodId: street.neighborhoodId || '',
+      neighborhoodId: street.neighborhoodId || undefined,
       neighborhoodName: street.neighborhoodName || '',
     });
     setStreetSearch(street.name);
@@ -115,8 +122,11 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
   };
 
   const handleHouseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value ? parseInt(e.target.value) : 0;
-    setFormData((prev) => ({ ...prev, houseNumber: value }));
+    const value = e.target.value;
+    setFormData((prev) => ({ 
+      ...prev, 
+      houseNumber: value === '' ? undefined : parseInt(value) 
+    }));
     setErrors((prev) => ({ ...prev, houseNumber: '' }));
   };
 
@@ -180,18 +190,30 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
         )}
       </div>
 
-      {/* Street (Autocomplete) */}
-      <div className="relative" ref={streetDropdownRef}>
+      {/* Street Search */}
+      <div className="relative">
         <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
-          רחוב <span className="text-red-500">*</span>
+          כתובת הנכס - רחוב (אופציונלי)
         </label>
         <div className="relative">
           <input
             type="text"
             value={streetSearch}
             onChange={(e) => {
-              setStreetSearch(e.target.value);
-              setShowStreetDropdown(e.target.value.length >= 2 || e.target.value.length === 0);
+              const value = e.target.value;
+              setStreetSearch(value);
+              setShowStreetDropdown(value.length >= 2 || value.length === 0);
+              
+              // If user clears the street field, clear streetId and neighborhoodName to allow manual selection
+              if (value === '') {
+                setFormData((prev) => ({
+                  ...prev,
+                  streetId: undefined,
+                  streetName: undefined,
+                  neighborhoodId: undefined,
+                  neighborhoodName: '',
+                }));
+              }
             }}
             onFocus={() => setShowStreetDropdown(true)}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] pr-10 ${
@@ -276,37 +298,54 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
         )}
       </div>
 
+      {/* Neighborhood - Required, Auto-filled from street or manual input */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
+          שכונה <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={formData.neighborhoodName}
+          onChange={(e) => {
+            setFormData((prev) => ({ ...prev, neighborhoodName: e.target.value }));
+            setErrors((prev) => ({ ...prev, neighborhoodName: '' }));
+          }}
+          disabled={!!formData.streetId}
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
+            formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
+          } ${errors.neighborhoodName ? 'border-red-500' : 'border-gray-300'}`}
+        >
+          <option value="">בחר שכונה</option>
+          {neighborhoods?.map((neighborhood: any) => (
+            <option key={neighborhood.id} value={neighborhood.name}>
+              {neighborhood.name}
+            </option>
+          ))}
+        </select>
+        {formData.streetId && (
+          <p className="text-sm text-gray-500 mt-1">השכונה מתמלאת אוטומטית מהרחוב שנבחר</p>
+        )}
+        {errors.neighborhoodName && (
+          <p className="text-red-500 text-sm mt-1">{errors.neighborhoodName}</p>
+        )}
+      </div>
+
       {/* House Number */}
       <div>
         <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
-          מספר בית <span className="text-red-500">*</span>
+          מספר בית (אופציונלי)
         </label>
         <input
           type="number"
           min="1"
           value={formData.houseNumber || ''}
           onChange={handleHouseNumberChange}
-          placeholder="הזן מספר בלבד"
+          placeholder="הזן מספר בית"
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
             errors.houseNumber ? 'border-red-500' : 'border-gray-300'
           }`}
         />
         {errors.houseNumber && <p className="text-red-500 text-sm mt-1">{errors.houseNumber}</p>}
       </div>
-
-      {/* Neighborhood (Auto-populated, read-only) */}
-      {formData.neighborhoodName && (
-        <div>
-          <label className="block text-sm font-medium text-[#1F3F3A] mb-2">שכונה</label>
-          <input
-            type="text"
-            value={formData.neighborhoodName}
-            disabled
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
-          />
-          <p className="mt-1 text-xs text-gray-500">השכונה מתמלאת אוטומטית לפי הרחוב</p>
-        </div>
-      )}
 
       {/* Next Button */}
       <div className="flex justify-end pt-4">

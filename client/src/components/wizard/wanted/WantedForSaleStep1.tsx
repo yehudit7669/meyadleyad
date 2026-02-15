@@ -15,14 +15,9 @@ const WantedForSaleStep1: React.FC<Props> = ({ data, onNext }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (hasBroker === null) {
-      alert('יש לבחור אחת מהאפשרויות');
-      return;
-    }
 
     const formData: WantedForSaleStep1Data = {
-      hasBroker,
+      hasBroker: hasBroker !== null ? hasBroker : undefined,
     };
 
     try {
@@ -37,7 +32,7 @@ const WantedForSaleStep1: React.FC<Props> = ({ data, onNext }) => {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-[#1F3F3A] mb-6">
-          עם תיווך או ללא תיווך?
+          עם תיווך או ללא תיווך? (אופציונלי)
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -79,8 +74,7 @@ const WantedForSaleStep1: React.FC<Props> = ({ data, onNext }) => {
         <div></div>
         <button
           type="submit"
-          className="px-8 py-3 bg-[#C9A24D] text-white rounded-lg font-bold hover:bg-[#B08C3C] transition-all disabled:opacity-50"
-          disabled={hasBroker === null}
+          className="px-8 py-3 bg-[#C9A24D] text-white rounded-lg font-bold hover:bg-[#B08C3C] transition-all"
         >
           המשך →
         </button>

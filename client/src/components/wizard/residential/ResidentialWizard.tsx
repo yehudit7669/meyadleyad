@@ -99,9 +99,11 @@ const ResidentialWizard: React.FC = () => {
     }
 
     // Build title based on property details
-    const title = `${getRoomsLabel(step3.rooms)} חדרים ב${step2.streetName}, ${
-      step2.neighborhoodName
-    }`;
+    const locationText = step2.streetName 
+      ? `${step2.streetName}, ${step2.neighborhoodName}`
+      : step2.neighborhoodName;
+    
+    const title = `${getRoomsLabel(step3.rooms)} חדרים ב${locationText}`;
 
     // Clean features - remove hasOption if not for_sale
     const cleanedFeatures: any = { ...step3.features };
@@ -118,11 +120,13 @@ const ResidentialWizard: React.FC = () => {
       cityId: step2.cityId,
       streetId: step2.streetId,
       houseNumber: step2.houseNumber,
-      address: `${step2.streetName} ${step2.houseNumber}${
+      neighborhoodName: step2.neighborhoodName,
+      address: `${step2.streetName || step2.neighborhoodName} ${step2.houseNumber || ''}${
         step2.addressSupplement ? ', ' + step2.addressSupplement : ''
       }`,
       contactName: step5.contactName,
       contactPhone: step5.contactPhone,
+      weeklyDigestOptIn: step5.weeklyDigestOptIn || false,
       sendCopyToEmail,
       customFields: {
         // Step 1

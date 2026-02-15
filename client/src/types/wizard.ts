@@ -24,7 +24,13 @@ export enum PropertyType {
   DUPLEX = 'DUPLEX',
   GARDEN_APARTMENT = 'GARDEN_APARTMENT',
   PRIVATE_HOUSE = 'PRIVATE_HOUSE',
+  PENTHOUSE = 'PENTHOUSE',
+  TWO_STORY = 'TWO_STORY',
+  SEMI_DETACHED = 'SEMI_DETACHED',
   UNIT = 'UNIT',
+  STUDIO = 'STUDIO',
+  COTTAGE = 'COTTAGE',
+  VILLA = 'VILLA',
 }
 
 export enum PropertyCondition {
@@ -83,26 +89,26 @@ export interface ResidentialStep1Data {
 export interface ResidentialStep2Data {
   cityId: string;
   cityName: string;
-  streetId: string;
-  streetName: string;
-  neighborhoodId: string;
+  streetId?: string;
+  streetName?: string;
+  neighborhoodId?: string;
   neighborhoodName: string;
-  houseNumber: number;
+  houseNumber?: number;
   addressSupplement?: string;
 }
 
 export interface ResidentialStep3Data {
   propertyType: PropertyType;
   rooms: number;
-  squareMeters: number;
-  condition: PropertyCondition;
-  floor: number;
-  balconies: number;
-  furniture: FurnitureStatus;
-  entryDate: string;
-  price: number;
-  arnona: number;
-  vaad: number;
+  squareMeters?: number;
+  condition?: PropertyCondition;
+  floor?: string | number;
+  balconies?: number;
+  furniture?: FurnitureStatus;
+  entryDate?: string;
+  price?: number;
+  arnona?: number;
+  vaad?: number;
   features: {
     parking: boolean;
     storage: boolean;
@@ -113,6 +119,10 @@ export interface ResidentialStep3Data {
     parentalUnit: boolean;
     housingUnit: boolean;
     yard: boolean;
+    garden: boolean;
+    frontFacing: boolean;
+    upgradedKitchen: boolean;
+    accessibleForDisabled: boolean;
     airConditioning: boolean;
     hasOption: boolean;
   };
@@ -133,6 +143,7 @@ export interface ResidentialStep5Data {
   contactName?: string;
   contactPhone: string;
   agreeToTerms: boolean;
+  weeklyDigestOptIn?: boolean;
 }
 
 export interface ResidentialWizardData {
@@ -151,11 +162,11 @@ export interface ResidentialWizardData {
 export interface HolidayRentStep1Data {
   cityId: string;
   cityName: string;
-  streetId: string;
-  streetName: string;
-  neighborhoodId: string;
+  streetId?: string;
+  streetName?: string;
+  neighborhoodId?: string;
   neighborhoodName: string;
-  houseNumber: number;
+  houseNumber?: number;
 }
 
 export interface HolidayRentStep2Data {
@@ -167,8 +178,9 @@ export interface HolidayRentStep3Data {
   propertyType: PropertyType;
   rooms: number;
   purpose: 'HOSTING' | 'SLEEPING_ONLY';
-  floor: number;
+  floor?: number | string;
   balconiesCount: number;
+  beds?: number;
   priceRequested?: number;
   features: {
     plata: boolean;
@@ -183,12 +195,14 @@ export interface HolidayRentStep3Data {
     babyBed: boolean;
     masterUnit: boolean;
     sleepingOnly: boolean;
+    accessibleForDisabled: boolean;
   };
 }
 
 export interface HolidayRentStep4Data {
   contactName?: string;
   contactPhone: string;
+  sendCopyToEmail?: boolean;
 }
 
 export interface HolidayRentWizardData {
@@ -335,7 +349,8 @@ export interface JobWizardData {
 // ======================
 
 // Israeli phone number validation
-const phoneRegex = /^0(5[0-9]|[2-4]|[8-9])[0-9]{7,8}$/;
+// Supports: 05X (mobile), 07X (mobile - Golan/Hot Mobile), 02-04 (landline), 08-09 (landline)
+const phoneRegex = /^0(5[0-9]|7[0-9]|[2-4]|[8-9])[0-9]{7,8}$/;
 
 // Residential Schemas
 export const residentialStep1Schema = z.object({
@@ -345,31 +360,29 @@ export const residentialStep1Schema = z.object({
 export const residentialStep2Schema = z.object({
   cityId: z.string().min(1, 'יש לבחור עיר'),
   cityName: z.string(),
-  streetId: z.string().min(1, 'יש לבחור רחוב'),
-  streetName: z.string(),
-  neighborhoodId: z.string(),
-  neighborhoodName: z.string(),
-  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי'),
+  streetId: z.string().optional(),
+  streetName: z.string().optional(),
+  neighborhoodId: z.string().optional(),
+  neighborhoodName: z.string().min(1, 'יש לבחור שכונה'),
+  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי').optional(),
   addressSupplement: z.string().optional(),
+}).refine((data) => data.streetId || data.neighborhoodName, {
+  message: 'יש להזין רחוב או שכונה',
+  path: ['neighborhoodName'],
 });
 
 export const residentialStep3Schema = z.object({
   propertyType: z.nativeEnum(PropertyType),
   rooms: z.number().min(1, 'יש לבחור מספר חדרים'),
-  squareMeters: z.number().min(1, 'יש להזין שטח'),
-  condition: z.nativeEnum(PropertyCondition),
-  floor: z.number(),
-  balconies: z.number().min(0).max(3),
-  furniture: z.nativeEnum(FurnitureStatus),
-  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה').refine((date) => {
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate >= today;
-  }, 'תאריך הכניסה חייב להיות היום או בעתיד'),
-  price: z.number().min(1, 'יש להזין מחיר'),
-  arnona: z.number().min(0),
-  vaad: z.number().min(0),
+  squareMeters: z.number().min(1, 'יש להזין שטח').optional(),
+  condition: z.nativeEnum(PropertyCondition).optional(),
+  floor: z.union([z.number(), z.string()]).optional(),
+  balconies: z.number().min(0).max(3).optional(),
+  furniture: z.nativeEnum(FurnitureStatus).optional(),
+  entryDate: z.string().optional(),
+  price: z.number().positive('המחיר חייב להיות חיובי').optional(),
+  arnona: z.number().min(0).optional(),
+  vaad: z.number().min(0).optional(),
   features: z.object({
     parking: z.boolean(),
     storage: z.boolean(),
@@ -380,6 +393,10 @@ export const residentialStep3Schema = z.object({
     parentalUnit: z.boolean(),
     housingUnit: z.boolean(),
     yard: z.boolean(),
+    garden: z.boolean(),
+    frontFacing: z.boolean(),
+    upgradedKitchen: z.boolean(),
+    accessibleForDisabled: z.boolean(),
     airConditioning: z.boolean(),
     hasOption: z.boolean(),
   }),
@@ -402,6 +419,7 @@ export const residentialStep5Schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
   agreeToTerms: z.boolean().refine(val => val === true, 'יש לאשר את תנאי השימוש'),
+  weeklyDigestOptIn: z.boolean().optional(),
 });
 
 // Holiday Schemas
@@ -420,12 +438,18 @@ export const holidayStep5Schema = z.object({
 export const holidayRentStep1Schema = z.object({
   cityId: z.string().min(1, 'יש לבחור עיר'),
   cityName: z.string(),
-  streetId: z.string().min(1, 'יש לבחור רחוב'),
-  streetName: z.string(),
-  neighborhoodId: z.string(),
-  neighborhoodName: z.string(),
-  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי'),
-});
+  streetId: z.string().optional(),
+  streetName: z.string().optional(),
+  neighborhoodId: z.string().optional(),
+  neighborhoodName: z.string().min(1, 'יש לבחור או להזין שכונה'),
+  houseNumber: z.number().optional(),
+}).refine(
+  (data) => data.streetId || data.neighborhoodName,
+  {
+    message: 'יש לבחור רחוב או להזין שכונה',
+    path: ['neighborhoodName'],
+  }
+);
 
 export const holidayRentStep2Schema = z.object({
   isPaid: z.boolean(),
@@ -434,10 +458,11 @@ export const holidayRentStep2Schema = z.object({
 export const holidayRentStep3Schema = z.object({
   parasha: z.string().min(1, 'יש לבחור פרשה'),
   propertyType: z.nativeEnum(PropertyType, { errorMap: () => ({ message: 'יש לבחור סוג נכס' }) }),
-  rooms: z.number().min(1, 'יש לבחור מספר חדרים').max(8, 'מקסימום 8 חדרים'),
+  rooms: z.number().min(0.5, 'מספר חדרים מינימלי הוא 0.5').max(10, 'מקסימום 10 חדרים'),
   purpose: z.enum(['HOSTING', 'SLEEPING_ONLY'], { errorMap: () => ({ message: 'יש לבחור מטרה' }) }),
-  floor: z.number(),
+  floor: z.union([z.number(), z.string()]).optional(),
   balconiesCount: z.number().min(0).max(3),
+  beds: z.number().positive('מספר מיטות חייב להיות חיובי').optional(),
   priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional().or(z.literal(undefined)),
   features: z.object({
     plata: z.boolean(),
@@ -452,12 +477,14 @@ export const holidayRentStep3Schema = z.object({
     babyBed: z.boolean(),
     masterUnit: z.boolean(),
     sleepingOnly: z.boolean(),
+    accessibleForDisabled: z.boolean(),
   }),
 });
 
 export const holidayRentStep4Schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
+  sendCopyToEmail: z.boolean().optional(),
 });
 
 // Project Schema
@@ -520,7 +547,7 @@ export const jobSchema = z.object({
 
 // Wanted For Sale - מחפש לקנות דירה
 export interface WantedForSaleStep1Data {
-  hasBroker: boolean;
+  hasBroker?: boolean;
 }
 
 export interface WantedForSaleStep2Data {
@@ -528,13 +555,13 @@ export interface WantedForSaleStep2Data {
 }
 
 export interface WantedForSaleStep3Data {
-  propertyType: PropertyType;
-  rooms: number;
-  squareMeters: number;
-  floor: number;
-  balconies: number;
-  condition: PropertyCondition;
-  furniture: FurnitureStatus;
+  propertyType?: PropertyType;
+  rooms?: number;
+  squareMeters?: number;
+  floor?: number;
+  balconies?: number;
+  condition?: PropertyCondition;
+  furniture?: FurnitureStatus;
   features: {
     parking: boolean;
     storage: boolean;
@@ -547,11 +574,16 @@ export interface WantedForSaleStep3Data {
     housingUnit: boolean;
     elevator: boolean;
     hasOption: boolean;
+    garden: boolean;
+    frontFacing: boolean;
+    upgradedKitchen: boolean;
+    accessibleForDisabled: boolean;
   };
-  priceRequested: number;
-  arnona: number;
-  vaad: number;
-  entryDate: string;
+  priceRequested?: number;
+  arnona?: number;
+  vaad?: number;
+  entryDate?: string;
+  description?: string;
 }
 
 export interface WantedForSaleStep4Data {
@@ -570,7 +602,7 @@ export interface WantedForSaleWizardData {
 
 // Wanted For Rent - מחפש לשכור דירה
 export interface WantedForRentStep1Data {
-  hasBroker: boolean;
+  hasBroker?: boolean;
 }
 
 export interface WantedForRentStep2Data {
@@ -578,13 +610,13 @@ export interface WantedForRentStep2Data {
 }
 
 export interface WantedForRentStep3Data {
-  propertyType: PropertyType;
-  rooms: number;
-  squareMeters: number;
-  floor: number;
-  balconies: number;
-  condition: PropertyCondition;
-  furniture: FurnitureStatus;
+  propertyType?: PropertyType;
+  rooms?: number;
+  squareMeters?: number;
+  floor?: number;
+  balconies?: number;
+  condition?: PropertyCondition;
+  furniture?: FurnitureStatus;
   features: {
     parking: boolean;
     storage: boolean;
@@ -595,11 +627,18 @@ export interface WantedForRentStep3Data {
     parentalUnit: boolean;
     elevator: boolean;
     yard: boolean;
+    garden: boolean;
+    frontFacing: boolean;
+    upgradedKitchen: boolean;
+    accessibleForDisabled: boolean;
+    housingUnit: boolean;
+    hasOption: boolean;
   };
-  priceRequested: number;
-  arnona: number;
-  vaad: number;
-  entryDate: string;
+  priceRequested?: number;
+  arnona?: number;
+  vaad?: number;
+  entryDate?: string;
+  description?: string;
 }
 
 export interface WantedForRentStep4Data {
@@ -621,17 +660,19 @@ export interface WantedHolidayStep1Data {
 }
 
 export interface WantedHolidayStep2Data {
-  isPaid: boolean;
+  isPaid?: boolean;
 }
 
 export interface WantedHolidayStep3Data {
   parasha: string;
-  propertyType: PropertyType;
-  rooms: number;
+  propertyType?: PropertyType;
+  rooms?: number;
   purpose: 'HOSTING' | 'SLEEPING_ONLY';
   floor: number;
   balconiesCount: number;
+  beds?: number;
   priceRequested?: number;
+  description?: string;
   features: {
     plata: boolean;
     urn: boolean;
@@ -651,6 +692,7 @@ export interface WantedHolidayStep3Data {
 export interface WantedHolidayStep4Data {
   contactName?: string;
   contactPhone: string;
+  sendCopyToEmail?: boolean;
 }
 
 export interface WantedHolidayWizardData {
@@ -663,7 +705,7 @@ export interface WantedHolidayWizardData {
 
 // Wanted Validation Schemas
 export const wantedForSaleStep1Schema = z.object({
-  hasBroker: z.boolean(),
+  hasBroker: z.boolean().optional(),
 });
 
 export const wantedForSaleStep2Schema = z.object({
@@ -671,13 +713,13 @@ export const wantedForSaleStep2Schema = z.object({
 });
 
 export const wantedForSaleStep3Schema = z.object({
-  propertyType: z.nativeEnum(PropertyType),
-  rooms: z.number().min(1, 'יש לבחור מספר חדרים').max(8),
-  squareMeters: z.number().min(1, 'יש להזין שטח'),
-  floor: z.number(),
-  balconies: z.number().min(0).max(3),
-  condition: z.nativeEnum(PropertyCondition),
-  furniture: z.nativeEnum(FurnitureStatus),
+  propertyType: z.nativeEnum(PropertyType).optional(),
+  rooms: z.number().min(0.5, 'מספר חדרים מינימלי הוא 0.5').max(10, 'מקסימום 10 חדרים').optional(),
+  squareMeters: z.number().positive('השטח חייב להיות חיובי').optional(),
+  floor: z.number().optional(),
+  balconies: z.number().min(0).max(3).optional(),
+  condition: z.nativeEnum(PropertyCondition).optional(),
+  furniture: z.nativeEnum(FurnitureStatus).optional(),
   features: z.object({
     parking: z.boolean(),
     storage: z.boolean(),
@@ -690,16 +732,16 @@ export const wantedForSaleStep3Schema = z.object({
     housingUnit: z.boolean(),
     elevator: z.boolean(),
     hasOption: z.boolean(),
+    garden: z.boolean(),
+    frontFacing: z.boolean(),
+    upgradedKitchen: z.boolean(),
+    accessibleForDisabled: z.boolean(),
   }),
-  priceRequested: z.number().min(1, 'יש להזין מחיר מבוקש'),
-  arnona: z.number().min(0),
-  vaad: z.number().min(0),
-  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה רצוי').refine((date) => {
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate >= today;
-  }, 'תאריך הכניסה חייב להיות היום או בעתיד'),
+  priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional(),
+  arnona: z.number().min(0).optional(),
+  vaad: z.number().min(0).optional(),
+  entryDate: z.string().optional(),
+  description: z.string().max(500, 'התיאור חייב להיות עד 500 תווים').optional(),
 });
 
 export const wantedForSaleStep4Schema = z.object({
@@ -709,7 +751,7 @@ export const wantedForSaleStep4Schema = z.object({
 });
 
 export const wantedForRentStep1Schema = z.object({
-  hasBroker: z.boolean(),
+  hasBroker: z.boolean().optional(),
 });
 
 export const wantedForRentStep2Schema = z.object({
@@ -717,13 +759,13 @@ export const wantedForRentStep2Schema = z.object({
 });
 
 export const wantedForRentStep3Schema = z.object({
-  propertyType: z.nativeEnum(PropertyType),
-  rooms: z.number().min(1, 'יש לבחור מספר חדרים').max(8),
-  squareMeters: z.number().min(1, 'יש להזין שטח'),
-  floor: z.number(),
-  balconies: z.number().min(0).max(3),
-  condition: z.nativeEnum(PropertyCondition),
-  furniture: z.nativeEnum(FurnitureStatus),
+  propertyType: z.nativeEnum(PropertyType).optional(),
+  rooms: z.number().min(0.5, 'מספר חדרים מינימלי הוא 0.5').max(10, 'מקסימום 10 חדרים').optional(),
+  squareMeters: z.number().positive('השטח חייב להיות חיובי').optional(),
+  floor: z.number().optional(),
+  balconies: z.number().min(0).max(3).optional(),
+  condition: z.nativeEnum(PropertyCondition).optional(),
+  furniture: z.nativeEnum(FurnitureStatus).optional(),
   features: z.object({
     parking: z.boolean(),
     storage: z.boolean(),
@@ -734,16 +776,18 @@ export const wantedForRentStep3Schema = z.object({
     parentalUnit: z.boolean(),
     elevator: z.boolean(),
     yard: z.boolean(),
+    garden: z.boolean(),
+    frontFacing: z.boolean(),
+    upgradedKitchen: z.boolean(),
+    accessibleForDisabled: z.boolean(),
+    housingUnit: z.boolean(),
+    hasOption: z.boolean(),
   }),
-  priceRequested: z.number().min(1, 'יש להזין מחיר מבוקש'),
-  arnona: z.number().min(0),
-  vaad: z.number().min(0),
-  entryDate: z.string().min(1, 'יש לבחור תאריך כניסה רצוי').refine((date) => {
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return selectedDate >= today;
-  }, 'תאריך הכניסה חייב להיות היום או בעתיד'),
+  priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional(),
+  arnona: z.number().min(0).optional(),
+  vaad: z.number().min(0).optional(),
+  entryDate: z.string().optional(),
+  description: z.string().max(500, 'התיאור חייב להיות עד 500 תווים').optional(),
 });
 
 export const wantedForRentStep4Schema = z.object({
@@ -756,17 +800,19 @@ export const wantedHolidayStep1Schema = z.object({
 });
 
 export const wantedHolidayStep2Schema = z.object({
-  isPaid: z.boolean(),
+  isPaid: z.boolean().optional(),
 });
 
 export const wantedHolidayStep3Schema = z.object({
   parasha: z.string().min(1, 'יש לבחור פרשה'),
-  propertyType: z.nativeEnum(PropertyType),
-  rooms: z.number().min(1, 'יש לבחור מספר חדרים').max(8),
+  propertyType: z.nativeEnum(PropertyType).optional(),
+  rooms: z.number().min(0.5, 'מספר חדרים מינימלי הוא 0.5').max(10, 'מקסימום 10 חדרים').optional(),
   purpose: z.enum(['HOSTING', 'SLEEPING_ONLY']),
   floor: z.number(),
   balconiesCount: z.number().min(0).max(3),
+  beds: z.number().positive('מספר מיטות חייב להיות חיובי').optional(),
   priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional().or(z.literal(undefined)),
+  description: z.string().max(500, 'התיאור חייב להיות עד 500 תווים').optional(),
   features: z.object({
     plata: z.boolean(),
     urn: z.boolean(),
@@ -786,4 +832,5 @@ export const wantedHolidayStep3Schema = z.object({
 export const wantedHolidayStep4Schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
+  sendCopyToEmail: z.boolean().optional(),
 });

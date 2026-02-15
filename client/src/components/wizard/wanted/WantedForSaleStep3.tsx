@@ -8,7 +8,6 @@ import {
 } from '../../../types/wizard';
 import {
   PROPERTY_TYPE_OPTIONS,
-  ROOMS_OPTIONS,
   CONDITION_OPTIONS,
   FURNITURE_OPTIONS,
 } from '../../../constants/adTypes';
@@ -22,13 +21,13 @@ interface Props {
 const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
   const [formData, setFormData] = useState<WantedForSaleStep3Data>(
     data || {
-      propertyType: PropertyType.APARTMENT,
-      rooms: 3,
-      squareMeters: 0,
-      floor: 0,
-      balconies: 0,
-      condition: PropertyCondition.MAINTAINED,
-      furniture: FurnitureStatus.NONE,
+      propertyType: undefined,
+      rooms: undefined,
+      squareMeters: undefined,
+      floor: undefined,
+      balconies: undefined,
+      condition: undefined,
+      furniture: undefined,
       features: {
         parking: false,
         storage: false,
@@ -41,11 +40,16 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
         housingUnit: false,
         elevator: false,
         hasOption: false,
+        garden: false,
+        frontFacing: false,
+        upgradedKitchen: false,
+        accessibleForDisabled: false,
       },
-      priceRequested: 0,
-      arnona: 0,
-      vaad: 0,
-      entryDate: '',
+      priceRequested: undefined,
+      arnona: undefined,
+      vaad: undefined,
+      entryDate: undefined,
+      description: undefined,
     }
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -99,7 +103,7 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
       {/* Property Type */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          סוג הנכס <span className="text-red-500">*</span>
+          סוג הנכס
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {PROPERTY_TYPE_OPTIONS.map((option) => (
@@ -107,7 +111,7 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
               key={option.value}
               type="button"
               onClick={() => handleChange('propertyType', option.value as PropertyType)}
-              className={`p-4 rounded-lg border-2 transition-all text-center ${
+              className={`p-4 rounded-lg border-2 transition-all text-center text-black ${
                 formData.propertyType === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10 ring-2 ring-[#C9A24D]/30'
                   : 'border-gray-300 hover:border-[#C9A24D]'
@@ -123,37 +127,32 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            מספר חדרים <span className="text-red-500">*</span>
+            מספר חדרים
           </label>
-          <select
-            value={formData.rooms}
-            onChange={(e) => handleChange('rooms', parseFloat(e.target.value))}
+          <input
+            type="number"
+            step="0.5"
+            min="0.5"
+            max="10"
+            value={formData.rooms ?? ''}
+            onChange={(e) => handleChange('rooms', e.target.value ? parseFloat(e.target.value) : undefined)}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.rooms ? 'border-red-500' : 'border-gray-300'
             }`}
-          >
-            {ROOMS_OPTIONS.filter(opt => opt.value <= 8).map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            placeholder="לדוגמה: 3.5"
+          />
           {errors.rooms && <p className="text-sm text-red-500">{errors.rooms}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            שטח במ״ר <span className="text-red-500">*</span>
+            שטח במ״ר
           </label>
           <input
             type="number"
-            value={formData.squareMeters === 0 ? '' : formData.squareMeters}
-            onChange={(e) => handleChange('squareMeters', parseInt(e.target.value) || 0)}
-            onFocus={() => {
-              if (formData.squareMeters === 0) {
-                handleChange('squareMeters', '');
-              }
-            }}
+            step="0.1"
+            value={formData.squareMeters ?? ''}
+            onChange={(e) => handleChange('squareMeters', e.target.value ? parseFloat(e.target.value) : undefined)}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.squareMeters ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -169,19 +168,22 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">קומה</label>
           <input
             type="number"
-            value={formData.floor}
-            onChange={(e) => handleChange('floor', parseInt(e.target.value) || 0)}
+            step="0.5"
+            value={formData.floor ?? ''}
+            onChange={(e) => handleChange('floor', e.target.value ? parseFloat(e.target.value) : undefined)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
+            placeholder="לדוגמה: 2"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">מרפסות</label>
           <select
-            value={formData.balconies}
-            onChange={(e) => handleChange('balconies', parseInt(e.target.value))}
+            value={formData.balconies ?? ''}
+            onChange={(e) => handleChange('balconies', e.target.value ? parseInt(e.target.value) : undefined)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
           >
+            <option value="">בחר</option>
             <option value={0}>ללא</option>
             <option value={1}>1</option>
             <option value={2}>2</option>
@@ -193,7 +195,7 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
       {/* Condition */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          מצב הנכס <span className="text-red-500">*</span>
+          מצב הנכס
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {CONDITION_OPTIONS.map((option) => (
@@ -201,7 +203,7 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
               key={option.value}
               type="button"
               onClick={() => handleChange('condition', option.value as PropertyCondition)}
-              className={`p-3 rounded-lg border-2 transition-all ${
+              className={`p-3 rounded-lg border-2 transition-all text-black ${
                 formData.condition === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10'
                   : 'border-gray-300 hover:border-[#C9A24D]'
@@ -222,7 +224,7 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
               key={option.value}
               type="button"
               onClick={() => handleChange('furniture', option.value as FurnitureStatus)}
-              className={`p-3 rounded-lg border-2 transition-all ${
+              className={`p-3 rounded-lg border-2 transition-all text-black ${
                 formData.furniture === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10'
                   : 'border-gray-300 hover:border-[#C9A24D]'
@@ -250,6 +252,10 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
             { key: 'housingUnit', label: 'יחידת דיור' },
             { key: 'elevator', label: 'מעלית' },
             { key: 'hasOption', label: 'אופציה' },
+            { key: 'garden', label: 'גינה' },
+            { key: 'frontFacing', label: 'חזית' },
+            { key: 'upgradedKitchen', label: 'מטבח משודרג' },
+            { key: 'accessibleForDisabled', label: 'נגישה לנכים' },
           ].map((feature) => (
             <button
               key={feature.key}
@@ -258,7 +264,7 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
               className={`p-3 rounded-lg border-2 transition-all ${
                 formData.features[feature.key as keyof WantedForSaleStep3Data['features']]
                   ? 'border-[#C9A24D] bg-[#C9A24D] text-white'
-                  : 'border-gray-300 hover:border-[#C9A24D]'
+                  : 'border-gray-300 hover:border-[#C9A24D] text-black'
               }`}
             >
               {feature.label}
@@ -271,17 +277,12 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            מחיר מבוקש (תקציב) <span className="text-red-500">*</span>
+            מחיר מבוקש (תקציב)
           </label>
           <input
             type="number"
-            value={formData.priceRequested === 0 ? '' : formData.priceRequested}
-            onChange={(e) => handleChange('priceRequested', parseInt(e.target.value) || 0)}
-            onFocus={() => {
-              if (formData.priceRequested === 0) {
-                handleChange('priceRequested', '');
-              }
-            }}
+            value={formData.priceRequested ?? ''}
+            onChange={(e) => handleChange('priceRequested', e.target.value ? parseInt(e.target.value) : undefined)}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
               errors.priceRequested ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -294,13 +295,8 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">ארנונה</label>
           <input
             type="number"
-            value={formData.arnona === 0 ? '' : formData.arnona}
-            onChange={(e) => handleChange('arnona', parseInt(e.target.value) || 0)}
-            onFocus={() => {
-              if (formData.arnona === 0) {
-                handleChange('arnona', '');
-              }
-            }}
+            value={formData.arnona ?? ''}
+            onChange={(e) => handleChange('arnona', e.target.value ? parseInt(e.target.value) : undefined)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
             placeholder="₪"
           />
@@ -310,13 +306,8 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           <label className="block text-sm font-medium text-gray-700 mb-2">ועד בית</label>
           <input
             type="number"
-            value={formData.vaad === 0 ? '' : formData.vaad}
-            onChange={(e) => handleChange('vaad', parseInt(e.target.value) || 0)}
-            onFocus={() => {
-              if (formData.vaad === 0) {
-                handleChange('vaad', '');
-              }
-            }}
+            value={formData.vaad ?? ''}
+            onChange={(e) => handleChange('vaad', e.target.value ? parseInt(e.target.value) : undefined)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D]"
             placeholder="₪"
           />
@@ -326,18 +317,73 @@ const WantedForSaleStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
       {/* Entry Date */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          תאריך כניסה רצוי <span className="text-red-500">*</span>
+          תאריך כניסה רצוי
         </label>
-        <input
-          type="date"
-          value={formData.entryDate}
-          onChange={(e) => handleChange('entryDate', e.target.value)}
-          min={new Date().toISOString().split('T')[0]}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
-            errors.entryDate ? 'border-red-500' : 'border-gray-300'
-          }`}
-        />
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <button
+            type="button"
+            onClick={() => handleChange('entryDate', 'גמיש')}
+            className={`p-3 rounded-lg border-2 transition-all text-black ${
+              formData.entryDate === 'גמיש'
+                ? 'border-[#C9A24D] bg-[#C9A24D]/10'
+                : 'border-gray-300 hover:border-[#C9A24D]'
+            }`}
+          >
+            גמיש
+          </button>
+          <button
+            type="button"
+            onClick={() => handleChange('entryDate', 'מיידי')}
+            className={`p-3 rounded-lg border-2 transition-all text-black ${
+              formData.entryDate === 'מיידי'
+                ? 'border-[#C9A24D] bg-[#C9A24D]/10'
+                : 'border-gray-300 hover:border-[#C9A24D]'
+            }`}
+          >
+            מיידי
+          </button>
+          <button
+            type="button"
+            onClick={() => handleChange('entryDate', '')}
+            className={`p-3 rounded-lg border-2 transition-all text-black ${
+              formData.entryDate !== 'גמיש' && formData.entryDate !== 'מיידי' && formData.entryDate !== undefined
+                ? 'border-[#C9A24D] bg-[#C9A24D]/10'
+                : 'border-gray-300 hover:border-[#C9A24D]'
+            }`}
+          >
+            תאריך מדויק
+          </button>
+        </div>
+        {formData.entryDate !== 'גמיש' && formData.entryDate !== 'מיידי' && formData.entryDate !== undefined && (
+          <input
+            type="date"
+            value={formData.entryDate || ''}
+            onChange={(e) => handleChange('entryDate', e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] ${
+              errors.entryDate ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+        )}
         {errors.entryDate && <p className="text-sm text-red-500">{errors.entryDate}</p>}
+      </div>
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          תיאור חופשי
+        </label>
+        <textarea
+          value={formData.description ?? ''}
+          onChange={(e) => handleChange('description', e.target.value || undefined)}
+          maxLength={500}
+          rows={4}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] resize-none"
+          placeholder="תאר את הנכס המבוקש בצורה חופשית (עד 500 תווים)"
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          {formData.description?.length || 0}/500 תווים
+        </p>
       </div>
 
       {/* Navigation */}

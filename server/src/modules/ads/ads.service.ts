@@ -197,9 +197,18 @@ export class AdsService {
   private async createRegularAd(userId: string, data: any) {
     console.log('ADS SERVICE - Creating REGULAR property ad');
 
-    // Validate required fields for regular ads
-    if (!data.cityId || !data.streetId || !data.houseNumber) {
-      throw new NotFoundError('עבור מודעת נכס נדרשים: עיר, רחוב ומספר בית');
+    // Validate city is required
+    if (!data.cityId) {
+      throw new NotFoundError('עיר היא שדה חובה');
+    }
+
+    // Validate either streetId or neighborhoodName is provided
+    const hasStreet = data.streetId && data.streetId.trim() !== '';
+    const hasNeighborhood = (data.neighborhood && data.neighborhood.trim() !== '') || 
+                            (data.neighborhoodName && data.neighborhoodName.trim() !== '');
+    
+    if (!hasStreet && !hasNeighborhood) {
+      throw new NotFoundError('יש להזין רחוב או שכונה');
     }
 
     // Validate city exists
@@ -212,22 +221,30 @@ export class AdsService {
       throw new NotFoundError('העיר שנבחרה לא קיימת במערכת');
     }
 
-    // Validate street exists and get neighborhood
-    const street = await prisma.street.findUnique({
-      where: { id: data.streetId },
-      include: {
-        Neighborhood: true,
-      },
-    });
-    
-    if (!street) {
-      console.error('ADS SERVICE - Street not found', { streetId: data.streetId });
-      throw new NotFoundError('הרחוב שנבחר לא קיים במערכת');
-    }
+    let street = null;
+    let neighborhoodName = data.neighborhoodName || data.neighborhood;
 
-    // Verify street belongs to the selected city
-    if (street.cityId !== data.cityId) {
-      throw new NotFoundError('הרחוב לא שייך לעיר שנבחרה');
+    // If street is provided, validate it and get neighborhood from it
+    if (hasStreet) {
+      street = await prisma.street.findUnique({
+        where: { id: data.streetId },
+        include: {
+          Neighborhood: true,
+        },
+      });
+      
+      if (!street) {
+        console.error('ADS SERVICE - Street not found', { streetId: data.streetId });
+        throw new NotFoundError('הרחוב שנבחר לא קיים במערכת');
+      }
+
+      // Verify street belongs to the selected city
+      if (street.cityId !== data.cityId) {
+        throw new NotFoundError('הרחוב לא שייך לעיר שנבחרה');
+      }
+
+      // Get neighborhood name from street
+      neighborhoodName = street.Neighborhood?.name || neighborhoodName;
     }
 
     console.log('ADS SERVICE - Validation passed, creating regular ad in DB');
@@ -274,8 +291,8 @@ export class AdsService {
           adType: data.adType, // Include adType for regular ads
           categoryId: data.categoryId,
           cityId: data.cityId,
-          streetId: data.streetId,
-          neighborhood: street.Neighborhood?.name || null,
+          streetId: hasStreet ? data.streetId : null,
+          neighborhood: neighborhoodName || null,
           address: data.address,
           latitude: data.latitude,
           longitude: data.longitude,
@@ -555,6 +572,8 @@ export class AdsService {
     customFields?: Record<string, any>;
     contactName?: string;
     contactPhone?: string;
+    neighborhoodName?: string;
+    neighborhood?: string;
     images?: Array<{ url: string; order: number }>;
   }>) {
     const ad = await prisma.ad.findUnique({
@@ -589,7 +608,7 @@ export class AdsService {
 
     // If streetId is being updated, fetch the neighborhood
     let neighborhood = ad.neighborhood;
-    if (data.streetId) {
+    if (data.streetId && data.streetId.trim() !== '') {
       const street = await prisma.street.findUnique({
         where: { id: data.streetId },
         include: {
@@ -602,16 +621,45 @@ export class AdsService {
       }
       
       neighborhood = street.Neighborhood?.name || null;
+    } else if (data.neighborhoodName) {
+      // If no street but neighborhood provided
+      neighborhood = data.neighborhoodName;
+    } else if (data.neighborhood) {
+      neighborhood = data.neighborhood;
+    }
+
+    // Prepare update data - separate regular fields from relations
+    const { categoryId, cityId, streetId, neighborhoodName, images, ...regularFields } = data;
+    
+    const updateData: any = {
+      ...regularFields,
+      neighborhood,
+    };
+
+    // Handle Category relation
+    if (categoryId) {
+      updateData.Category = { connect: { id: categoryId } };
+    }
+
+    // Handle City relation
+    if (cityId) {
+      updateData.City = { connect: { id: cityId } };
+    }
+
+    // Handle Street relation - connect if provided, disconnect if empty
+    if (streetId !== undefined) {
+      if (streetId && streetId.trim() !== '') {
+        updateData.Street = { connect: { id: streetId } };
+      } else {
+        updateData.Street = { disconnect: true };
+      }
     }
 
     // אם המשתמש הוא מנהל - מעדכן ישירות
     if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
       const updatedAd = await prisma.ad.update({
         where: { id: adId },
-        data: {
-          ...data,
-          neighborhood,
-        },
+        data: updateData,
         include: {
           Category: true,
           City: true,
@@ -679,10 +727,7 @@ export class AdsService {
     // אם המודעה לא מאושרת (PENDING/REJECTED) - מעדכן ישירות
     const updatedAd = await prisma.ad.update({
       where: { id: adId },
-      data: {
-        ...data,
-        neighborhood,
-      },
+      data: updateData,
       include: {
         Category: true,
         City: true,

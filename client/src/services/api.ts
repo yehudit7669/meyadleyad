@@ -377,6 +377,20 @@ export const streetsService = {
   },
 };
 
+// =============== NEIGHBORHOODS SERVICES ===============
+export const neighborhoodsService = {
+  getNeighborhoods: async (cityId?: string) => {
+    const params = cityId ? { cityId } : {};
+    const response = await api.get('/neighborhoods', { params });
+    return (response.data as any).data;
+  },
+
+  getNeighborhoodById: async (id: string) => {
+    const response = await api.get(`/neighborhoods/${id}`);
+    return (response.data as any).data;
+  },
+};
+
 // =============== USERS SERVICES ===============
 export const usersService = {
   getUser: async (id: string) => {

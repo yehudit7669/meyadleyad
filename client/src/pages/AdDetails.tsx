@@ -6,6 +6,7 @@ import { useAnalytics } from '../utils/analytics';
 import SEO from '../components/SEO';
 import AdMap from '../components/AdMap';
 import AppointmentCard from '../components/appointments/AppointmentCard';
+import { PROPERTY_TYPE_OPTIONS } from '../constants/adTypes';
 
 export default function AdDetails() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,46 @@ export default function AdDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { trackAdView, trackContactClick } = useAnalytics();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  // Helper function to get property type label in Hebrew
+  const getPropertyTypeLabel = (propertyType: string): string => {
+    const option = PROPERTY_TYPE_OPTIONS.find(opt => opt.value === propertyType);
+    return option ? option.label : propertyType;
+  };
+
+  // Helper function to build address dynamically
+  const getFullAddress = (): string => {
+    if (ad.isWanted && ad.requestedLocationText) {
+      return `אזור מבוקש: ${ad.requestedLocationText}`;
+    }
+
+    const parts: string[] = [];
+    
+    // Add street name if exists
+    if (ad.street?.name) {
+      parts.push(ad.street.name);
+    }
+    
+    // Add house number if exists in customFields
+    if (ad.customFields?.houseNumber) {
+      parts.push(ad.customFields.houseNumber.toString());
+    }
+    
+    // Add neighborhood if no street or as additional info
+    if (ad.neighborhood) {
+      if (!ad.street?.name) {
+        // If no street, show neighborhood prominently
+        parts.push(ad.neighborhood);
+      }
+    }
+    
+    // Add city name
+    if (ad.city?.nameHe) {
+      parts.push(ad.city.nameHe);
+    }
+    
+    return parts.length > 0 ? parts.join(', ') : (ad.address || '');
+  };
 
   console.log("✅ AdDetails rendered - New luxury design loaded");
 
@@ -162,22 +203,19 @@ export default function AdDetails() {
               )}
 
               {/* Address */}
-              <div className="text-right">
-                {(ad.address || ad.requestedLocationText) && (
+              {getFullAddress() && (
+                <div className="text-right">
                   <div className="text-xl text-gray-900 font-bold mb-3">
-                    {ad.isWanted && ad.requestedLocationText
-                      ? `אזור מבוקש: ${ad.requestedLocationText}`
-                      : ad.address && ad.city?.nameHe
-                      ? `${ad.address}, ${ad.city.nameHe}`
-                      : ad.address || ad.requestedLocationText
-                    }
+                    {getFullAddress()}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Property Details Line */}
+              {/* Property Details Line */}
+              <div className="text-right">
                 <div className="flex items-center gap-2 text-base text-gray-600 flex-wrap">
                   {ad.customFields?.propertyType && (
-                    <span className="font-medium">{ad.customFields.propertyType}</span>
+                    <span className="font-medium">{getPropertyTypeLabel(ad.customFields.propertyType)}</span>
                   )}
                   {ad.customFields?.rooms && (
                     <>
@@ -313,6 +351,30 @@ export default function AdDetails() {
                         <div className="flex flex-col items-start gap-1">
                           <div className="text-2xl text-[#C9A24D]">🌳</div>
                           <span className="text-xs text-[#1F3F3A]">חצר</span>
+                        </div>
+                      )}
+                      {(ad.customFields as any).features.garden && (
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="text-2xl text-[#C9A24D]">🌻</div>
+                          <span className="text-xs text-[#1F3F3A]">גינה</span>
+                        </div>
+                      )}
+                      {(ad.customFields as any).features.frontFacing && (
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="text-2xl text-[#C9A24D]">🏢</div>
+                          <span className="text-xs text-[#1F3F3A]">חזית</span>
+                        </div>
+                      )}
+                      {(ad.customFields as any).features.upgradedKitchen && (
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="text-2xl text-[#C9A24D]">👨‍🍳</div>
+                          <span className="text-xs text-[#1F3F3A]">מטבח משודרג</span>
+                        </div>
+                      )}
+                      {(ad.customFields as any).features.accessibleForDisabled && (
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="text-2xl text-[#C9A24D]">♿</div>
+                          <span className="text-xs text-[#1F3F3A]">נגיש לנכים</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.ac && (

@@ -14,13 +14,10 @@ const WantedHolidayStep2: React.FC<Props> = ({ data, onNext, onPrev }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isPaid === null) {
-      alert('יש לבחור אחת מהאפשרויות');
-      return;
-    }
 
-    const formData: WantedHolidayStep2Data = { isPaid };
+    const formData: WantedHolidayStep2Data = {
+      isPaid: isPaid !== null ? isPaid : undefined,
+    };
 
     try {
       wantedHolidayStep2Schema.parse(formData);
@@ -34,7 +31,7 @@ const WantedHolidayStep2: React.FC<Props> = ({ data, onNext, onPrev }) => {
     <form onSubmit={handleSubmit} className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-[#1F3F3A] mb-6">
-          בתשלום או ללא תשלום?
+          בתשלום או ללא תשלום? (אופציונלי)
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -82,8 +79,7 @@ const WantedHolidayStep2: React.FC<Props> = ({ data, onNext, onPrev }) => {
         </button>
         <button
           type="submit"
-          className="px-8 py-3 bg-[#C9A24D] text-white rounded-lg font-bold hover:bg-[#B08C3C] transition-all disabled:opacity-50"
-          disabled={isPaid === null}
+          className="px-8 py-3 bg-[#C9A24D] text-white rounded-lg font-bold hover:bg-[#B08C3C] transition-all"
         >
           המשך →
         </button>
