@@ -14,8 +14,8 @@ export interface CreateDistributionResult {
   skipped: number;
   items: Array<{
     id: string;
-    groupId: string;
-    groupName: string;
+    groupId: string | null;
+    groupName: string | null;
     status: DistributionItemStatus;
   }>;
 }
@@ -80,7 +80,12 @@ export class WhatsAppDistributionService {
       console.log(`✅ Created placeholder item ${item.id} with groupId=null for ad ${adId}`);
 
       result.created = 1;
-      result.items.push(item);
+      result.items.push({
+        id: item.id,
+        groupId: null,
+        groupName: null,
+        status: item.status,
+      });
 
       await auditService.log({
         action: 'create_distribution_no_group',

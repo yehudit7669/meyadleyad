@@ -10,6 +10,8 @@ export type WhatsAppAction =
   | 'approve_and_whatsapp'
   | 'create_distribution_items'
   | 'create_manual_distribution'
+  | 'create_distribution_no_group'
+  | 'delete_group'
   | 'mark_in_progress'
   | 'mark_sent'
   | 'mark_sent_manual'

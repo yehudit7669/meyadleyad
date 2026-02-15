@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { whatsappService, adminService } from '../../services/api';
+import { whatsappService } from '../../services/api';
 import { Link } from 'react-router-dom';
 
 interface WhatsAppGroup {
@@ -46,6 +46,7 @@ export default function WhatsAppGroups() {
     categoryScopes: [] as string[],
     cityScopes: [] as string[],
     dailyQuota: 10,
+    status: 'ACTIVE' as string,
   });
 
   const { data: groupsData, isLoading } = useQuery({
@@ -145,6 +146,7 @@ export default function WhatsAppGroups() {
       categoryScopes: [],
       cityScopes: [],
       dailyQuota: 10,
+      status: 'ACTIVE',
     });
   };
 

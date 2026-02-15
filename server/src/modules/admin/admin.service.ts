@@ -327,8 +327,7 @@ export class AdminService {
     await this.logAdminAction(
       adminId,
       adId,
-      'approve',
-      `Approved ad #${ad.adNumber} and sending to WhatsApp`
+      'approve'
     );
 
     // יצירת פריטי הפצה עם סטטוס SENT (שליחה מיידית)

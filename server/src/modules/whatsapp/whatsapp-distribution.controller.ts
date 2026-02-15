@@ -141,14 +141,14 @@ export class WhatsAppDistributionController {
           continue;
         }
 
-        let itemStatus = DistributionItemStatus.PENDING;
-        let sentAtDate = null;
+        let itemStatus: DistributionItemStatus = DistributionItemStatus.PENDING;
+        let sentAtDate: Date | null = null;
         
         if (status === 'SENT') {
-          itemStatus = DistributionItemStatus.SENT;
+          itemStatus = DistributionItemStatus.SENT as DistributionItemStatus;
           sentAtDate = new Date();
         } else if (status === 'IN_PROGRESS') {
-          itemStatus = DistributionItemStatus.IN_PROGRESS;
+          itemStatus = DistributionItemStatus.IN_PROGRESS as DistributionItemStatus;
         }
         
         const item = await prisma.distributionItem.create({

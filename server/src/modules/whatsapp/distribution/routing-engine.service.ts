@@ -291,10 +291,7 @@ export class RoutingEngineService {
   async checkDuplicate(adId: string, groupId: string): Promise<boolean> {
     const existing = await prisma.distributionItem.findUnique({
       where: {
-        adId_groupId: {
-          adId,
-          groupId,
-        },
+        dedupeKey: `${adId}-${groupId}`,
       },
     });
 
