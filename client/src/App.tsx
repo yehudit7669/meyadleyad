@@ -31,6 +31,7 @@ import UsersManagementPage from './pages/admin/UsersManagementPage';
 import UserProfilePage from './pages/admin/UserProfilePage';
 import CityPage from './pages/CityPage';
 import CategoryPage from './pages/CategoryPage';
+import WantedAdsPage from './pages/WantedAdsPage';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -41,9 +42,12 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import PublishAdSelection from './pages/PublishAdSelection';
 import ResidentialWizard from './components/wizard/residential/ResidentialWizard';
+import SharedOwnershipWizard from './components/wizard/shared-ownership/SharedOwnershipWizard';
 import HolidayWizard from './components/wizard/holiday/HolidayWizard';
 import ProjectWizard from './components/wizard/project/ProjectWizard';
-import CommercialWizard from './components/wizard/commercial/CommercialWizard';
+import CommercialSpaceWizard from './components/wizard/commercial-space/CommercialSpaceWizard';
+import WantedCommercialWizard from './components/wizard/wanted-commercial/WantedCommercialWizard';
+import WantedSharedOwnershipWizard from './components/wizard/wanted-shared-ownership/WantedSharedOwnershipWizard';
 import JobWizard from './components/wizard/job/JobWizard';
 import WantedForSaleWizard from './components/wizard/wanted/WantedForSaleWizard';
 import WantedForRentWizard from './components/wizard/wanted/WantedForRentWizard';
@@ -133,16 +137,19 @@ const App: React.FC = () => {
                   {/* Publish Routes - New Wizard */}
                   <Route path="/publish" element={<ProtectedRoute><PublishAdSelection /></ProtectedRoute>} />
                   <Route path="/publish/wizard/:adType" element={<ProtectedRoute><ResidentialWizard /></ProtectedRoute>} />
+                  <Route path="/publish/wizard/shared_ownership" element={<ProtectedRoute><SharedOwnershipWizard /></ProtectedRoute>} />
                   <Route path="/publish/wizard/holiday_rent" element={<ProtectedRoute><HolidayWizard /></ProtectedRoute>} />
                   <Route path="/publish/wizard/service_providers" element={<ProtectedRoute><div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center p-8 bg-white rounded-lg shadow-md"><h2 className="text-2xl font-bold text-[#1F3F3A] mb-4">נותני שירות</h2><p className="text-gray-600">בקרוב...</p></div></div></ProtectedRoute>} />
                   <Route path="/publish/wizard/project" element={<ProtectedRoute><ProjectWizard /></ProtectedRoute>} />
-                  <Route path="/publish/wizard/commercial" element={<ProtectedRoute><CommercialWizard /></ProtectedRoute>} />
+                  <Route path="/publish/wizard/commercial" element={<ProtectedRoute><CommercialSpaceWizard /></ProtectedRoute>} />
                   <Route path="/publish/wizard/job" element={<ProtectedRoute><JobWizard /></ProtectedRoute>} />
                   
                   {/* Wanted (Drushim) Wizards */}
                   <Route path="/publish/wanted/for-sale" element={<ProtectedRoute><WantedForSaleWizard /></ProtectedRoute>} />
                   <Route path="/publish/wanted/for-rent" element={<ProtectedRoute><WantedForRentWizard /></ProtectedRoute>} />
                   <Route path="/publish/wanted/holiday" element={<ProtectedRoute><WantedHolidayWizard /></ProtectedRoute>} />
+                  <Route path="/publish/wanted/commercial" element={<ProtectedRoute><WantedCommercialWizard /></ProtectedRoute>} />
+                  <Route path="/publish/wanted/shared-ownership" element={<ProtectedRoute><WantedSharedOwnershipWizard /></ProtectedRoute>} />
                   
                   {/* Ad Routes */}
                   <Route path="/ads/:id" element={<AdDetails />} />
@@ -219,6 +226,7 @@ const App: React.FC = () => {
                   
                   {/* Search & Category Routes */}
                   <Route path="/category/:slug" element={<CategoryPage />} />
+                  <Route path="/wanted" element={<WantedAdsPage />} />
                   <Route path="/city/:slug" element={<CityPage />} />
                   <Route path="/test-colors" element={<TestColors />} />
                   

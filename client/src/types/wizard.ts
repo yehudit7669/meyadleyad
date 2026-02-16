@@ -9,14 +9,17 @@ export enum AdType {
   FOR_RENT = 'FOR_RENT',
   UNIT = 'UNIT',
   HOLIDAY_RENT = 'HOLIDAY_RENT',
-  SERVICE_PROVIDERS = 'SERVICE_PROVIDERS',
+  SHARED_TABU = 'SHARED_TABU',
   PROJECT = 'PROJECT',
   COMMERCIAL = 'COMMERCIAL',
+  SERVICE_PROVIDERS = 'SERVICE_PROVIDERS',
   JOB = 'JOB',
   WANTED_FOR_SALE = 'WANTED_FOR_SALE',
   WANTED_FOR_RENT = 'WANTED_FOR_RENT',
   WANTED_HOLIDAY = 'WANTED_HOLIDAY',
   WANTED_COMMERCIAL = 'WANTED_COMMERCIAL',
+  WANTED_SHARED_OWNERSHIP = 'WANTED_SHARED_OWNERSHIP',
+  WANTED = 'WANTED',
 }
 
 export enum PropertyType {
@@ -153,6 +156,90 @@ export interface ResidentialWizardData {
   step3: ResidentialStep3Data;
   step4: ResidentialStep4Data;
   step5: ResidentialStep5Data;
+}
+
+// ======================
+// Shared Ownership (טאבו משותף) Types
+// ======================
+
+export interface SharedOwnershipStep1Data {
+  hasBroker: boolean;
+}
+
+export interface SharedOwnershipStep2Data {
+  cityId: string;
+  cityName: string;
+  streetId?: string;
+  streetName?: string;
+  neighborhoodId?: string;
+  neighborhoodName: string;
+  houseNumber?: number;
+  addressSupplement?: string;
+}
+
+export interface SharedOwnershipStep3Data {
+  propertyType: PropertyType;
+  rooms: number;
+  squareMeters?: number;
+  condition?: PropertyCondition;
+  floor?: string | number;
+  balconies?: number;
+  priceRequested?: number;
+  arnona?: number;
+  vaad?: number;
+  requiredEquity?: number;
+  numberOfPartners?: number;
+  entryDate?: string;
+  features: {
+    parking: boolean;
+    storage: boolean;
+    view: boolean;
+    airConditioning: boolean;
+    sukkaBalcony: boolean;
+    safeRoom: boolean;
+    parentalUnit: boolean;
+    elevator: boolean;
+    yard: boolean;
+    garden: boolean;
+    frontFacing: boolean;
+    upgradedKitchen: boolean;
+    accessibleForDisabled: boolean;
+  };
+}
+
+export interface SharedOwnershipStep4Data {
+  description: string;
+  images: Array<{
+    url: string;
+    file?: File;
+    isPrimary: boolean;
+    order: number;
+  }>;
+  floorPlan?: File | null;
+}
+
+export interface SharedOwnershipStep5Data {
+  contactName?: string;
+  contactPhone: string;
+  agreeToTerms: boolean;
+  weeklyDigestOptIn?: boolean;
+}
+
+export interface SharedOwnershipWizardData {
+  adType: AdType.SHARED_TABU;
+  step1: SharedOwnershipStep1Data;
+  step2: SharedOwnershipStep2Data;
+  step3: SharedOwnershipStep3Data;
+  step4: SharedOwnershipStep4Data;
+  step5: SharedOwnershipStep5Data;
+}
+
+export interface WantedSharedOwnershipWizardData {
+  adType: AdType.WANTED_SHARED_OWNERSHIP;
+  step1: SharedOwnershipStep1Data;
+  step2: SharedOwnershipStep2Data;
+  step3: SharedOwnershipStep3Data;
+  step4: SharedOwnershipStep5Data; // Contact info (no images step)
 }
 
 // ======================
@@ -421,6 +508,76 @@ export const residentialStep5Schema = z.object({
   agreeToTerms: z.boolean().refine(val => val === true, 'יש לאשר את תנאי השימוש'),
   weeklyDigestOptIn: z.boolean().optional(),
 });
+
+// Shared Ownership Schemas
+export const sharedOwnershipStep1Schema = z.object({
+  hasBroker: z.boolean(),
+});
+
+export const sharedOwnershipStep2Schema = z.object({
+  cityId: z.string().min(1, 'יש לבחור עיר'),
+  cityName: z.string(),
+  streetId: z.string().optional(),
+  streetName: z.string().optional(),
+  neighborhoodId: z.string().optional(),
+  neighborhoodName: z.string().min(1, 'יש לבחור שכונה'),
+  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי').optional(),
+  addressSupplement: z.string().optional(),
+}).refine((data) => data.streetId || data.neighborhoodName, {
+  message: 'יש להזין רחוב או שכונה',
+  path: ['neighborhoodName'],
+});
+
+export const sharedOwnershipStep3Schema = z.object({
+  propertyType: z.nativeEnum(PropertyType),
+  rooms: z.number().min(0.5, 'מספר חדרים מינימלי הוא 0.5'),
+  squareMeters: z.number().positive('השטח חייב להיות חיובי').optional(),
+  condition: z.nativeEnum(PropertyCondition).optional(),
+  floor: z.union([z.number(), z.string()]).optional(),
+  balconies: z.number().min(0).max(3).optional(),
+  priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional(),
+  arnona: z.number().min(0).optional(),
+  vaad: z.number().min(0).optional(),
+  requiredEquity: z.number().min(0, 'ההון העצמי חייב להיות חיובי').optional(),
+  numberOfPartners: z.number().int('מספר שותפים חייב להיות מספר שלם').min(1, 'מינימום שותף אחד').optional(),
+  entryDate: z.string().optional(),
+  features: z.object({
+    parking: z.boolean(),
+    storage: z.boolean(),
+    view: z.boolean(),
+    airConditioning: z.boolean(),
+    sukkaBalcony: z.boolean(),
+    safeRoom: z.boolean(),
+    parentalUnit: z.boolean(),
+    elevator: z.boolean(),
+    yard: z.boolean(),
+    garden: z.boolean(),
+    frontFacing: z.boolean(),
+    upgradedKitchen: z.boolean(),
+    accessibleForDisabled: z.boolean(),
+  }),
+});
+
+export const sharedOwnershipStep4Schema = z.object({
+  description: z.string()
+    .max(1200, 'התיאור חייב להיות עד 1200 תווים')
+    .optional(),
+  images: z.array(z.object({
+    url: z.string(),
+    file: z.any().optional(),
+    isPrimary: z.boolean(),
+    order: z.number(),
+  })).max(15, 'מקסימום 15 תמונות').optional(),
+  floorPlan: z.any().optional(),
+});
+
+export const sharedOwnershipStep5Schema = z.object({
+  contactName: z.string().optional(),
+  contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
+  agreeToTerms: z.boolean().refine(val => val === true, 'יש לאשר את תנאי השימוש'),
+  weeklyDigestOptIn: z.boolean().optional(),
+});
+
 
 // Holiday Schemas
 export const holidayStep1Schema = z.object({

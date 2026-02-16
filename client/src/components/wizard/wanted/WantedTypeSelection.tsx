@@ -18,8 +18,10 @@ const WantedTypeSelection: React.FC = () => {
         navigate('/publish/wanted/holiday');
         break;
       case AdType.WANTED_COMMERCIAL:
-        // TODO: Implement when ready
-        alert('נכס מסחרי בהכנה - בקרוב!');
+        navigate('/publish/wanted/commercial');
+        break;
+      case AdType.WANTED_SHARED_OWNERSHIP:
+        navigate('/publish/wanted/shared-ownership');
         break;
     }
   };
@@ -43,14 +45,7 @@ const WantedTypeSelection: React.FC = () => {
             <button
               key={option.type}
               onClick={() => handleTypeSelect(option.type)}
-              disabled={option.type === AdType.WANTED_COMMERCIAL}
-              className={`
-                p-8 rounded-lg shadow-md transition-all
-                ${option.type === AdType.WANTED_COMMERCIAL
-                  ? 'bg-gray-100 cursor-not-allowed opacity-50'
-                  : 'bg-white hover:shadow-xl hover:scale-105'
-                }
-              `}
+              className="p-8 rounded-lg shadow-md transition-all bg-white hover:shadow-xl hover:scale-105"
             >
               <div className="text-center">
                 <div className="text-6xl mb-4">{option.icon}</div>

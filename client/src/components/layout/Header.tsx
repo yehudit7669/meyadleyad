@@ -49,9 +49,9 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-[#1F3F3A] shadow-md sticky top-0 z-50" dir="rtl">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Left Side (RTL) - Logo */}
+      <div className="w-full px-0">
+        <div className="flex items-center justify-between h-16 px-4">
+          {/* Right Side (RTL) - Logo */}
           <Link 
             to="/" 
             aria-label="מקומי - חזרה לדף הבית"
@@ -61,7 +61,7 @@ const Header: React.FC = () => {
           </Link>
 
           {/* Center - Navigation Categories */}
-          <nav className="hidden md:flex items-center space-x-8 space-x-reverse" aria-label="ניווט ראשי">
+          <nav className="hidden md:flex items-center space-x-8 space-x-reverse flex-1 justify-center" aria-label="ניווט ראשי">
             <CategoryWithCities 
               categorySlug="apartments-for-sale"
               categoryName="דירות למכירה"
@@ -71,16 +71,34 @@ const Header: React.FC = () => {
               categoryName="דירות להשכרה"
             />
             <CategoryWithCities 
+              categorySlug="shared-tabu"
+              categoryName="טאבו משותף"
+            />
+            <CategoryWithCities 
               categorySlug="commercial-real-estate"
               categoryName='נדל״ן מסחרי'
             />
             <CategoryWithCities 
-              categorySlug="second-hand-board"
-              categoryName="לוח יד שניה"
+              categorySlug="service-providers"
+              categoryName="נותני שירות"
             />
+            <CategoryWithCities 
+              categorySlug="housing-units"
+              categoryName="יחידות דיור"
+            />
+            <CategoryWithCities 
+              categorySlug="projects"
+              categoryName="פרויקטים"
+            />
+            <Link
+              to="/wanted"
+              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium"
+            >
+              דרושים
+            </Link>
           </nav>
 
-          {/* Right Side (RTL) - Actions */}
+          {/* Left Side (RTL) - Actions */}
           <div className="hidden md:flex items-center space-x-4 space-x-reverse">
             {/* Contact Button */}
             <button
@@ -182,7 +200,6 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
           <button
             className="md:hidden p-2 text-[#E6D3A3] hover:text-[#C9A24D] focus-visible:ring-2 focus-visible:ring-[#C9A24D] rounded"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -237,6 +254,13 @@ const Header: React.FC = () => {
                 </div>
                 <div onClick={closeMobileMenu}>
                   <CategoryWithCities 
+                    categorySlug="shared-tabu"
+                    categoryName="📋 טאבו משותף"
+                    isMobile={true}
+                  />
+                </div>
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
                     categorySlug="commercial-real-estate"
                     categoryName='🏢 נדל״ן מסחרי'
                     isMobile={true}
@@ -244,11 +268,32 @@ const Header: React.FC = () => {
                 </div>
                 <div onClick={closeMobileMenu}>
                   <CategoryWithCities 
-                    categorySlug="second-hand-board"
-                    categoryName="🛍️ לוח יד שניה"
+                    categorySlug="service-providers"
+                    categoryName="🔧 נותני שירות"
                     isMobile={true}
                   />
                 </div>
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
+                    categorySlug="housing-units"
+                    categoryName="🏘️ יחידות דיור"
+                    isMobile={true}
+                  />
+                </div>
+                <div onClick={closeMobileMenu}>
+                  <CategoryWithCities 
+                    categorySlug="projects"
+                    categoryName="🏗️ פרויקטים"
+                    isMobile={true}
+                  />
+                </div>
+                <Link
+                  to="/wanted"
+                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  onClick={closeMobileMenu}
+                >
+                  🔍 דרושים
+                </Link>
               </div>
               
               {user ? (

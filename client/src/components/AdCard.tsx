@@ -28,9 +28,10 @@ interface AdCardProps {
     };
   };
   featured?: boolean;
+  showCategory?: boolean;
 }
 
-export default function AdCard({ ad, featured = false }: AdCardProps) {
+export default function AdCard({ ad, featured = false, showCategory = false }: AdCardProps) {
   const queryClient = useQueryClient();
   const [isFavoriteOptimistic, setIsFavoriteOptimistic] = useState(false);
 
@@ -159,6 +160,13 @@ export default function AdCard({ ad, featured = false }: AdCardProps) {
 
       {/* תוכן */}
       <div className="p-4">
+        {/* קטגוריה - רק בדרושים */}
+        {showCategory && (
+          <div className="text-xs font-semibold text-[#1F3F3A] mb-2 bg-[#E6D3A3] px-2 py-1 rounded inline-block">
+            {ad.category.nameHe}
+          </div>
+        )}
+
         {/* מחיר */}
         {ad.price && (
           <div className="text-xl font-bold text-[#C9A24D] mb-2">

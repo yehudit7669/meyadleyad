@@ -11,7 +11,7 @@ export interface AdTypeOption {
 export const AD_TYPE_OPTIONS: AdTypeOption[] = [
   {
     type: AdType.FOR_SALE,
-    title: 'דירה לקניה',
+    title: 'דירה למכירה',
     description: 'פרסם דירה למכירה',
     icon: '🏠',
     color: 'bg-blue-500',
@@ -24,18 +24,18 @@ export const AD_TYPE_OPTIONS: AdTypeOption[] = [
     color: 'bg-green-500',
   },
   {
-    type: AdType.UNIT,
-    title: 'יחידת דיור',
-    description: 'פרסם יחידת דיור',
-    icon: '🏡',
-    color: 'bg-purple-500',
+    type: AdType.SHARED_TABU,
+    title: 'טאבו משותף',
+    description: 'פרסם נכס בטאבו משותף',
+    icon: '📋',
+    color: 'bg-teal-500',
   },
   {
-    type: AdType.HOLIDAY_RENT,
-    title: 'דירות לשבת',
-    description: 'אני מציע דירה לשבת/חג',
-    icon: '🕯️',
-    color: 'bg-indigo-500',
+    type: AdType.COMMERCIAL,
+    title: 'נדל״ן מסחרי',
+    description: 'פרסם נכס מסחרי',
+    icon: '🏢',
+    color: 'bg-orange-500',
   },
   {
     type: AdType.SERVICE_PROVIDERS,
@@ -45,6 +45,13 @@ export const AD_TYPE_OPTIONS: AdTypeOption[] = [
     color: 'bg-pink-500',
   },
   {
+    type: AdType.UNIT,
+    title: 'יחידות דיור',
+    description: 'פרסם יחידת דיור',
+    icon: '🏡',
+    color: 'bg-purple-500',
+  },
+  {
     type: AdType.PROJECT,
     title: 'פרויקטים',
     description: 'פרסם פרויקט בנייה',
@@ -52,11 +59,11 @@ export const AD_TYPE_OPTIONS: AdTypeOption[] = [
     color: 'bg-yellow-500',
   },
   {
-    type: AdType.COMMERCIAL,
-    title: 'נדל״ן מסחרי',
-    description: 'פרסם נכס מסחרי',
-    icon: '🏢',
-    color: 'bg-orange-500',
+    type: AdType.HOLIDAY_RENT,
+    title: 'דירות לשבת',
+    description: 'אני מציע דירה לשבת/חג',
+    icon: '🕯️',
+    color: 'bg-indigo-500',
   },
   {
     type: AdType.JOB,
@@ -93,9 +100,16 @@ export const WANTED_TYPE_OPTIONS = [
   {
     type: AdType.WANTED_COMMERCIAL,
     title: 'נדל"ן מסחרי',
-    description: 'מחפש נכס מסחרי (בקרוב)',
+    description: 'מחפש נכס מסחרי',
     icon: '🏢',
     color: 'bg-orange-500',
+  },
+  {
+    type: AdType.WANTED_SHARED_OWNERSHIP,
+    title: 'טאבו משותף',
+    description: 'מחפש נכס בטאבו משותף',
+    icon: '📋',
+    color: 'bg-teal-500',
   },
 ];
 

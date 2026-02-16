@@ -7,16 +7,21 @@ const PublishAdSelection: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAdTypeSelect = (adType: AdType) => {
-    // Special handling for JOB - redirect to wanted type selection
     if (adType === AdType.JOB) {
-      navigate('/publish/wizard/job'); // This will show WantedTypeSelection
+      navigate('/publish/wizard/job');
     } else if (adType === AdType.SERVICE_PROVIDERS) {
-      // TODO: Service Providers functionality - placeholder for now
       navigate('/publish/wizard/service_providers');
+    } else if (adType === AdType.SHARED_TABU) {
+      navigate('/publish/wizard/shared_ownership');
     } else {
       navigate(`/publish/wizard/${adType.toLowerCase()}`);
     }
   };
+
+  // Filter out SERVICE_PROVIDERS and PROJECT from display
+  const displayAdTypes = AD_TYPE_OPTIONS.filter(
+    option => option.type !== AdType.SERVICE_PROVIDERS && option.type !== AdType.PROJECT
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12" dir="rtl">
@@ -31,7 +36,7 @@ const PublishAdSelection: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {AD_TYPE_OPTIONS.map((option) => (
+          {displayAdTypes.map((option) => (
             <button
               key={option.type}
               onClick={() => handleAdTypeSelect(option.type)}
