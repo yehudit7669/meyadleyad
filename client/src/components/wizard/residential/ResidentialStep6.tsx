@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ResidentialWizardData } from '../../../types/wizard';
 
 interface Props {
@@ -9,8 +9,6 @@ interface Props {
 }
 
 const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoading }) => {
-  const [sendCopyToEmail, setSendCopyToEmail] = useState(false);
-
   const step1 = wizardData.step1;
   const step2 = wizardData.step2;
   const step3 = wizardData.step3;
@@ -23,7 +21,7 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
   console.log('Vaad:', step3?.vaad, 'Type:', typeof step3?.vaad);
 
   const handleSubmit = () => {
-    onSubmit(sendCopyToEmail);
+    onSubmit(false);
   };
 
   const getPropertyTypeLabel = (type?: string) => {
@@ -278,26 +276,6 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
           </div>
 
         </div>
-      </div>
-
-      {/* Send Copy to Email Checkbox */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <label className="flex items-start cursor-pointer">
-          <input
-            type="checkbox"
-            checked={sendCopyToEmail}
-            onChange={(e) => setSendCopyToEmail(e.target.checked)}
-            className="mt-1 ml-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <div className="flex-1">
-            <span className="font-medium text-gray-900">
-              שלח לי את הלוח השבועי באימייל לאחר הפרסום
-            </span>
-            <p className="text-sm text-gray-600 mt-1">
-              קובץ PDF מסודר עם כל פרטי המודעה כפי שתפורסם באתר
-            </p>
-          </div>
-        </label>
       </div>
 
       {/* Navigation */}

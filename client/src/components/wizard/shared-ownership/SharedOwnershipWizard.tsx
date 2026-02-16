@@ -81,7 +81,7 @@ const SharedOwnershipWizard: React.FC = () => {
     
     const step2 = data.step2!;
     const step3 = data.step3!;
-    const step5 = data.step5!;
+    const step4 = data.step4 as any; // Contact details (was step5 before removing images step)
 
     // Find categoryId from categories - try multiple possible slugs
     let category = categories?.find((cat: any) => cat.slug === 'shared-tabu');
@@ -123,9 +123,9 @@ const SharedOwnershipWizard: React.FC = () => {
       address: `${step2.streetName || step2.neighborhoodName} ${step2.houseNumber || ''}${
         step2.addressSupplement ? ', ' + step2.addressSupplement : ''
       }`,
-      contactName: step5.contactName,
-      contactPhone: step5.contactPhone,
-      weeklyDigestOptIn: step5.weeklyDigestOptIn || false,
+      contactName: step4.contactName,
+      contactPhone: step4.contactPhone,
+      weeklyDigestOptIn: step4.weeklyDigestOptIn || false,
       sendCopyToEmail,
       customFields: {
         hasBroker: data.step1!.hasBroker,

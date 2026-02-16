@@ -12,6 +12,7 @@ interface AdCardProps {
     images?: { url: string }[];
     category: { nameHe: string };
     city?: { nameHe: string };
+    address?: string;
     createdAt: string;
     views: number;
     user: {
@@ -179,7 +180,10 @@ export default function AdCard({ ad, featured = false, showCategory = false }: A
           <div className="text-base font-semibold text-gray-900 mb-2">
             {ad.isWanted && ad.requestedLocationText 
               ? ad.requestedLocationText 
-              : ad.city?.nameHe}
+              : ad.address && ad.city?.nameHe
+                ? `${ad.address}, ${ad.city.nameHe}`
+                : ad.city?.nameHe
+            }
           </div>
         )}
 

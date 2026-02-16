@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { WantedSharedOwnershipWizardData } from '../../../types/wizard';
 
 interface Props {
@@ -9,18 +9,15 @@ interface Props {
 }
 
 const WantedSharedOwnershipStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoading }) => {
-  const [sendCopyToEmail, setSendCopyToEmail] = useState(false);
-
   const step1 = wizardData.step1;
   const step2 = wizardData.step2;
   const step3 = wizardData.step3;
   const step4 = wizardData.step4;
 
   const handleSubmit = () => {
-    console.log('🎯 Step6 handleSubmit called');
-    console.log('Send copy to email:', sendCopyToEmail);
+    console.log('🎯 WantedSharedOwnershipPreview handleSubmit called');
     console.log('Wizard data:', wizardData);
-    onSubmit(sendCopyToEmail);
+    onSubmit(false);
   };
 
   const getPropertyTypeLabel = (type?: string) => {
@@ -216,23 +213,6 @@ const WantedSharedOwnershipStep6: React.FC<Props> = ({ wizardData, onSubmit, onP
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
-        <input
-          type="checkbox"
-          checked={sendCopyToEmail}
-          onChange={(e) => setSendCopyToEmail(e.target.checked)}
-          className="mt-1 w-5 h-5 text-[#C9A24D] focus:ring-[#C9A24D] border-gray-300 rounded"
-        />
-        <div>
-          <label className="text-sm font-medium text-gray-900 cursor-pointer">
-            שלח עותק של המודעה למייל
-          </label>
-          <p className="text-xs text-gray-600 mt-1">
-            קבל את פרטי המודעה כולל קישור למעקב לדואר האלקטרוני שלך
-          </p>
         </div>
       </div>
 

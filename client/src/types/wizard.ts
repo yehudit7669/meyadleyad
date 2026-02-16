@@ -574,7 +574,6 @@ export const sharedOwnershipStep4Schema = z.object({
 export const sharedOwnershipStep5Schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
-  agreeToTerms: z.boolean().refine(val => val === true, 'יש לאשר את תנאי השימוש'),
   weeklyDigestOptIn: z.boolean().optional(),
 });
 

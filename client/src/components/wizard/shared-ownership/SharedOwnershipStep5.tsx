@@ -188,24 +188,6 @@ const SharedOwnershipStep5: React.FC<WizardStepProps> = ({ data, onNext, onPrev 
           </div>
         </div>
 
-        <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
-          <input
-            type="checkbox"
-            checked={formData.agreeToTerms}
-            onChange={(e) => handleChange('agreeToTerms', e.target.checked)}
-            className={`mt-1 w-5 h-5 text-[#C9A24D] focus:ring-[#C9A24D] rounded ${
-              errors.agreeToTerms ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          <div className="flex-1">
-            <label className="text-sm font-medium text-gray-900 cursor-pointer">
-              אני מסכים ל<a href="/terms" target="_blank" className="text-[#C9A24D] hover:underline">תנאי השימוש</a> ול<a href="/privacy" target="_blank" className="text-[#C9A24D] hover:underline">מדיניות הפרטיות</a> <span className="text-red-500">*</span>
-            </label>
-            {errors.agreeToTerms && (
-              <p className="mt-1 text-sm text-red-500">{errors.agreeToTerms}</p>
-            )}
-          </div>
-        </div>
       </div>
 
       <div className="flex items-center justify-between pt-6 border-t border-gray-200">

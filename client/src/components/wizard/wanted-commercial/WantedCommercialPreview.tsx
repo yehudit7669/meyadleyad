@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 interface WantedCommercialWizardData {
   step1?: any;
@@ -16,8 +16,6 @@ interface Props {
 }
 
 const WantedCommercialPreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoading }) => {
-  const [sendCopyToEmail, setSendCopyToEmail] = useState(false);
-
   const step1 = wizardData.step1;
   const step2 = wizardData.step2;
   const step3 = wizardData.step3;
@@ -26,9 +24,8 @@ const WantedCommercialPreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev
 
   const handleSubmit = () => {
     console.log('🎯 Preview handleSubmit called');
-    console.log('Send copy to email:', sendCopyToEmail);
     console.log('Wizard data:', wizardData);
-    onSubmit(sendCopyToEmail);
+    onSubmit(false);
   };
 
   const getTransactionTypeLabel = (type?: string) => {
@@ -234,24 +231,6 @@ const WantedCommercialPreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev
               <p className="text-gray-900 font-medium">📱 {step5?.contactPhone || 'לא צוין'}</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Email Copy Checkbox */}
-      <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
-        <input
-          type="checkbox"
-          checked={sendCopyToEmail}
-          onChange={(e) => setSendCopyToEmail(e.target.checked)}
-          className="mt-1 w-5 h-5 text-[#C9A24D] focus:ring-[#C9A24D] border-gray-300 rounded"
-        />
-        <div>
-          <label className="text-sm font-medium text-gray-900 cursor-pointer">
-            שלח עותק של המודעה למייל
-          </label>
-          <p className="text-xs text-gray-600 mt-1">
-            קבל את פרטי המודעה כולל קישור למעקב לדואר האלקטרוני שלך
-          </p>
         </div>
       </div>
 
