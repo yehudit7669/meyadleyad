@@ -114,8 +114,8 @@ export default function CityPage() {
                   />
                 ) : (
                   <img
-                    src="/default-ad-image.svg"
-                    alt="אין תמונה זמינה"
+                    src="/images/default-property.jpg"
+                    alt={ad.title}
                     className="w-full h-48 object-cover"
                   />
                 )}

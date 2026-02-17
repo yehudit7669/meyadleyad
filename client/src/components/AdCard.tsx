@@ -125,9 +125,9 @@ export default function AdCard({ ad, featured = false, showCategory = false }: A
           />
         ) : (
           <img
-            src="/default-ad-image.svg"
-            alt="אין תמונה זמינה"
-            className="w-full h-48 object-cover"
+            src="/images/default-property.jpg"
+            alt={ad.title}
+            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
           />
         )}
         {featured && (

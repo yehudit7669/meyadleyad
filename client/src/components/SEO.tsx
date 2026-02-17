@@ -41,7 +41,7 @@ export default function SEO({
       <meta property="og:url" content={url} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={imageUrl} />
+      <meta property="og:image" content={imageUrl || `${window.location.origin}/images/default-property.jpg`} />
       <meta property="og:site_name" content={siteName} />
       <meta property="og:locale" content="he_IL" />
 

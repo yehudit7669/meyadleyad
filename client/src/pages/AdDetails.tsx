@@ -185,9 +185,11 @@ export default function AdDetails() {
                         onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[currentImageIndex].url}`, '_blank')}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
-                        אין תמונה זמינה
-                      </div>
+                      <img
+                        src="/images/default-property.jpg"
+                        alt={ad.title}
+                        className="w-full h-full object-cover"
+                      />
                     )}
                   </div>
                 </div>
