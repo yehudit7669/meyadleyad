@@ -32,12 +32,12 @@ export default function SearchBar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}
-            className="w-full px-6 py-4 pr-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+            className="w-full px-6 py-4 pr-14 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg bg-[#f8f3f2]"
           />
           <button
             type="submit"
             aria-label="חפש"
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600 transition"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-[#c89b4c] text-white hover:bg-[#b88a3d] transition rounded-full p-2"
           >
             <svg
               className="w-6 h-6"

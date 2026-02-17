@@ -89,6 +89,7 @@ export class AdsController {
         search: req.query.search as string,
         userId: req.query.userId as string,
         status: req.query.status as any,
+        adType: req.query.adType as string, // Add adType filter
       };
 
       const result = await adsService.getAds(filters);

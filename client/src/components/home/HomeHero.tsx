@@ -7,8 +7,8 @@ const HomeHero: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Right side: Headline + Search */}
           <div className="order-1 lg:order-1 text-center lg:text-right">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight" style={{ color: '#1F3F3A' }}>
-              למצוא את הנדל״ן שלך
+            <h1 className="mb-6 leading-tight" style={{ color: '#3f504f', fontFamily: 'Assistant, sans-serif', fontSize: '75px' }}>
+              למצוא את<br />הנדל״ן שלך
             </h1>
             
             {/* Search Bar */}
@@ -20,7 +20,7 @@ const HomeHero: React.FC = () => {
                   window.location.href = `/search?q=${encodeURIComponent(input.value.trim())}`;
                 }
               }}>
-                <div className="relative flex items-center bg-gray-50 rounded-full shadow-lg overflow-hidden border-2 border-gray-200 hover:border-blue-400 transition-colors pl-3">
+                <div className="relative flex items-center bg-[#f8f3f2] rounded-full overflow-hidden transition-colors pl-3">
                   <input
                     type="text"
                     placeholder="חפש לפי עיר, רחוב או מאפיינים..."
@@ -29,10 +29,10 @@ const HomeHero: React.FC = () => {
                   <button
                     type="submit"
                     className="px-8 py-3 text-white font-medium transition-colors flex items-center gap-2 rounded-full"
-                    style={{ backgroundColor: '#C9A24D' }}
+                    style={{ backgroundColor: '#c89b4c' }}
                     aria-label="חפש"
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B08C3C'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#C9A24D'}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b88a3d'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c89b4c'}
                   >
                     <svg
                       className="w-5 h-5"
@@ -54,33 +54,13 @@ const HomeHero: React.FC = () => {
             </div>
           </div>
 
-          {/* Left side: Two Images */}
-          <div className="order-2 lg:order-2 grid grid-cols-2 gap-4">
-            {/* Image 1 */}
-            <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+          {/* Left side: Homepage Image */}
+          <div className="order-2 lg:order-2">
+            <div className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow max-w-md mx-auto">
               <img
-                src="/hero-image-1.jpg"
+                src="/images/homepage-image.jpg"
                 alt="נדלן המקום"
-                className="w-full h-64 md:h-80 object-cover"
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  // Fallback to gradient if image not found
-                  const target = e.currentTarget;
-                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7XoNeTXZzXnCfXnyDXldeo15XXqzwvdGV4dD48L3N2Zz4=';
-                }}
-              />
-            </div>
-
-            {/* Image 2 */}
-            <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <img
-                src="/hero-image-2.jpg"
-                alt="נדלן המקום"
-                className="w-full h-64 md:h-80 object-cover"
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  // Fallback to gradient if image not found
-                  const target = e.currentTarget;
-                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2UyZThmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj7XoNeTXZzXnCfXnyDXldeo15XXqzwvdGV4dD48L3N2Zz4=';
-                }}
+                className="w-full h-auto object-contain"
               />
             </div>
           </div>

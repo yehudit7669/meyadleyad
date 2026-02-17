@@ -48,7 +48,7 @@ const Header: React.FC = () => {
   }, [profileMenuOpen]);
 
   return (
-    <header className="bg-[#1F3F3A] shadow-md sticky top-0 z-50" dir="rtl">
+    <header className="bg-white shadow-md sticky top-0 z-50" dir="rtl">
       <div className="w-full px-0">
         <div className="flex items-center justify-between h-16 px-4">
           {/* Right Side (RTL) - Logo */}
@@ -92,7 +92,8 @@ const Header: React.FC = () => {
             />
             <Link
               to="/wanted"
-              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium"
+              className="text-[#3f504f] hover:text-[#2f403f] transition font-bold"
+              style={{ fontFamily: 'Assistant, sans-serif' }}
             >
               דרושים
             </Link>
@@ -103,7 +104,7 @@ const Header: React.FC = () => {
             {/* Contact Button */}
             <button
               onClick={() => setContactModalOpen(true)}
-              className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium flex items-center space-x-1 space-x-reverse"
+              className="text-[#3f504f] hover:text-[#2f403f] transition font-medium flex items-center space-x-1 space-x-reverse"
               aria-label="יצירת קשר"
             >
               <MessageCircle className="w-5 h-5" />
@@ -115,7 +116,7 @@ const Header: React.FC = () => {
                 {/* Support Notifications Bell */}
                 <Link
                   to={user.isAdmin ? '/admin/conversations' : '/my-conversations'}
-                  className="relative text-[#E6D3A3] hover:text-[#C9A24D] transition"
+                  className="relative text-[#3f504f] hover:text-[#2f403f] transition"
                   aria-label="הודעות תמיכה"
                 >
                   <Bell className="w-6 h-6" />
@@ -128,7 +129,7 @@ const Header: React.FC = () => {
 
                 <Link 
                   to="/publish" 
-                  className="bg-[#C9A24D] text-[#1F3F3A] px-6 py-2 rounded-lg font-semibold hover:bg-[#B08C3C] transition focus-visible:ring-2 focus-visible:ring-[#C9A24D] focus-visible:ring-offset-2"
+                  className="bg-[#3f504f] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#2f403f] transition focus-visible:ring-2 focus-visible:ring-[#3f504f] focus-visible:ring-offset-2"
                   role="button"
                   aria-label="פרסום מודעה חדשה"
                 >
@@ -143,9 +144,9 @@ const Header: React.FC = () => {
                     className="flex items-center space-x-2 space-x-reverse text-[#E6D3A3] hover:text-[#C9A24D] transition focus-visible:ring-2 focus-visible:ring-[#C9A24D] rounded-full"
                   >
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.name || user.email} className="w-10 h-10 rounded-full ring-2 ring-[#C9A24D]" />
+                      <img src={user.avatar} alt={user.name || user.email} className="w-10 h-10 rounded-full ring-2 ring-[#3f504f]" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#C9A24D] text-[#1F3F3A] flex items-center justify-center font-bold text-lg ring-2 ring-[#C9A24D]">
+                      <div className="w-10 h-10 rounded-full bg-[#3f504f] text-white flex items-center justify-center font-bold text-lg ring-2 ring-[#3f504f]">
                         {(user.name || user.email).charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -186,13 +187,13 @@ const Header: React.FC = () => {
               <>
                 <Link 
                   to="/login" 
-                  className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium"
+                  className="text-[#3f504f] hover:text-[#2f403f] transition"
                 >
                   התחבר
                 </Link>
                 <Link 
                   to="/register" 
-                  className="bg-[#C9A24D] text-[#1F3F3A] px-6 py-2 rounded-lg font-semibold hover:bg-[#B08C3C] transition focus-visible:ring-2 focus-visible:ring-[#C9A24D] focus-visible:ring-offset-2"
+                  className="bg-[#3f504f] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#2f403f] transition focus-visible:ring-2 focus-visible:ring-[#3f504f] focus-visible:ring-offset-2"
                 >
                   הירשם
                 </Link>

@@ -113,14 +113,8 @@ const WantedSharedOwnershipWizard: React.FC = () => {
       description: '',
       price: step3.priceRequested,
       categoryId,
-      adType: AdType.WANTED,
-      cityId: step2.cityId,
-      streetId: step2.streetId,
-      houseNumber: step2.houseNumber,
-      neighborhoodName: step2.neighborhoodName,
-      address: `${step2.streetName || step2.neighborhoodName} ${step2.houseNumber || ''}${
-        step2.addressSupplement ? ', ' + step2.addressSupplement : ''
-      }`,
+      adType: AdType.WANTED_SHARED_OWNERSHIP,
+      requestedLocationText: `${step2.streetName || step2.neighborhoodName || ''} ${step2.houseNumber || ''}${step2.addressSupplement ? ', ' + step2.addressSupplement : ''}`.trim(),
       contactName: step4.contactName,
       contactPhone: step4.contactPhone,
       weeklyDigestOptIn: step4.weeklyDigestOptIn || false,

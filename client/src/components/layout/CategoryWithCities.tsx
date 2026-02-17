@@ -125,13 +125,14 @@ const CategoryWithCities: React.FC<CategoryWithCitiesProps> = ({
       <Link
         to={`/category/${categorySlug}`}
         onClick={handleCategoryClick}
-        className="text-[#E6D3A3] hover:text-[#C9A24D] transition font-medium relative group py-2 inline-block"
+        className="text-[#3f504f] hover:text-[#2f403f] transition font-bold relative group py-2 inline-block"
+        style={{ fontFamily: 'Assistant, sans-serif' }}
         aria-label={categoryName}
       >
         {categoryName} {selectedCity && cities.find(c => c.slug === selectedCity) && (
           <span className="text-xs"> - {cities.find(c => c.slug === selectedCity)?.nameHe}</span>
         )}
-        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C9A24D] transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
+        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#3f504f] transform scale-x-0 group-hover:scale-x-100 transition-transform"></span>
       </Link>
 
       {/* Cities Dropdown */}

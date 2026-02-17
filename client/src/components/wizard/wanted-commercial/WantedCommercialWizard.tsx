@@ -138,14 +138,8 @@ const WantedCommercialWizard: React.FC = () => {
       description: step4.description || '',
       price: step4.price,
       categoryId,
-      adType: AdType.WANTED,
-      cityId: step3.cityId,
-      streetId: step3.streetId,
-      houseNumber: step3.houseNumber,
-      neighborhoodName: step3.neighborhoodName,
-      address: `${step3.streetName || step3.neighborhoodName} ${step3.houseNumber || ''}${
-        step3.addressSupplement ? ', ' + step3.addressSupplement : ''
-      }`,
+      adType: AdType.WANTED_COMMERCIAL,
+      requestedLocationText: `${step3.streetName || step3.neighborhoodName || ''} ${step3.houseNumber || ''}${step3.addressSupplement ? ', ' + step3.addressSupplement : ''}`.trim(),
       contactName: step5.contactName,
       contactPhone: step5.contactPhone,
       weeklyDigestOptIn: step5.weeklyDigestOptIn || false,

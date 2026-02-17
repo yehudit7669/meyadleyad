@@ -21,34 +21,32 @@ export default function AdCardCompact({ ad }: AdCardCompactProps) {
   return (
     <Link
       to={`/ads/${ad.id}`}
-      className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow block"
+      className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow block p-2 h-full flex flex-col"
     >
       {/* תמונה */}
-      <div className="relative overflow-hidden">
-        {ad.images && ad.images[0] ? (
-          <img
-            src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[0].url}`}
-            alt={ad.title}
-            className="w-full h-32 object-cover"
-          />
-        ) : (
-          <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400 text-sm">אין תמונה</span>
-          </div>
-        )}
+      <div className="relative overflow-hidden rounded-lg">
+        <img
+          src={ad.images && ad.images[0] 
+            ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[0].url}`
+            : '/images/default-property.jpg'
+          }
+          alt={ad.title}
+          className="w-full h-40 object-cover"
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            e.currentTarget.src = '/images/default-property.jpg';
+          }}
+        />
       </div>
 
       {/* תוכן */}
-      <div className="p-3">
+      <div className="p-3 flex-1 flex flex-col">
         {/* מחיר */}
-        {ad.price && (
-          <div className="text-lg font-bold mb-1" style={{ color: '#C9A24D' }}>
-            ₪{ad.price.toLocaleString()}
-          </div>
-        )}
+        <div className="text-lg mb-1" style={{ color: '#C9A24D' }}>
+          {ad.price ? `₪${ad.price.toLocaleString()}` : 'לא צוין'}
+        </div>
 
         {/* כתובת (רחוב מספר בית, עיר) */}
-        <div className="text-sm text-gray-700 mb-2 truncate">
+        <div className="text-xs text-gray-700 font-bold mb-2 truncate">
           {ad.address && ad.city?.nameHe ? (
             `${ad.address}, ${ad.city.nameHe}`
           ) : ad.address ? (
@@ -61,7 +59,7 @@ export default function AdCardCompact({ ad }: AdCardCompactProps) {
         </div>
 
         {/* חדרים, מ"ר, קומה */}
-        <div className="flex items-center gap-2 text-xs text-gray-600">
+        <div className="flex items-center gap-2 text-xs text-gray-600 mt-auto min-h-[20px]">
           {rooms && (
             <span>{rooms} חד׳</span>
           )}

@@ -69,7 +69,7 @@ export class AdsService {
   }
 
   private isWantedAd(adType?: string): boolean {
-    const wantedTypes = ['WANTED_FOR_SALE', 'WANTED_FOR_RENT', 'WANTED_HOLIDAY', 'WANTED_COMMERCIAL'];
+    const wantedTypes = ['WANTED_FOR_SALE', 'WANTED_FOR_RENT', 'WANTED_HOLIDAY', 'WANTED_COMMERCIAL', 'WANTED_SHARED_OWNERSHIP'];
     return adType ? wantedTypes.includes(adType) : false;
   }
 
@@ -289,6 +289,7 @@ export class AdsService {
           description: data.description,
           price: data.price,
           adType: data.adType, // Include adType for regular ads
+          isWanted: false, // Explicitly mark as NOT wanted
           categoryId: data.categoryId,
           cityId: data.cityId,
           streetId: hasStreet ? data.streetId : null,
@@ -892,6 +893,7 @@ export class AdsService {
     search?: string;
     userId?: string;
     status?: AdStatus;
+    adType?: string; // Filter by ad type (WANTED, etc.)
   }) {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
@@ -901,6 +903,21 @@ export class AdsService {
 
     if (filters.categoryId) {
       where.categoryId = filters.categoryId;
+    }
+
+    // Filter by adType (WANTED ads)
+    if (filters.adType) {
+      if (filters.adType === 'WANTED') {
+        // Show all wanted ads
+        where.isWanted = true;
+      } else {
+        // Show specific adType
+        where.adType = filters.adType;
+      }
+    } else {
+      // When no adType is specified, exclude wanted ads by default
+      // This prevents wanted ads from appearing in regular category listings
+      where.isWanted = false;
     }
 
     // Handle multiple cities filter

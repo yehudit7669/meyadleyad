@@ -10,6 +10,7 @@ export const adsService = {
     minPrice?: number;
     maxPrice?: number;
     search?: string;
+    adType?: string;
   }) {
     const response = await api.get<{ data: PaginatedResponse<Ad> }>('/ads', {
       params: filters,

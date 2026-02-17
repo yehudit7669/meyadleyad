@@ -223,6 +223,7 @@ export const adsService = {
     maxPrice?: string;
     page?: number;
     limit?: number;
+    adType?: string;
   }) => {
     const response = await api.get('/ads', { params });
     return (response.data as any).data;

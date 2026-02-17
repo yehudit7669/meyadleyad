@@ -1,29 +1,20 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useAds } from '../../hooks/useAds';
+import { useQuery } from '@tanstack/react-query';
+import { adsService } from '../../services/api';
 import AdCardCompact from './AdCardCompact';
 import { Ad } from '../../types';
 
-interface CategorySliderProps {
-  categoryId: string;
-  categorySlug: string;
-  categoryName: string;
-}
-
-const CategorySlider: React.FC<CategorySliderProps> = ({
-  categoryId,
-  categorySlug,
-  categoryName,
-}) => {
+const WantedSlider: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
-  // Fetch ads for this category (limit to 12)
-  const { data, isLoading } = useAds({
-    categoryId,
-    limit: 12,
+  // Fetch wanted ads (limit to 12)
+  const { data, isLoading } = useQuery({
+    queryKey: ['wanted-ads-home'],
+    queryFn: () => adsService.getAds({ adType: 'WANTED', limit: 12 }),
   });
 
-  // Extract ads from the response (server returns data.ads structure)
+  // Extract ads from the response
   const ads = ((data as any)?.ads as Ad[]) || [];
 
   // Scroll functions
@@ -51,10 +42,10 @@ const CategorySlider: React.FC<CategorySliderProps> = ({
         {/* Category Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold" style={{ color: '#c89b4c', fontFamily: 'Assistant, sans-serif' }}>
-            • {categoryName}
+            • דרושים
           </h2>
           <Link
-            to={`/category/${categorySlug}`}
+            to="/wanted"
             className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1 hover:gap-2 transition-all"
           >
             לכל המודעות
@@ -157,4 +148,4 @@ const CategorySlider: React.FC<CategorySliderProps> = ({
   );
 };
 
-export default CategorySlider;
+export default WantedSlider;

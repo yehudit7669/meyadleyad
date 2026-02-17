@@ -3,13 +3,16 @@ import React from 'react';
 import { useCategories } from '../hooks/useCategories';
 import HomeHero from '../components/home/HomeHero';
 import CategorySlider from '../components/home/CategorySlider';
+import WantedSlider from '../components/home/WantedSlider';
 
 const Home: React.FC = () => {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
-  // Filter out "דירות לשבת" category
+  // Filter out unwanted categories
   const filteredCategories = categories?.filter(
-    (cat: any) => cat.nameHe !== 'דירות לשבת'
+    (cat: any) => cat.nameHe !== 'דירות לשבת' 
+      && cat.nameHe !== 'דרושים - נדל״ן מסחרי' 
+      && cat.nameHe !== 'דרושים - טאבו משותף'
   ) || [];
 
   return (
@@ -24,14 +27,18 @@ const Home: React.FC = () => {
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : filteredCategories.length > 0 ? (
-          filteredCategories.map((category: any) => (
-            <CategorySlider
-              key={category.id}
-              categoryId={category.id}
-              categorySlug={category.slug}
-              categoryName={category.nameHe}
-            />
-          ))
+          <>
+            {filteredCategories.map((category: any) => (
+              <CategorySlider
+                key={category.id}
+                categoryId={category.id}
+                categorySlug={category.slug}
+                categoryName={category.nameHe}
+              />
+            ))}
+            {/* Wanted Ads Section */}
+            <WantedSlider />
+          </>
         ) : (
           <div className="text-center py-12 text-gray-500">
             לא נמצאו קטגוריות
