@@ -37,6 +37,8 @@ services:
     build: ./client
     container_name: meyadleyad-frontend
     restart: unless-stopped
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=528324828528-vcsvk4o9qviut7lddq26bufdmopeg4ji.apps.googleusercontent.com
     ports:
       - "3001:80"
     depends_on:
