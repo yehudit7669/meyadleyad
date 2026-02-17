@@ -552,7 +552,17 @@ export class NewspaperGeneralSheetService {
         if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
         if (featuresObj.view) features.push('נוף');
         if (featuresObj.yard) features.push('חצר');
+        if (featuresObj.garden) features.push('גינה');
+        if (featuresObj.frontFacing) features.push('חזית');
+        if (featuresObj.upgradedKitchen) features.push('מטבח משודרג');
+        if (featuresObj.accessibleForDisabled) features.push('נגישה לנכים');
         if (featuresObj.housingUnit) features.push('יח׳ דיור');
+        if (featuresObj.gallery) features.push('גלריה');
+        if (featuresObj.kitchenette) features.push('מטבחון');
+        if (featuresObj.toilets) features.push('שירותים');
+        if (featuresObj.storefront) features.push('חלון ראווה');
+        if (featuresObj.internet) features.push('אינטרנט');
+        if (featuresObj.upgraded) features.push('מושפץ');
 
         const contactName = customFields.contactName || 'פרטים נוספים';
         const contactPhone = customFields.contactPhone || listing.User?.phone || '050-000-0000';

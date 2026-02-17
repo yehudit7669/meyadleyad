@@ -934,6 +934,12 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
             });
             console.log('🏙️ ADMIN: City found:', cityRecord ? `${cityRecord.nameHe} (ID: ${cityRecord.id})` : 'NOT FOUND');
             
+            // Get neighborhood from row data (required field)
+            if (row.neighborhood) {
+              neighborhood = row.neighborhood.toString().trim();
+              console.log('🏘️ ADMIN: Neighborhood from file:', neighborhood);
+            }
+            
             // Find street if city found and street provided
             if (cityRecord && row.street) {
               const streetName = row.street.toString().trim();
@@ -953,9 +959,10 @@ router.post('/properties-file/commit', async (req: Request, res: Response): Prom
               });
               console.log('🛣️ ADMIN: Street found:', streetRecord ? `${streetRecord.name} (ID: ${streetRecord.id})` : 'NOT FOUND');
               
-              if (streetRecord?.Neighborhood) {
+              // If street has neighborhood and we don't have one from file, use street's neighborhood
+              if (!neighborhood && streetRecord?.Neighborhood) {
                 neighborhood = streetRecord.Neighborhood.name;
-                console.log('🏘️ ADMIN: Neighborhood:', neighborhood);
+                console.log('🏘️ ADMIN: Neighborhood from street:', neighborhood);
               }
             }
           }
@@ -1062,6 +1069,14 @@ function getSchemaForCategory(categorySlug: string, adType?: string): CategorySc
   const slug = categorySlug.toLowerCase();
   const type = adType?.toUpperCase() || '';
   
+  // SHARED OWNERSHIP (TABU)
+  if (slug.includes('shared') || slug.includes('tabu') || slug.includes('טאבו')) {
+    if (type.includes('WANTED')) {
+      return getWantedSharedOwnershipSchema();
+    }
+    return getSharedOwnershipSchema();
+  }
+  
   // APARTMENTS FOR SALE
   if (slug.includes('sale') || slug.includes('למכירה')) {
     if (type.includes('WANTED')) {
@@ -1114,6 +1129,7 @@ function getApartmentsForSaleSchema(): CategorySchema {
     { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
     { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
     { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
+    { name: 'addressSupplement', hebrewName: 'תוספת כתובת', aliases: ['תוספת כתובת', 'דירה', 'כניסה'], required: false, parser: optionalString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumberWithDecimals },
@@ -1122,7 +1138,7 @@ function getApartmentsForSaleSchema(): CategorySchema {
     { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: false, parser: parseOptionalInt },
     { name: 'furniture', hebrewName: 'ריהוט', aliases: ['ריהוט'], required: false, parser: parseFurnitureOptional },
     { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseEntryDateOptional },
-    { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: true, parser: parseRequiredNumber },
+    { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: false, parser: parseOptionalNumber },
     { name: 'arnona', hebrewName: 'ארנונה', aliases: ['ארנונה'], required: false, parser: parseOptionalNumber },
     { name: 'vaad', hebrewName: 'ועד בית', aliases: ['ועד בית'], required: false, parser: parseOptionalNumber },
     { name: 'parking', hebrewName: 'חניה', aliases: ['חניה'], required: false, parser: normalizeBoolean },
@@ -1163,7 +1179,8 @@ function getApartmentsForRentSchema(): CategorySchema {
     { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
     { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
     { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
-    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
+    { name: 'addressSupplement', hebrewName: 'תוספת כתובת', aliases: ['תוספת כתובת', 'דירה', 'כניסה'], required: false, parser: optionalString },
+    { name: 'propertyType', hebrewName: 'סוג הנכץ', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumberWithDecimals },
     { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: false, parser: optionalString },
@@ -1171,7 +1188,7 @@ function getApartmentsForRentSchema(): CategorySchema {
     { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: false, parser: parseOptionalInt },
     { name: 'furniture', hebrewName: 'ריהוט', aliases: ['ריהוט'], required: false, parser: parseFurnitureOptional },
     { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseEntryDateOptional },
-    { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: true, parser: parseRequiredNumber },
+    { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: false, parser: parseOptionalNumber },
     { name: 'arnona', hebrewName: 'ארנונה', aliases: ['ארנונה'], required: false, parser: parseOptionalNumber },
     { name: 'vaad', hebrewName: 'ועד בית', aliases: ['ועד בית'], required: false, parser: parseOptionalNumber },
     { name: 'parking', hebrewName: 'חניה', aliases: ['חניה'], required: false, parser: normalizeBoolean },
@@ -1207,7 +1224,7 @@ function getApartmentsForRentSchema(): CategorySchema {
 function getWantedForSaleSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
-    { name: 'requestedLocation', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש'], required: true, parser: requiredString },
+    { name: 'desiredStreet', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש', 'רחוב מבוקש'], required: true, parser: requiredString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumber },
@@ -1230,6 +1247,11 @@ function getWantedForSaleSchema(): CategorySchema {
     { name: 'housingUnit', hebrewName: 'יחידת דיור', aliases: ['יחידת דיור'], required: false, parser: normalizeBoolean },
     { name: 'elevator', hebrewName: 'מעלית', aliases: ['מעלית'], required: false, parser: normalizeBoolean },
     { name: 'hasOption', hebrewName: 'אופציה', aliases: ['אופציה'], required: false, parser: normalizeBoolean },
+    { name: 'garden', hebrewName: 'גינה', aliases: ['גינה'], required: false, parser: normalizeBoolean },
+    { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
+    { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור'], required: false, parser: optionalString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1244,7 +1266,7 @@ function getWantedForSaleSchema(): CategorySchema {
 function getWantedForRentSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
-    { name: 'requestedLocation', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש'], required: true, parser: requiredString },
+    { name: 'desiredStreet', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש', 'רחוב מבוקש'], required: true, parser: requiredString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumber },
@@ -1266,6 +1288,12 @@ function getWantedForRentSchema(): CategorySchema {
     { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
     { name: 'housingUnit', hebrewName: 'יחידת דיור', aliases: ['יחידת דיור'], required: false, parser: normalizeBoolean },
     { name: 'elevator', hebrewName: 'מעלית', aliases: ['מעלית'], required: false, parser: normalizeBoolean },
+    { name: 'hasOption', hebrewName: 'אופציה', aliases: ['אופציה'], required: false, parser: normalizeBoolean },
+    { name: 'garden', hebrewName: 'גינה', aliases: ['גינה'], required: false, parser: normalizeBoolean },
+    { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
+    { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור'], required: false, parser: optionalString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1279,7 +1307,10 @@ function getWantedForRentSchema(): CategorySchema {
 // ===== SHABBAT APARTMENTS (NO IMAGES!) =====
 function getShabbatApartmentSchema(): CategorySchema {
   const fields: FieldSchema[] = [
-    { name: 'requestedLocation', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש'], required: true, parser: requiredString },
+    { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
     { name: 'isPaid', hebrewName: 'בתשלום', aliases: ['בתשלום'], required: true, parser: requiredBoolean },
     { name: 'parasha', hebrewName: 'פרשה', aliases: ['פרשה'], required: true, parser: requiredString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
@@ -1348,24 +1379,33 @@ function getWantedForShabbatSchema(): CategorySchema {
 function getCommercialSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
+    { name: 'transactionType', hebrewName: 'סוג עסקה', aliases: ['סוג עסקה', 'למכירה/להשכרה'], required: true, parser: parseTransactionType },
     { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
-    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: true, parser: requiredString },
-    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
     { name: 'commercialType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
-    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: true, parser: parseRequiredNumber },
+    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseRequiredNumber },
     { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: false, parser: parseFloorOptional },
     { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: false, parser: optionalString },
     { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseDateOptional },
-    { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: true, parser: parseRequiredNumber },
+    { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: false, parser: parseOptionalNumber },
     { name: 'parking', hebrewName: 'חניה', aliases: ['חניה'], required: false, parser: normalizeBoolean },
     { name: 'elevator', hebrewName: 'מעלית', aliases: ['מעלית'], required: false, parser: normalizeBoolean },
     { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
+    { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
+    { name: 'gallery', hebrewName: 'גלריה', aliases: ['גלריה'], required: false, parser: normalizeBoolean },
+    { name: 'storage', hebrewName: 'מחסון', aliases: ['מחסון'], required: false, parser: normalizeBoolean },
+    { name: 'kitchenette', hebrewName: 'מטבחון', aliases: ['מטבחון'], required: false, parser: normalizeBoolean },
+    { name: 'safeRoom', hebrewName: 'ממד', aliases: ['ממד'], required: false, parser: normalizeBoolean },
+    { name: 'toilets', hebrewName: 'שירותים', aliases: ['שירותים'], required: false, parser: normalizeBoolean },
+    { name: 'storefront', hebrewName: 'חלון ראווה לרחוב', aliases: ['חלון ראווה לרחוב', 'חלון ראווה'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישות לנכים', aliases: ['נגישות לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'internet', hebrewName: 'אינטרנט', aliases: ['אינטרנט'], required: false, parser: normalizeBoolean },
+    { name: 'upgraded', hebrewName: 'מושפץ', aliases: ['מושפץ'], required: false, parser: normalizeBoolean },
     { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: true, parser: requiredString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
-    { name: 'image1', hebrewName: 'תמונה 1', aliases: ['תמונה 1'], required: false, parser: parseUrl },
-    { name: 'image2', hebrewName: 'תמונה 2', aliases: ['תמונה 2'], required: false, parser: parseUrl },
-    { name: 'image3', hebrewName: 'תמונה 3', aliases: ['תמונה 3'], required: false, parser: parseUrl },
   ];
   
   return {
@@ -1379,6 +1419,7 @@ function getCommercialSchema(): CategorySchema {
 function getWantedCommercialSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
+    { name: 'transactionType', hebrewName: 'סוג עסקה', aliases: ['סוג עסקה', 'למכירה/להשכרה'], required: false, parser: parseTransactionTypeOptional },
     { name: 'requestedLocation', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש'], required: true, parser: requiredString },
     { name: 'commercialType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumber },
@@ -1389,6 +1430,100 @@ function getWantedCommercialSchema(): CategorySchema {
     { name: 'parking', hebrewName: 'חניה', aliases: ['חניה'], required: false, parser: normalizeBoolean },
     { name: 'elevator', hebrewName: 'מעלית', aliases: ['מעלית'], required: false, parser: normalizeBoolean },
     { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
+    { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
+    { name: 'gallery', hebrewName: 'גלריה', aliases: ['גלריה'], required: false, parser: normalizeBoolean },
+    { name: 'storage', hebrewName: 'מחסון', aliases: ['מחסון'], required: false, parser: normalizeBoolean },
+    { name: 'kitchenette', hebrewName: 'מטבחון', aliases: ['מטבחון'], required: false, parser: normalizeBoolean },
+    { name: 'safeRoom', hebrewName: 'ממד', aliases: ['ממד'], required: false, parser: normalizeBoolean },
+    { name: 'toilets', hebrewName: 'שירותים', aliases: ['שירותים'], required: false, parser: normalizeBoolean },
+    { name: 'storefront', hebrewName: 'חלון ראווה לרחוב', aliases: ['חלון ראווה לרחוב', 'חלון ראווה'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישות לנכים', aliases: ['נגישות לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'internet', hebrewName: 'אינטרנט', aliases: ['אינטרנט'], required: false, parser: normalizeBoolean },
+    { name: 'upgraded', hebrewName: 'מושפץ', aliases: ['מושפץ'], required: false, parser: normalizeBoolean },
+    { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
+    { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
+  ];
+  
+  return {
+    fields,
+    getDuplicateKey: (row) => null
+  };
+}
+
+// ===== SHARED OWNERSHIP (TABU) - REGULAR =====
+function getSharedOwnershipSchema(): CategorySchema {
+  const fields: FieldSchema[] = [
+    { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
+    { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
+    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
+    { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
+    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumberWithDecimals },
+    { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: false, parser: optionalString },
+    { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: false, parser: parseFloorOptionalOrText },
+    { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: false, parser: parseOptionalInt },
+    { name: 'priceRequested', hebrewName: 'מחיר מבוקש', aliases: ['מחיר מבוקש', 'מחיר'], required: false, parser: parseOptionalNumber },
+    { name: 'arnona', hebrewName: 'ארנונה', aliases: ['ארנונה'], required: false, parser: parseOptionalNumber },
+    { name: 'vaad', hebrewName: 'ועד בית', aliases: ['ועד בית'], required: false, parser: parseOptionalNumber },
+    { name: 'requiredEquity', hebrewName: 'הון עצמי נדרש', aliases: ['הון עצמי נדרש'], required: false, parser: parseRequiredNumber },
+    { name: 'numberOfPartners', hebrewName: 'מספר שותפים', aliases: ['מספר שותפים'], required: false, parser: parseRequiredInt },
+    { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseEntryDateOptional },
+    { name: 'parking', hebrewName: 'חניה', aliases: ['חניה'], required: false, parser: normalizeBoolean },
+    { name: 'storage', hebrewName: 'מחסן', aliases: ['מחסן'], required: false, parser: normalizeBoolean },
+    { name: 'view', hebrewName: 'נוף', aliases: ['נוף'], required: false, parser: normalizeBoolean },
+    { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
+    { name: 'sukkaBalcony', hebrewName: 'מרפסת סוכה', aliases: ['מרפסת סוכה'], required: false, parser: normalizeBoolean },
+    { name: 'safeRoom', hebrewName: 'ממד', aliases: ['ממד'], required: false, parser: normalizeBoolean },
+    { name: 'parentalUnit', hebrewName: 'יחידת הורים', aliases: ['יחידת הורים'], required: false, parser: normalizeBoolean },
+    { name: 'elevator', hebrewName: 'מעלית', aliases: ['מעלית'], required: false, parser: normalizeBoolean },
+    { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
+    { name: 'garden', hebrewName: 'גינה', aliases: ['גינה'], required: false, parser: normalizeBoolean },
+    { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
+    { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
+    { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
+  ];
+  
+  return {
+    fields,
+    getDuplicateKey: (row) => row.city && row.street && row.houseNumber ?
+      `${row.city}-${row.street}-${row.houseNumber}`.toLowerCase() : null
+  };
+}
+
+// ===== WANTED SHARED OWNERSHIP =====
+function getWantedSharedOwnershipSchema(): CategorySchema {
+  const fields: FieldSchema[] = [
+    { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
+    { name: 'requestedLocation', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש', 'אזור מבוקש'], required: true, parser: requiredString },
+    { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: parsePropertyType },
+    { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
+    { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumberWithDecimals },
+    { name: 'condition', hebrewName: 'מצב הנכס', aliases: ['מצב הנכס'], required: false, parser: optionalString },
+    { name: 'floor', hebrewName: 'קומה', aliases: ['קומה'], required: false, parser: parseFloorOptionalOrText },
+    { name: 'balconies', hebrewName: 'מספר מרפסות', aliases: ['מספר מרפסות'], required: false, parser: parseOptionalInt },
+    { name: 'priceRequested', hebrewName: 'מחיר מבוקש', aliases: ['מחיר מבוקש', 'מחיר'], required: false, parser: parseOptionalNumber },
+    { name: 'arnona', hebrewName: 'ארנונה', aliases: ['ארנונה'], required: false, parser: parseOptionalNumber },
+    { name: 'vaad', hebrewName: 'ועד בית', aliases: ['ועד בית'], required: false, parser: parseOptionalNumber },
+    { name: 'requiredEquity', hebrewName: 'הון עצמי נדרש', aliases: ['הון עצמי נדרש'], required: false, parser: parseOptionalNumber },
+    { name: 'numberOfPartners', hebrewName: 'מספר שותפים', aliases: ['מספר שותפים'], required: false, parser: parseOptionalInt },
+    { name: 'entryDate', hebrewName: 'תאריך כניסה', aliases: ['תאריך כניסה'], required: false, parser: parseEntryDateOptional },
+    { name: 'parking', hebrewName: 'חניה', aliases: ['חניה'], required: false, parser: normalizeBoolean },
+    { name: 'storage', hebrewName: 'מחסן', aliases: ['מחסן'], required: false, parser: normalizeBoolean },
+    { name: 'view', hebrewName: 'נוף', aliases: ['נוף'], required: false, parser: normalizeBoolean },
+    { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
+    { name: 'sukkaBalcony', hebrewName: 'מרפסת סוכה', aliases: ['מרפסת סוכה'], required: false, parser: normalizeBoolean },
+    { name: 'safeRoom', hebrewName: 'ממד', aliases: ['ממד'], required: false, parser: normalizeBoolean },
+    { name: 'parentalUnit', hebrewName: 'יחידת הורים', aliases: ['יחידת הורים'], required: false, parser: normalizeBoolean },
+    { name: 'elevator', hebrewName: 'מעלית', aliases: ['מעלית'], required: false, parser: normalizeBoolean },
+    { name: 'yard', hebrewName: 'חצר', aliases: ['חצר'], required: false, parser: normalizeBoolean },
+    { name: 'garden', hebrewName: 'גינה', aliases: ['גינה'], required: false, parser: normalizeBoolean },
+    { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
+    { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
+    { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1477,6 +1612,36 @@ function parseDateRequired(value: any): string {
   const date = parseDate(value);
   if (!date) throw new Error('תאריך לא תקין');
   return date;
+}
+
+function parseTransactionType(value: any): string {
+  if (!value || !value.toString().trim()) throw new Error('סוג עסקה חובה');
+  const str = value.toString().trim().toUpperCase();
+  
+  // Accept variations
+  if (str === 'FOR_RENT' || str === 'RENT' || str.includes('השכרה') || str.includes('להשכרה')) {
+    return 'FOR_RENT';
+  }
+  if (str === 'FOR_SALE' || str === 'SALE' || str.includes('מכירה') || str.includes('למכירה')) {
+    return 'FOR_SALE';
+  }
+  
+  throw new Error('סוג עסקה חייב להיות: למכירה או להשכרה');
+}
+
+function parseTransactionTypeOptional(value: any): string | null {
+  if (!value || !value.toString().trim()) return null;
+  const str = value.toString().trim().toUpperCase();
+  
+  // Accept variations
+  if (str === 'FOR_RENT' || str === 'RENT' || str.includes('השכרה') || str.includes('להשכרה')) {
+    return 'FOR_RENT';
+  }
+  if (str === 'FOR_SALE' || str === 'SALE' || str.includes('מכירה') || str.includes('למכירה')) {
+    return 'FOR_SALE';
+  }
+  
+  throw new Error('סוג עסקה חייב להיות: למכירה או להשכרה');
 }
 
 function parsePurpose(value: any): string {
@@ -1725,6 +1890,81 @@ function buildCustomFields(row: any, categorySlug: string, adType?: string): any
     if (row.upgradedKitchen !== null) features.upgradedKitchen = row.upgradedKitchen;
     if (row.accessibleForDisabled !== null) features.accessibleForDisabled = row.accessibleForDisabled;
     if (row.airConditioning !== null) features.airConditioning = row.airConditioning;
+    
+    if (Object.keys(features).length > 0) {
+      customFields.features = features;
+    }
+    
+    // Add contact info
+    if (row.contactName) customFields.contactName = row.contactName;
+    if (row.contactPhone) customFields.contactPhone = row.contactPhone;
+  }
+  
+  // Commercial real estate
+  if (categorySlug.includes('commercial') || categorySlug.includes('מסחרי')) {
+    if (row.hasBroker !== null) customFields.hasBroker = row.hasBroker;
+    if (row.transactionType) customFields.transactionType = row.transactionType;
+    if (row.commercialType) customFields.commercialType = row.commercialType;
+    if (row.squareMeters) customFields.squareMeters = row.squareMeters;
+    if (row.floor !== null && row.floor !== undefined) customFields.floor = row.floor;
+    if (row.condition) customFields.condition = row.condition;
+    if (row.entryDate) customFields.entryDate = row.entryDate;
+    
+    const features: any = {};
+    if (row.parking !== null) features.parking = row.parking;
+    if (row.elevator !== null) features.elevator = row.elevator;
+    if (row.airConditioning !== null) features.airConditioning = row.airConditioning;
+    if (row.yard !== null) features.yard = row.yard;
+    if (row.gallery !== null) features.gallery = row.gallery;
+    if (row.storage !== null) features.storage = row.storage;
+    if (row.kitchenette !== null) features.kitchenette = row.kitchenette;
+    if (row.safeRoom !== null) features.safeRoom = row.safeRoom;
+    if (row.toilets !== null) features.toilets = row.toilets;
+    if (row.storefront !== null) features.storefront = row.storefront;
+    if (row.accessibleForDisabled !== null) features.accessibleForDisabled = row.accessibleForDisabled;
+    if (row.internet !== null) features.internet = row.internet;
+    if (row.upgraded !== null) features.upgraded = row.upgraded;
+    
+    if (Object.keys(features).length > 0) {
+      customFields.features = features;
+    }
+    
+    // Add contact info
+    if (row.contactName) customFields.contactName = row.contactName;
+    if (row.contactPhone) customFields.contactPhone = row.contactPhone;
+    if (row.description) customFields.description = row.description;
+  }
+  
+  // Shared ownership (Tabu)
+  if (categorySlug.includes('shared') || categorySlug.includes('משותף')) {
+    if (row.hasBroker !== null) customFields.hasBroker = row.hasBroker;
+    if (row.propertyType) customFields.propertyType = row.propertyType;
+    if (row.rooms) customFields.rooms = row.rooms;
+    if (row.squareMeters) customFields.squareMeters = row.squareMeters;
+    if (row.condition) customFields.condition = row.condition;
+    if (row.floor !== null && row.floor !== undefined) customFields.floor = row.floor;
+    if (row.balconies) customFields.balconies = row.balconies;
+    if (row.priceRequested) customFields.priceRequested = row.priceRequested;
+    if (row.arnona) customFields.arnona = row.arnona;
+    if (row.vaad) customFields.vaad = row.vaad;
+    if (row.requiredEquity) customFields.requiredEquity = row.requiredEquity;
+    if (row.numberOfPartners) customFields.numberOfPartners = row.numberOfPartners;
+    if (row.entryDate) customFields.entryDate = row.entryDate;
+    
+    const features: any = {};
+    if (row.parking !== null) features.parking = row.parking;
+    if (row.storage !== null) features.storage = row.storage;
+    if (row.view !== null) features.view = row.view;
+    if (row.airConditioning !== null) features.airConditioning = row.airConditioning;
+    if (row.sukkaBalcony !== null) features.sukkaBalcony = row.sukkaBalcony;
+    if (row.safeRoom !== null) features.safeRoom = row.safeRoom;
+    if (row.parentalUnit !== null) features.parentalUnit = row.parentalUnit;
+    if (row.elevator !== null) features.elevator = row.elevator;
+    if (row.yard !== null) features.yard = row.yard;
+    if (row.garden !== null) features.garden = row.garden;
+    if (row.frontFacing !== null) features.frontFacing = row.frontFacing;
+    if (row.upgradedKitchen !== null) features.upgradedKitchen = row.upgradedKitchen;
+    if (row.accessibleForDisabled !== null) features.accessibleForDisabled = row.accessibleForDisabled;
     
     if (Object.keys(features).length > 0) {
       customFields.features = features;

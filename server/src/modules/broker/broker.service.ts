@@ -526,8 +526,18 @@ export class BrokerService {
     if (row['יחידת הורים']) fields.masterBedroom = this.parseBoolean(row['יחידת הורים']);
     if (row['יחידת דיור']) fields.housingUnit = this.parseBoolean(row['יחידת דיור']);
     if (row['חצר']) fields.yard = this.parseBoolean(row['חצר']);
+    if (row['גינה']) fields.garden = this.parseBoolean(row['גינה']);
+    if (row['חזית']) fields.frontFacing = this.parseBoolean(row['חזית']);
+    if (row['מטבח משודרג']) fields.upgradedKitchen = this.parseBoolean(row['מטבח משודרג']);
+    if (row['נגישה לנכים']) fields.accessibleForDisabled = this.parseBoolean(row['נגישה לנכים']);
     if (row['מיזוג']) fields.airConditioning = this.parseBoolean(row['מיזוג']);
     if (row['אופציה']) fields.option = this.parseBoolean(row['אופציה']);
+    if (row['גלריה']) fields.gallery = this.parseBoolean(row['גלריה']);
+    if (row['מטבחון']) fields.kitchenette = this.parseBoolean(row['מטבחון']);
+    if (row['שירותים']) fields.toilets = this.parseBoolean(row['שירותים']);
+    if (row['חלון ראווה לרחוב'] || row['חלון ראווה']) fields.storefront = this.parseBoolean(row['חלון ראווה לרחוב'] || row['חלון ראווה']);
+    if (row['אינטרנט']) fields.internet = this.parseBoolean(row['אינטרנט']);
+    if (row['מושפץ']) fields.upgraded = this.parseBoolean(row['מושפץ']);
     
     // Wanted-specific fields
     if (row['מספר מרפסות'] || row['מרפסות']) {

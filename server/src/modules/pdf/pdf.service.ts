@@ -427,11 +427,21 @@ export class PDFService {
         sukkaBalcony: 'מרפסת סוכה',
         view: 'נוף',
         yard: 'חצר',
+        garden: 'גינה',
+        frontFacing: 'חזית',
+        upgradedKitchen: 'מטבח משודרג',
+        accessibleForDisabled: 'נגישה לנכים',
         housingUnit: 'יחידת דיור',
         parentalUnit: 'יחידת הורים',
         pool: 'בריכה',
         kidsGames: 'משחקי ילדים',
         babyBed: 'מיטת תינוק',
+        gallery: 'גלריה',
+        kitchenette: 'מטבחון',
+        toilets: 'שירותים',
+        storefront: 'חלון ראווה לרחוב',
+        internet: 'אינטרנט',
+        upgraded: 'מושפץ',
       };
 
       Object.entries(featureLabels).forEach(([key, label]) => {

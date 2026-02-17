@@ -325,7 +325,7 @@ export default function PendingAds() {
                           <td className="px-4 py-4 text-sm">
                             <div className="max-w-xs">
                               <div className="font-medium text-gray-900">
-                                {ad.address || ad.Street?.name || 'לא צוין'}
+                                {ad.address || ad.Street?.name || ad.neighborhood || 'לא צוין'}
                               </div>
                               {ad.City?.nameHe && (
                                 <div className="text-xs text-gray-700">{ad.City.nameHe}</div>
@@ -395,9 +395,13 @@ export default function PendingAds() {
                           {/* שם מפרסם */}
                           <td className="px-4 py-4 text-sm">
                             <div className="max-w-xs">
-                              <div className="font-medium text-gray-900">{ad.User?.name || ad.User?.email}</div>
-                              {ad.User?.phone && (
-                                <div className="text-xs text-gray-700">{ad.User.phone}</div>
+                              <div className="font-medium text-gray-900">
+                                {ad.customFields?.contactName || ad.User?.name || ad.User?.email}
+                              </div>
+                              {(ad.customFields?.contactPhone || ad.User?.phone) && (
+                                <div className="text-xs text-gray-700">
+                                  {ad.customFields?.contactPhone || ad.User.phone}
+                                </div>
                               )}
                             </div>
                           </td>

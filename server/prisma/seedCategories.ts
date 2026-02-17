@@ -52,21 +52,6 @@ async function main() {
     },
   });
 
-  const secondHandBoard = await prisma.category.upsert({
-    where: { slug: 'second-hand-board' },
-    update: {},
-    create: {
-      id: createId(),
-      name: 'Second Hand Board',
-      nameHe: 'לוח יד שניה',
-      slug: 'second-hand-board',
-      description: 'מוצרים ושירותים יד שניה',
-      icon: '🛍️',
-      order: 4,
-      updatedAt: new Date(),
-    },
-  });
-
   const shabbatApartments = await prisma.category.upsert({
     where: { slug: 'shabbat-apartments' },
     update: {},
@@ -77,16 +62,15 @@ async function main() {
       slug: 'shabbat-apartments',
       description: 'דירות לאירוח לשבת וחגים',
       icon: '🕯️',
-      order: 5,
+      order: 4,
       updatedAt: new Date(),
     },
   });
 
-  console.log('✅ Created categories (5 Real Estate Categories)');
+  console.log('✅ Created categories (4 Real Estate Categories)');
   console.log('   - apartments-for-sale');
   console.log('   - apartments-for-rent');
   console.log('   - commercial-real-estate');
-  console.log('   - second-hand-board');
   console.log('   - shabbat-apartments');
 }
 

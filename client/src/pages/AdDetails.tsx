@@ -437,32 +437,32 @@ export default function AdDetails() {
                 <div className="space-y-3">
                   <div className="text-[#1F3F3A] text-center">
                     <div className="font-bold text-lg mb-2">
-                      {ad.user?.role === 'BROKER' ? `תיווך - ${ad.user?.name || ad.user?.email || 'משתמש'}` : ad.user?.name || ad.user?.email || 'משתמש'}
+                      {ad.customFields?.contactName || (ad.user?.role === 'BROKER' ? `תיווך - ${ad.user?.name || ad.user?.email || 'משתמש'}` : ad.user?.name || ad.user?.email || 'משתמש')}
                     </div>
-                    {ad.user.phone && (
+                    {(ad.customFields?.contactPhone || ad.user.phone) && (
                       <div className="flex items-center justify-center gap-2 text-base">
                         <span>☎️</span>
                         <a
-                          href={`tel:${ad.user.phone}`}
+                          href={`tel:${ad.customFields?.contactPhone || ad.user.phone}`}
                           onClick={() => handleContactClick('phone')}
                           className="font-semibold hover:underline"
                         >
-                          {ad.user.phone}
+                          {ad.customFields?.contactPhone || ad.user.phone}
                         </a>
                       </div>
                     )}
                   </div>
-                  {ad.user.phone && (
+                  {(ad.customFields?.contactPhone || ad.user.phone) && (
                     <div className="flex gap-3">
                       <a
-                        href={`tel:${ad.user.phone}`}
+                        href={`tel:${ad.customFields?.contactPhone || ad.user.phone}`}
                         onClick={() => handleContactClick('phone')}
                         className="flex-1 bg-[#1F3F3A] text-white py-2 rounded-lg hover:bg-[#2d5a52] transition text-center font-bold text-sm"
                       >
                         📞 התקשר
                       </a>
                       <a
-                        href={`https://wa.me/${ad.user.phone?.replace(/[^0-9]/g, '')}`}
+                        href={`https://wa.me/${(ad.customFields?.contactPhone || ad.user.phone)?.replace(/[^0-9]/g, '')}`}
                         onClick={() => handleContactClick('whatsapp')}
                         target="_blank"
                         rel="noopener noreferrer"

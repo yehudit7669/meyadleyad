@@ -61,7 +61,21 @@ export default function ImportPropertiesFromFile() {
 
   const showAdTypeSelector = (): boolean => {
     const slug = getCategorySlug();
-    return slug.includes('sale') || slug.includes('rent') || slug.includes('shabbat') || slug.includes('שבת') || slug.includes('holiday') || slug.includes('commercial') || slug.includes('מסחרי');
+    return slug.includes('sale') || slug.includes('rent') || slug.includes('shabbat') || slug.includes('שבת') || slug.includes('holiday') || slug.includes('commercial') || slug.includes('מסחרי') || slug.includes('shared') || slug.includes('משותף');
+  };
+
+  const shouldShowCategoryInImport = (category: any): boolean => {
+    const slug = category.slug?.toLowerCase() || '';
+    // Hide secondhand/classifieds and wanted-commercial/wanted-shared from file import
+    // (wanted ads are now selected via ad type dropdown)
+    return !slug.includes('secondhand') && 
+           !slug.includes('classified') && 
+           !slug.includes('יד-שניה') && 
+           !slug.includes('לוח') &&
+           !slug.includes('wanted-commercial') &&
+           !slug.includes('wanted-shared') &&
+           !slug.includes('דרושים-מסחרי') &&
+           !slug.includes('דרושים-משותף');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,6 +121,7 @@ export default function ImportPropertiesFromFile() {
       return [{
         'תיווך': 'כן',
         'עיר': 'ירושלים',
+        'שכונה': 'גילה',
         'רחוב': 'הרצל',
         'מספר בית': '15',
         'סוג הנכס': 'דירה',
@@ -129,6 +144,10 @@ export default function ImportPropertiesFromFile() {
         'יחידת הורים': 'כן',
         'יחידת דיור': 'לא',
         'חצר': 'לא',
+        'גינה': 'כן',
+        'חזית': 'כן',
+        'מטבח משודרג': 'כן',
+        'נגישה לנכים': 'לא',
         'מיזוג': 'כן',
         'אופציה': 'כן',
         'תיאור הנכס': 'דירת 4.5 חדרים מרווחת ומשופצת, קומה 2 עם מעלית',
@@ -167,6 +186,11 @@ export default function ImportPropertiesFromFile() {
         'יחידת דיור': 'לא',
         'מעלית': 'כן',
         'אופציה': 'לא',
+        'גינה': 'לא',
+        'חזית': 'לא',
+        'מטבח משודרג': 'כן',
+        'נגישה לנכים': 'לא',
+        'תיאור': '',
         'שם': 'מוישה כהן',
         'טלפון': '052-9876543',
       }];
@@ -177,6 +201,7 @@ export default function ImportPropertiesFromFile() {
       return [{
         'תיווך': 'לא',
         'עיר': 'תל אביב',
+        'שכונה': 'צפון',
         'רחוב': 'דיזנגוף',
         'מספר בית': '120',
         'סוג הנכס': 'דירה',
@@ -199,6 +224,10 @@ export default function ImportPropertiesFromFile() {
         'יחידת הורים': 'כן',
         'יחידת דיור': 'לא',
         'חצר': 'לא',
+        'גינה': 'לא',
+        'חזית': 'כן',
+        'מטבח משודרג': 'כן',
+        'נגישה לנכים': 'כן',
         'מיזוג': 'כן',
         'תיאור הנכס': 'דירת 3 חדרים מרוהטת במלואה בלב העיר',
         'שם': 'רחל לוי',
@@ -235,6 +264,12 @@ export default function ImportPropertiesFromFile() {
         'חצר': 'לא',
         'יחידת דיור': 'לא',
         'מעלית': 'כן',
+        'אופציה': 'לא',
+        'גינה': 'לא',
+        'חזית': 'לא',
+        'מטבח משודרג': 'כן',
+        'נגישה לנכים': 'כן',
+        'תיאור': '',
         'שם': 'דוד דוידי',
         'טלפון': '053-4445566',
       }];
@@ -270,7 +305,10 @@ export default function ImportPropertiesFromFile() {
         }];
       }
       return [{
-        'רחוב / אזור מבוקש': 'גילה',
+        'עיר': 'ירושלים',
+        'שכונה': 'גילה',
+        'רחוב': 'הראשונים',
+        'מספר בית': '10',
         'בתשלום': 'לא',
         'פרשה': 'בראשית',
         'סוג הנכס': 'דירה',
@@ -323,6 +361,12 @@ export default function ImportPropertiesFromFile() {
           'חצר': 'לא',
           'יחידת דיור': 'לא',
           'מעלית': 'כן',
+          'אופציה': 'לא',
+          'גינה': 'לא',
+          'חזית': 'לא',
+          'מטבח משודרג': 'כן',
+          'נגישה לנכים': 'כן',
+          'תיאור': '',
           'שם': 'דוד דוידי',
           'טלפון': '053-4445566',
         }];
@@ -352,6 +396,10 @@ export default function ImportPropertiesFromFile() {
         'יחידת הורים': 'כן',
         'יחידת דיור': 'לא',
         'חצר': 'לא',
+        'גינה': 'לא',
+        'חזית': 'כן',
+        'מטבח משודרג': 'כן',
+        'נגישה לנכים': 'כן',
         'מיזוג': 'כן',
         'תיאור הנכס': 'דירת 3 חדרים מרוהטת במלואה בלב העיר',
         'שם': 'רחל לוי',
@@ -368,6 +416,7 @@ export default function ImportPropertiesFromFile() {
         return [{
           'תיווך': 'כן',
           'רחוב / אזור מבוקש': 'מרכז תל אביב',
+          'סוג עסקה': 'למכירה',
           'סוג הנכס': 'משרד',
           'שטח במר': '100',
           'קומה': '2',
@@ -377,15 +426,25 @@ export default function ImportPropertiesFromFile() {
           'חניה': 'כן',
           'מעלית': 'כן',
           'מיזוג': 'כן',
+          'חצר': 'לא',
+          'גלריה': 'לא',
+          'מחסון': 'כן',
+          'מטבחון': 'כן',
+          'ממד': 'כן',
+          'שירותים': 'כן',
+          'חלון ראווה לרחוב': 'כן',
+          'נגישות לנכים': 'כן',
+          'אינטרנט': 'כן',
+          'מושפץ': 'כן',
           'שם': 'דוד כהן',
           'טלפון': '050-1234567',
         }];
       }
       return [{
         'תיווך': 'לא',
-        'עיר': 'תל אביב',
-        'רחוב': 'רוטשילד',
+        'עיר': 'תל אביב',        'שכונה': 'מרכז העיר',        'רחוב': 'רוטשילד',
         'מספר בית': '12',
+        'סוג עסקה': 'להשכרה',
         'סוג הנכס': 'משרד',
         'שטח במר': '120',
         'קומה': '5',
@@ -395,10 +454,79 @@ export default function ImportPropertiesFromFile() {
         'חניה': 'כן',
         'מעלית': 'כן',
         'מיזוג': 'כן',
+        'חצר': 'לא',
+        'גלריה': 'לא',
+        'מחסון': 'כן',
+        'מטבחון': 'כן',
+        'ממד': 'כן',
+        'שירותים': 'כן',
+        'חלון ראווה לרחוב': 'כן',
+        'נגישות לנכים': 'כן',
+        'אינטרנט': 'כן',
+        'מושפץ': 'כן',
         'תיאור הנכס': 'משרד מרווח ומשופץ ברחוב רוטשילד',
         'שם': 'משה לוי',
         'טלפון': '052-9876543',
         'תמונה 1': 'https://example.com/office1.jpg',
+        'תמונה 2': '',
+        'תמונה 3': '',
+      }];
+    }
+    
+    // SHARED OWNERSHIP
+    if (slug.includes('shared') || slug.includes('משותף')) {
+      if (adType === 'WANTED') {
+        return [{
+          'תיווך': 'כן',
+          'רחוב / אזור מבוקש': 'ירושלים - אזור גילה',
+          'סוג הנכס': 'דירה',
+          'מספר חדרים': '4',
+          'הון עצמי נדרש': '500000',
+          'מספר שותפים': '3',
+          'שטח במר': '100',
+          'קומה': '2-4',
+          'מצב הנכס': 'משופץ',
+          'מחיר': '',
+          'חניה': 'כן',
+          'מחסן': 'לא',
+          'ממד': 'כן',
+          'מעלית': 'כן',
+          'שם': 'יוסף יוסף',
+          'טלפון': '050-5556666',
+        }];
+      }
+      return [{
+        'תיווך': 'לא',
+        'עיר': 'ירושלים',
+        'שכונה': 'גילה',
+        'רחוב': 'גילה',
+        'מספר בית': '5',
+        'סוג הנכס': 'דירה',
+        'מספר חדרים': '4.5',
+        'הון עצמי נדרש': '600000',
+        'מספר שותפים': '3',
+        'שטח במר': '110',
+        'מצב הנכס': 'חדש',
+        'קומה': '3',
+        'מספר מרפסות': '1',
+        'תאריך כניסה': '01/08/2026',
+        'מחיר': '2100000',
+        'ארנונה': '600',
+        'ועד בית': '350',
+        'חניה': 'כן',
+        'מחסן': 'כן',
+        'ממד': 'כן',
+        'מרפסת סוכה': 'כן',
+        'מעלית': 'כן',
+        'נוף': 'לא',
+        'יחידת הורים': 'כן',
+        'יחידת דיור': 'לא',
+        'חצר': 'לא',
+        'מיזוג': 'כן',
+        'תיאור הנכס': 'דירת 4.5 חדרים בטאבו משותף, מתאימה ל-3 שותפים',
+        'שם': 'אברהם אברהם',
+        'טלפון': '052-1231234',
+        'תמונה 1': 'https://example.com/shared1.jpg',
         'תמונה 2': '',
         'תמונה 3': '',
       }];
@@ -569,7 +697,7 @@ export default function ImportPropertiesFromFile() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1F3F3A] focus:border-transparent"
             >
               <option value="">בחר קטגוריה...</option>
-              {categories?.filter((cat: any) => cat.isActive).map((cat: any) => (
+              {categories?.filter((cat: any) => cat.isActive && shouldShowCategoryInImport(cat)).map((cat: any) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.nameHe}
                 </option>
