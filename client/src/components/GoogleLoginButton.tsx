@@ -89,7 +89,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
   return (
     <div className="w-full flex justify-center" style={{ opacity: loading ? 0.5 : 1 }}>
-      <div style={{ width: '300px' }}>
+      <div className="w-full max-w-md">
         <GoogleLogin
           onSuccess={handleSuccess}
           onError={handleError}
