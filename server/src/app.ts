@@ -89,8 +89,8 @@ app.use(
 
 // Rate limiting - Different limits for different routes
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 100 requests per windowMs
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10),
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || String(15 * 60 * 1000), 10),
   message: 'יותר מדי בקשות מכתובת ה-IP הזו, אנא נסה שוב מאוחר יותר.',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
@@ -102,10 +102,10 @@ const generalLimiter = rateLimit({
 
 // Stricter rate limiting for authentication routes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || String(15 * 60 * 1000), 10),
+  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '50', 10),
   message: 'יותר מדי ניסיונות התחברות, אנא נסה שוב מאוחר יותר.',
-  skipSuccessfulRequests: true, // Don't count successful requests
+  skipSuccessfulRequests: true,
 });
 
 // Apply rate limiters
