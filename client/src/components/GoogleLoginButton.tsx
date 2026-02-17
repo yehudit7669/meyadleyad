@@ -97,6 +97,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
           locale="he"
           theme="outline"
           size="large"
+          width="100%"
         />
       </div>
     </div>
