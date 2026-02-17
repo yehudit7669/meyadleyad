@@ -27,7 +27,7 @@ export class EmailOperationsTemplatesService {
   }
 
   /**
-   * מייל "השלמת הרשמה למערכת „מקומי""
+   * מייל "השלמת הרשמה למערכת „המקום""
    * נשלח למשתמש שאינו רשום כשהוא מנסה לבצע פעולה
    */
   async sendRegistrationRequiredEmail(
@@ -44,10 +44,10 @@ export class EmailOperationsTemplatesService {
         </head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #2563eb; text-align: center;">השלמת הרשמה למערכת „מקומי"</h2>
+            <h2 style="color: #2563eb; text-align: center;">השלמת הרשמה למערכת „המקום"</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              קיבלנו את פנייתך למערכת „מקומי."
+              קיבלנו את פנייתך למערכת „המקום".
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               כדי שנוכל לפרסם מודעות,<br>
@@ -72,7 +72,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -81,7 +81,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'השלמת הרשמה למערכת „מקומי"',
+      'השלמת הרשמה למערכת „המקום"',
       html
     );
   }
@@ -99,10 +99,10 @@ export class EmailOperationsTemplatesService {
         </head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #10b981; text-align: center;">ההרשמה הושלמה בהצלחה – „מקומי"</h2>
+            <h2 style="color: #10b981; text-align: center;">ההרשמה הושלמה בהצלחה – „המקום"</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום${userName ? ` ${userName}` : ''},</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              ההרשמה שלך למערכת „מקומי" הושלמה בהצלחה!
+              ההרשמה שלך למערכת „המקום" הושלמה בהצלחה!
             </p>
             <h3 style="color: #2563eb;">כיצד לפרסם מודעה או בקשה דרך אימייל:</h3>
             <p style="font-size: 16px; line-height: 1.6;">
@@ -135,7 +135,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -144,7 +144,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'ההרשמה הושלמה בהצלחה – „מקומי"',
+      'ההרשמה הושלמה בהצלחה – „המקום"',
       html
     );
   }
@@ -162,27 +162,27 @@ export class EmailOperationsTemplatesService {
     const commandTexts: Record<string, { subject: string; body: string }> = {
       [EmailCommandType.PUBLISH_SALE]: {
         subject: 'פנייתך התקבלה – פרסום דירה למכירה',
-        body: 'קיבלנו את פנייתך בנושא פרסום דירה למכירה. כדי להשלים את תהליך הפרסום ב־מקומי, יש למלא את הטופס בקישור הבא:',
+        body: 'קיבלנו את פנייתך בנושא פרסום דירה למכירה. כדי להשלים את תהליך הפרסום ב־המקום, יש למלא את הטופס בקישור הבא:',
       },
       [EmailCommandType.PUBLISH_RENT]: {
         subject: 'פנייתך התקבלה – פרסום דירה להשכרה',
-        body: 'קיבלנו את פנייתך בנושא פרסום דירה להשכרה. כדי להשלים את תהליך הפרסום ב־מקומי, יש למלא את הטופס בקישור הבא:',
+        body: 'קיבלנו את פנייתך בנושא פרסום דירה להשכרה. כדי להשלים את תהליך הפרסום ב־המקום, יש למלא את הטופס בקישור הבא:',
       },
       [EmailCommandType.PUBLISH_SHABBAT]: {
         subject: 'פנייתך התקבלה – פרסום דירה לשבת',
-        body: 'קיבלנו את פנייתך בנושא פרסום דירה לשבת. כדי להשלים את תהליך הפרסום ב־מקומי, יש למלא את הטופס בקישור הבא:',
+        body: 'קיבלנו את פנייתך בנושא פרסום דירה לשבת. כדי להשלים את תהליך הפרסום ב־המקום, יש למלא את הטופס בקישור הבא:',
       },
       [EmailCommandType.PUBLISH_COMMERCIAL]: {
         subject: 'פנייתך התקבלה – פרסום שטח מסחרי',
-        body: 'קיבלנו את פנייתך בנושא פרסום שטח מסחרי. כדי להשלים את תהליך הפרסום ב־מקומי, יש למלא את הטופס בקישור הבא:',
+        body: 'קיבלנו את פנייתך בנושא פרסום שטח מסחרי. כדי להשלים את תהליך הפרסום ב־המקום, יש למלא את הטופס בקישור הבא:',
       },
       [EmailCommandType.PUBLISH_SHARED_OWNERSHIP]: {
         subject: 'פנייתך התקבלה – פרסום טאבו משותף',
-        body: 'קיבלנו את פנייתך בנושא פרסום טאבו משותף. כדי להשלים את תהליך הפרסום ב־מקומי, יש למלא את הטופס בקישור הבא:',
+        body: 'קיבלנו את פנייתך בנושא פרסום טאבו משותף. כדי להשלים את תהליך הפרסום ב־המקום, יש למלא את הטופס בקישור הבא:',
       },
       [EmailCommandType.WANTED_BUY]: {
         subject: 'פנייתך התקבלה – דרושה דירה לקנייה',
-        body: 'קיבלנו את פנייתך בנושא דרושה דירה לקנייה בפלטפורמת „מקומי." כדי לפרסם את הבקשה בצורה מסודרת, יש למלא את טופס הבקשה בקישור המצורף למייל זה.',
+        body: 'קיבלנו את פנייתך בנושא דרושה דירה לקנייה בפלטפורמת „המקום." כדי לפרסם את הבקשה בצורה מסודרת, יש למלא את טופס הבקשה בקישור המצורף למייל זה.',
       },
       [EmailCommandType.WANTED_RENT]: {
         subject: 'פנייתך התקבלה – דרושה דירה להשכרה',
@@ -228,7 +228,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -258,7 +258,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">המודעה פורסמה – מספר המודעה שלך: ${adNumber}</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              המודעה שלך "${adTitle}" פורסמה בהצלחה באתר „מקומי."
+              המודעה שלך "${adTitle}" פורסמה בהצלחה באתר „המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               <strong>מספר המודעה שלך הוא: ${adNumber}</strong>
@@ -285,7 +285,7 @@ export class EmailOperationsTemplatesService {
             </div>
             <h3 style="color: #2563eb;">קובץ הדירות השבועי:</h3>
             <p style="font-size: 16px; line-height: 1.6;">
-              אם תרצה לקבל את קובץ הדירות השבועי של „מקומי" למייל, שלח אימייל עם:
+              אם תרצה לקבל את קובץ הדירות השבועי של „המקום" למייל, שלח אימייל עם:
             </p>
             <p style="font-size: 16px; color: #2563eb; margin: 10px 0;">
               <strong>שורת נושא: הצטרפות</strong>
@@ -296,7 +296,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -329,7 +329,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">הבקשה פורסמה – מספר הבקשה שלך: ${requestNumber}</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              הבקשה שלך "${requestTitle}" פורסמה בהצלחה באתר „מקומי."
+              הבקשה שלך "${requestTitle}" פורסמה בהצלחה באתר „המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               <strong>מספר הבקשה שלך הוא: ${requestNumber}</strong>
@@ -343,7 +343,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -372,7 +372,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #2563eb; text-align: center;">פנייתך התקבלה – בקשת עדכון מודעה</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              קיבלנו את פנייתך בנושא עדכון מודעה ב„מקומי."
+              קיבלנו את פנייתך בנושא עדכון מודעה ב„המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               כדי לעדכן מודעה קיימת, יש להשיב למייל אישור הפרסום שקיבלת ולכתוב בשורת הנושא בלבד את המילה עדכון בצירוף מספר המודעה.
@@ -383,7 +383,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -409,7 +409,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #2563eb; text-align: center;">פנייתך התקבלה – בקשת הסרת מודעה</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              קיבלנו את פנייתך בנושא הסרת מודעה ב„מקומי."
+              קיבלנו את פנייתך בנושא הסרת מודעה ב„המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               כדי להסיר מודעה קיימת, יש להשיב למייל אישור הפרסום שקיבלת ולכתוב בשורת הנושא בלבד את המילה הסרה בצירוף מספר המודעה.
@@ -417,7 +417,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -449,7 +449,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">המודעה עודכנה בהצלחה – מספר המודעה שלך: ${adNumber}</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר „מקומי."
+              המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר „המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               להמשך עדכון או הסרה, השתמש במספר המודעה:
@@ -466,7 +466,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -501,12 +501,12 @@ export class EmailOperationsTemplatesService {
               המודעה שלך מספר ${adNumber} הוסרה מהאתר ואינה מוצגת עוד לציבור.
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
-              תודה שהשתמשת בשירותי „מקומי."
+              תודה שהשתמשת בשירותי „המקום."
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -535,7 +535,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">הצטרפת בהצלחה לרשימת התפוצה</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              הצטרפת בהצלחה לרשימת התפוצה של „מקומי."
+              הצטרפת בהצלחה לרשימת התפוצה של „המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               תקבל את קובץ הדירות השבועי למייל שלך.
@@ -549,7 +549,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -558,7 +558,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'הצטרפת בהצלחה לרשימת התפוצה – „מקומי"',
+      'הצטרפת בהצלחה לרשימת התפוצה – „המקום"',
       html
     );
   }
@@ -578,7 +578,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #ef4444; text-align: center;">הוסרת מרשימת התפוצה</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              הוסרת בהצלחה מרשימת התפוצה של „מקומי."
+              הוסרת בהצלחה מרשימת התפוצה של „המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
               לא תקבל עוד את קובץ הדירות השבועי.
@@ -592,7 +592,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -601,7 +601,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'הוסרת מרשימת התפוצה – „מקומי"',
+      'הוסרת מרשימת התפוצה – „המקום"',
       html
     );
   }
@@ -648,7 +648,7 @@ export class EmailOperationsTemplatesService {
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות מקומי
+              צוות המקום
             </p>
           </div>
         </body>
@@ -657,7 +657,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'הבקשה לא זוהתה – „מקומי"',
+      'הבקשה לא זוהתה – „המקום"',
       html
     );
   }

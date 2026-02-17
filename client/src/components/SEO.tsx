@@ -24,7 +24,7 @@ export default function SEO({
   publishedTime,
   modifiedTime,
 }: SEOProps) {
-  const siteName = 'מקומי';
+  const siteName = 'המקום';
   const fullTitle = `${title} | ${siteName}`;
   const imageUrl = image.startsWith('http') ? image : `${window.location.origin}${image}`;
 

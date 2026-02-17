@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About */}
           <div className="text-center">
-            <h3 className="text-lg font-bold mb-4">אודות מקומי</h3>
+            <h3 className="text-lg font-bold mb-4">אודות המקום</h3>
             <p className="text-gray-400 text-sm">
               פלטפורמה מובילה לנדל״ן לבני הציבור החרדי. נכסים למכירה ולהשכרה, דירות לשבת וחגים, פרויקטים חדשים וכל סוגי הנדל״ן המותאמים למגזר החרדי.
             </p>
@@ -104,7 +104,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} מקומי. כל הזכויות שמורות.</p>
+          <p>&copy; {new Date().getFullYear()} המקום. כל הזכויות שמורות.</p>
         </div>
       </div>
     </footer>

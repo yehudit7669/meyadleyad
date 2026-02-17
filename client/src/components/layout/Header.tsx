@@ -54,10 +54,10 @@ const Header: React.FC = () => {
           {/* Right Side (RTL) - Logo */}
           <Link 
             to="/" 
-            aria-label="מקומי - חזרה לדף הבית"
+            aria-label="המקום - חזרה לדף הבית"
             className="flex items-center space-x-2 space-x-reverse"
           >
-            <span className="text-2xl font-bold text-[#E6D3A3]">מקומי</span>
+            <span className="text-2xl font-bold text-[#E6D3A3]">המקום</span>
           </Link>
 
           {/* Center - Navigation Categories */}

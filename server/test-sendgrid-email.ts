@@ -121,7 +121,7 @@ async function testSendGridEmail() {
 <body>
   <div class="container">
     <div class="header">
-      <h1>מקומי - meyadleyad</h1>
+      <h1>המקום - meyadleyad</h1>
     </div>
     <div class="content">
       <div class="success-box">
@@ -164,7 +164,7 @@ async function testSendGridEmail() {
       </p>
     </div>
     <div class="footer">
-      <p>© ${new Date().getFullYear()} מקומי - meyadleyad. כל הזכויות שמורות.</p>
+      <p>© ${new Date().getFullYear()} המקום - amakom. כל הזכויות שמורות.</p>
       <p>Email powered by SendGrid 🚀</p>
     </div>
   </div>

@@ -211,7 +211,7 @@ export class UnifiedEmailTemplateService {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #2563eb; text-align: center;">ברוכים הבאים למקומי!</h2>
+            <h2 style="color: #2563eb; text-align: center;">"ברוכים הבאים ל"המקום!</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
               כדי לאשר את כתובת המייל שלך ולהפעיל את החשבון, לחץ על הכפתור הבא:
@@ -268,7 +268,7 @@ export class UnifiedEmailTemplateService {
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
             <h2 style="color: #dc2626; text-align: center;">החשבון שלך נמחק</h2>
             <p style="font-size: 16px;">שלום,</p>
-            <p style="font-size: 16px;">החשבון שלך באתר מקומי נמחק בהצלחה.</p>
+            <p style="font-size: 16px;">החשבון שלך באתר המקום נמחק בהצלחה.</p>
             <p style="font-size: 14px; color: #666;">אם זו לא הייתה פעולה שלך, צור קשר עם התמיכה.</p>
           </div>
         </body>
@@ -289,7 +289,7 @@ export class UnifiedEmailTemplateService {
             <h2 style="color: #f59e0b; text-align: center;">נדרשת הרשמה</h2>
             <p style="font-size: 16px;">שלום,</p>
             <p style="font-size: 16px;">
-              קיבלנו את בקשתך לפעולה במערכת "מקומי", אך כתובת המייל שלך לא רשומה עדיין.
+              קיבלנו את בקשתך לפעולה במערכת "המקום", אך כתובת המייל שלך לא רשומה עדיין.
             </p>
             <p style="font-size: 16px;">
               נא להירשם תחילה, ואז נוכל לעבד את בקשתך.
@@ -361,7 +361,7 @@ export class UnifiedEmailTemplateService {
               </div>
             ` : ''}
             <p style="font-size: 14px; color: #666;">מספר בקשה: ${requestId || 'N/A'}</p>
-            <p style="font-size: 12px; color: #999; text-align: center;">צוות "מקומי"</p>
+            <p style="font-size: 12px; color: #999; text-align: center;">צוות "המקום"</p>
           </div>
         </body>
       </html>
@@ -641,7 +641,7 @@ export class UnifiedEmailTemplateService {
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
             <h2 style="color: #10b981; text-align: center;">✓ נרשמת לרשימת התפוצה</h2>
             <p style="font-size: 16px;">שלום,</p>
-            <p style="font-size: 16px;">נרשמת בהצלחה לרשימת התפוצה של "מקומי".</p>
+            <p style="font-size: 16px;">נרשמת בהצלחה לרשימת התפוצה של "המקום".</p>
             ${params.categories && params.categories.length > 0 ? `
               <p style="font-size: 14px;"><strong>קטגוריות:</strong> ${params.categories.join(', ')}</p>
             ` : ''}
@@ -696,7 +696,7 @@ export class UnifiedEmailTemplateService {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px;">
-            <h2 style="color: #2563eb; text-align: center;">תפוצת תוכן - מקומי</h2>
+            <h2 style="color: #2563eb; text-align: center;">תפוצת תוכן - המקום</h2>
             <p style="font-size: 16px;">שלום,</p>
             ${params.content || '<p>תוכן לא זמין</p>'}
             ${params.adsCount ? `<p style="font-size: 14px; color: #666;">מספר מודעות: ${params.adsCount}</p>` : ''}

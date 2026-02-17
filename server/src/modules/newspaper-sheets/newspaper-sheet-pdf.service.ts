@@ -747,7 +747,7 @@ export class NewspaperSheetPDFService {
    */
   private async imageToBase64(imageUrl: string): Promise<string> {
     try {
-      // נניח שזה קובץ מקומי
+      // נניח שזה קובץ המקום
       if (imageUrl.startsWith('/uploads/')) {
         const relativePath = imageUrl.substring(1);
         const filePath = path.join(process.cwd(), relativePath);

@@ -60,7 +60,7 @@ export class EmailAuthVerifier {
           authorized: false,
           userExists: false,
           failReason: 'USER_NOT_REGISTERED',
-          publicMessage: 'כדי לבצע פעולה זו, יש להירשם תחילה למערכת „מקומי."',
+          publicMessage: 'כדי לבצע פעולה זו, יש להירשם תחילה למערכת „המקום."',
         };
       }
 

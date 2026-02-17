@@ -29,7 +29,7 @@ class SupportEmailService {
       }
 
       const guestEmail = message.conversation.guestEmail;
-      const subject = 'תשובה לפנייתך באתר מקומי';
+      const subject = 'תשובה לפנייתך באתר המקום';
       const html = this.buildGuestReplyEmailTemplate(message.body, message.conversation.id);
 
       await emailService.sendEmail(guestEmail, subject, html);
@@ -73,7 +73,7 @@ class SupportEmailService {
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     <tr>
       <td style="background-color: #1F3F3A; padding: 30px; text-align: center;">
-        <h1 style="color: #E6D3A3; margin: 0; font-size: 28px;">מקומי</h1>
+        <h1 style="color: #E6D3A3; margin: 0; font-size: 28px;">המקום</h1>
       </td>
     </tr>
     <tr>
@@ -93,7 +93,7 @@ class SupportEmailService {
     <tr>
       <td style="background-color: #f4f4f4; padding: 20px; text-align: center;">
         <p style="margin: 0; color: #999; font-size: 12px;">
-          © ${new Date().getFullYear()} מקומי. כל הזכויות שמורות.
+          © ${new Date().getFullYear()} המקום. כל הזכויות שמורות.
         </p>
       </td>
     </tr>

@@ -504,7 +504,7 @@ export class AppointmentsService {
     // שליחת מייל לבעל הנכס על הביטול
     await this.emailService.sendEmail(
       appointment.owner.email,
-      'ביטול פגישה - מקומי',
+      'ביטול פגישה - המקום',
       `
         <div dir="rtl" style="font-family: Arial; padding: 20px;">
           <h2>ביטול פגישה</h2>
