@@ -35,6 +35,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   const [googleError, setGoogleError] = React.useState(false);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+
+  console.log("VITE_GOOGLE_CLIENT_ID =", import.meta.env.VITE_GOOGLE_CLIENT_ID);
+console.log("ALL ENV =", import.meta.env);
+
   // אם אין Client ID או שיש בעיה - לא להציג את הכפתור
   if (!googleClientId || googleError) {
     return null;
