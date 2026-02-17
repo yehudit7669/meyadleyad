@@ -34,13 +34,38 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/category/holiday-rentals" className="text-gray-400 hover:text-white transition">
+                  דירות לשבת וחגים
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/shared-ownership" className="text-gray-400 hover:text-white transition">
+                  טאבו משותף
+                </Link>
+              </li>
+              <li>
                 <Link to="/category/commercial-real-estate" className="text-gray-400 hover:text-white transition">
                   נדל״ן מסחרי
                 </Link>
               </li>
               <li>
-                <Link to="/category/second-hand-board" className="text-gray-400 hover:text-white transition">
-                  לוח יד שניה
+                <Link to="/category/units" className="text-gray-400 hover:text-white transition">
+                  יחידות דיור
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/projects" className="text-gray-400 hover:text-white transition">
+                  פרויקטים
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/service-providers" className="text-gray-400 hover:text-white transition">
+                  נותני שירות
+                </Link>
+              </li>
+              <li>
+                <Link to="/category/wanted" className="text-gray-400 hover:text-white transition">
+                  דרושים
                 </Link>
               </li>
             </ul>
@@ -87,7 +112,7 @@ const Footer: React.FC = () => {
           <div className="text-center">
             <h3 className="text-lg font-bold mb-4">צור קשר</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>📧 info@meyadleyad.com</li>
+              <li>📧 publish@amakom.co.il</li>
               <li>📱 050-123-4567</li>
               <li>📍 תל אביב, ישראל</li>
               <li className="pt-2">
