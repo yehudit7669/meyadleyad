@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libxshmfence1 \
   libxss1 \
   libxtst6 \
+  libxkbcommon0 \
   xdg-utils \
   && rm -rf /var/lib/apt/lists/*
 
