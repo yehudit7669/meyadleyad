@@ -1175,6 +1175,23 @@ model SupportNotification {
   @@index([createdAt])
 }
 
+model EmailPermission {
+  id             Int       @id @default(autoincrement())
+  email          String
+  permissionType String    @map("permission_type")
+  scope          String    @default("one-time")
+  expiry         DateTime?
+  adminNote      String    @map("admin_note")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  createdBy      String    @map("created_by")
+  usedAt         DateTime? @map("used_at")
+  isActive       Boolean   @default(true) @map("is_active")
+
+  @@map("email_permissions")
+  @@index([email])
+  @@index([isActive])
+}
+
 enum AdStatus {
   PENDING
   APPROVED
