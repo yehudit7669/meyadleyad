@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { adsService } from '../services/api';
-import AdCard from '../components/AdCard';
+import AdCardCompact from '../components/home/AdCardCompact';
 
 export default function WantedAdsPage() {
   const [searchParams] = useSearchParams();
@@ -27,7 +27,7 @@ export default function WantedAdsPage() {
   const ads = adsData?.ads || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
+    <div className="min-h-screen bg-white py-8" dir="rtl">
       <div className="container mx-auto px-4">
         {/* כותרת */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
@@ -100,9 +100,9 @@ export default function WantedAdsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {ads.map((ad: any) => (
-              <AdCard key={ad.id} ad={ad} showCategory={true} />
+              <AdCardCompact key={ad.id} ad={ad} showCategory={true} />
             ))}
           </div>
         )}

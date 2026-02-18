@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '../services/api';
-import AdCard from '../components/AdCard';
+import AdCardCompact from '../components/home/AdCardCompact';
 import { GridSkeleton } from '../components/LoadingSkeletons';
 
 export default function Favorites() {
@@ -15,7 +15,7 @@ export default function Favorites() {
   console.log('Favorites data:', favorites); // לוג לבדיקה
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8" dir="rtl">
+    <div className="min-h-screen bg-white py-8" dir="rtl">
       <div className="container mx-auto px-4 max-w-6xl">
         <h1 className="text-3xl font-bold mb-8">מודעות שאהבתי</h1>
 
@@ -36,11 +36,11 @@ export default function Favorites() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {favorites.map((favorite: any) => {
               // התאמה למבנה הנתונים שחוזר מהשרת
               const adData = favorite.ad || favorite;
-              return <AdCard key={favorite.id} ad={adData} />;
+              return <AdCardCompact key={favorite.id} ad={adData} />;
             })}
           </div>
         )}

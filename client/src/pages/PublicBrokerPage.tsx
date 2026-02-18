@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import AdCard from '../components/AdCard';
+import AdCardCompact from '../components/home/AdCardCompact';
 
 interface PublicBrokerData {
   broker: {
@@ -73,7 +73,7 @@ const PublicBrokerPage: React.FC = () => {
   const ads = data.ads || [];
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-white" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Broker Header */}
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
@@ -147,9 +147,9 @@ const PublicBrokerPage: React.FC = () => {
               <p className="text-gray-500">אין מודעות פעילות כרגע</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {ads.map((ad: any) => (
-                <AdCard
+                <AdCardCompact
                   key={ad.id}
                   ad={{
                     id: ad.id,

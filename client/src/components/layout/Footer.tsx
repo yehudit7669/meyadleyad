@@ -34,12 +34,12 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/category/holiday-rentals" className="text-gray-400 hover:text-white transition">
+                <Link to="/category/shabbat-apartments" className="text-gray-400 hover:text-white transition">
                   דירות לשבת וחגים
                 </Link>
               </li>
               <li>
-                <Link to="/category/shared-ownership" className="text-gray-400 hover:text-white transition">
+                <Link to="/category/shared-tabu" className="text-gray-400 hover:text-white transition">
                   טאבו משותף
                 </Link>
               </li>
@@ -49,7 +49,7 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/category/units" className="text-gray-400 hover:text-white transition">
+                <Link to="/category/housing-units" className="text-gray-400 hover:text-white transition">
                   יחידות דיור
                 </Link>
               </li>
@@ -64,7 +64,7 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/category/wanted" className="text-gray-400 hover:text-white transition">
+                <Link to="/wanted" className="text-gray-400 hover:text-white transition">
                   דרושים
                 </Link>
               </li>
