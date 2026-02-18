@@ -9,7 +9,7 @@ interface HolidayRentStep1Props {
   onBack?: () => void;
 }
 
-const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => {
+const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext, onBack }) => {
   const [formData, setFormData] = useState<Partial<HolidayRentStep1Data>>({
     cityId: data.cityId || '',
     cityName: data.cityName || '',
@@ -347,11 +347,19 @@ const HolidayRentStep1: React.FC<HolidayRentStep1Props> = ({ data, onNext }) => 
         {errors.houseNumber && <p className="text-red-500 text-sm mt-1">{errors.houseNumber}</p>}
       </div>
 
-      {/* Next Button */}
-      <div className="flex justify-end pt-4">
+      {/* Navigation Buttons */}
+      <div className="flex justify-between pt-4">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            חזור
+          </button>
+        )}
         <button
           onClick={handleNext}
-          className="px-8 py-3 bg-[#1F3F3A] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+          className={`px-8 py-3 bg-[#1F3F3A] text-white rounded-lg hover:bg-opacity-90 transition-colors ${!onBack ? 'mr-auto' : ''}`}
         >
           המשך לשלב הבא
         </button>

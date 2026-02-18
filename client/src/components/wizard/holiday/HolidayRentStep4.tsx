@@ -18,7 +18,7 @@ const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBac
   const [formData, setFormData] = useState<Partial<HolidayRentStep4Data>>({
     contactName: data.contactName || '',
     contactPhone: data.contactPhone || '',
-    sendCopyToEmail: data.sendCopyToEmail !== undefined ? data.sendCopyToEmail : false,
+    weeklyDigestOptIn: data.weeklyDigestOptIn || false,
   });
   const [selectedBrokerId, setSelectedBrokerId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -135,32 +135,33 @@ const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBac
         <p className="text-sm text-gray-500 mt-1">הזן מספר טלפון ישראלי תקין (10 ספרות)</p>
       </div>
 
-      {/* Send Copy to Email */}
-      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <input
-          type="checkbox"
-          id="sendCopyToEmail"
-          checked={formData.sendCopyToEmail || false}
-          onChange={(e) => setFormData((prev) => ({ ...prev, sendCopyToEmail: e.target.checked }))}
-          className="mt-1 w-4 h-4 text-[#C9A24D] border-gray-300 rounded focus:ring-[#C9A24D]"
-        />
-        <label htmlFor="sendCopyToEmail" className="flex-1 cursor-pointer">
-          <div className="font-medium text-[#1F3F3A]">
-            שלח לי את המודעה שלי במייל כקובץ PDF
-          </div>
-          <div className="text-sm text-gray-600 mt-1">
-            קבל עותק דיגיטלי של המודעה שפרסמת - נוח לשמירה ושיתוף
+      {/* Weekly Digest Opt-in */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.weeklyDigestOptIn || false}
+            onChange={(e) => setFormData((prev) => ({ ...prev, weeklyDigestOptIn: e.target.checked }))}
+            className="mt-1 w-5 h-5 text-[#C9A24D] border-gray-300 rounded focus:ring-[#C9A24D] cursor-pointer"
+          />
+          <div className="flex-1">
+            <div className="font-medium text-[#1F3F3A]">
+              שלח לי את הלוח השבועי באימייל לאחר הפרסום
+            </div>
+            <p className="text-sm text-gray-600 mt-1">
+              קובץ PDF מסודר עם כל פרטי המודעה כפי שתפורסם באתר
+            </p>
           </div>
         </label>
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <div className="text-blue-500 text-xl">ℹ️</div>
+          <div className="text-amber-500 text-xl">ℹ️</div>
           <div>
             <h3 className="font-semibold text-[#1F3F3A] mb-1">לתשומת לבך</h3>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-amber-700">
               פרטי הקשר שלך יוצגו במודעה כדי שמעוניינים יוכלו ליצור איתך קשר בנוגע לאירוח לשבת.
               אנא וודא שהפרטים נכונים.
             </p>
@@ -178,9 +179,9 @@ const HolidayRentStep4: React.FC<HolidayRentStep4Props> = ({ data, onNext, onBac
         </button>
         <button
           onClick={handleNext}
-          className="px-8 py-3 bg-[#C9A24D] text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold"
+          className="px-8 py-3 bg-[#1F3F3A] text-white rounded-lg hover:bg-opacity-90 transition-colors font-semibold"
         >
-          פרסם דירה לשבת
+          המשך לתצוגה מקדימה
         </button>
       </div>
     </div>

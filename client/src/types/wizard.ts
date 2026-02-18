@@ -290,6 +290,7 @@ export interface HolidayRentStep4Data {
   contactName?: string;
   contactPhone: string;
   sendCopyToEmail?: boolean;
+  weeklyDigestOptIn?: boolean;
 }
 
 export interface HolidayRentWizardData {
@@ -641,6 +642,7 @@ export const holidayRentStep4Schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
   sendCopyToEmail: z.boolean().optional(),
+  weeklyDigestOptIn: z.boolean().optional(),
 });
 
 // Project Schema

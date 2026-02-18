@@ -4,7 +4,7 @@ import { HolidayRentStep2Data, holidayRentStep2Schema } from '../../../types/wiz
 interface HolidayRentStep2Props {
   data: Partial<HolidayRentStep2Data>;
   onNext: (data: HolidayRentStep2Data) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 const HolidayRentStep2: React.FC<HolidayRentStep2Props> = ({ data, onNext, onBack }) => {
@@ -59,15 +59,17 @@ const HolidayRentStep2: React.FC<HolidayRentStep2Props> = ({ data, onNext, onBac
 
       {/* Navigation Buttons */}
       <div className="flex justify-between pt-4">
-        <button
-          onClick={onBack}
-          className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          חזור
-        </button>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            חזור
+          </button>
+        )}
         <button
           onClick={handleNext}
-          className="px-8 py-3 bg-[#1F3F3A] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+          className={`px-8 py-3 bg-[#1F3F3A] text-white rounded-lg hover:bg-opacity-90 transition-colors ${!onBack ? 'mr-auto' : ''}`}
         >
           המשך לשלב הבא
         </button>

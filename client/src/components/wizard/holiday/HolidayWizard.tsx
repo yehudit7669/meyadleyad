@@ -8,6 +8,7 @@ import HolidayRentStep1 from './HolidayRentStep1';
 import HolidayRentStep2 from './HolidayRentStep2';
 import HolidayRentStep3 from './HolidayRentStep3';
 import HolidayRentStep4 from './HolidayRentStep4';
+import HolidayRentStep5 from './HolidayRentStep5';
 import {
   AdType,
   HolidayRentWizardData,
@@ -46,12 +47,12 @@ const HolidayWizard: React.FC = () => {
 
   const handleStep1Next = (data: HolidayRentStep1Data) => {
     setWizardData((prev) => ({ ...prev, step1: data }));
-    setCurrentStep(2);
+    setCurrentStep(3);
   };
 
   const handleStep2Next = (data: HolidayRentStep2Data) => {
     setWizardData((prev) => ({ ...prev, step2: data }));
-    setCurrentStep(3);
+    setCurrentStep(2);
   };
 
   const handleStep3Next = (data: HolidayRentStep3Data) => {
@@ -61,7 +62,12 @@ const HolidayWizard: React.FC = () => {
 
   const handleStep4Next = (data: HolidayRentStep4Data) => {
     setWizardData((prev) => ({ ...prev, step4: data }));
-    handleFinalSubmit({ ...wizardData, step4: data } as HolidayRentWizardData);
+    setCurrentStep(5);
+  };
+
+  const handleStep5Submit = (sendCopyToEmail: boolean) => {
+    const finalData = { ...wizardData, step4: { ...wizardData.step4, sendCopyToEmail } } as HolidayRentWizardData;
+    handleFinalSubmit(finalData);
   };
 
   const handleBack = () => {
@@ -120,6 +126,8 @@ ${data.step3.purpose === 'HOSTING' ? 'אירוח מלא' : 'לינה בלבד'}
       customFields,
       contactName: data.step4.contactName || undefined,
       contactPhone: data.step4.contactPhone,
+      weeklyDigestOptIn: data.step4.weeklyDigestOptIn || false,
+      sendCopyToEmail: data.step4.sendCopyToEmail || false,
     };
   };
 
@@ -132,8 +140,8 @@ ${data.step3.purpose === 'HOSTING' ? 'אירוח מלא' : 'לינה בלבד'}
     }
   };
 
-  const totalSteps = 4;
-  const stepTitles = ['כתובת', 'תשלום', 'פרטים', 'התקשרות'];
+  const totalSteps = 5;
+  const stepTitles = ['תשלום', 'כתובת', 'פרטים', 'התקשרות', 'תצוגה מקדימה'];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -159,15 +167,16 @@ ${data.step3.purpose === 'HOSTING' ? 'אירוח מלא' : 'לינה בלבד'}
           {/* Steps */}
           <div className="mt-8">
             {currentStep === 1 && (
-              <HolidayRentStep1
-                data={wizardData.step1 || {}}
-                onNext={handleStep1Next}
-              />
-            )}
-            {currentStep === 2 && (
               <HolidayRentStep2
                 data={wizardData.step2 || {}}
                 onNext={handleStep2Next}
+                onBack={undefined}
+              />
+            )}
+            {currentStep === 2 && (
+              <HolidayRentStep1
+                data={wizardData.step1 || {}}
+                onNext={handleStep1Next}
                 onBack={handleBack}
               />
             )}
@@ -184,6 +193,14 @@ ${data.step3.purpose === 'HOSTING' ? 'אירוח מלא' : 'לינה בלבד'}
                 data={wizardData.step4 || {}}
                 onNext={handleStep4Next}
                 onBack={handleBack}
+              />
+            )}
+            {currentStep === 5 && (
+              <HolidayRentStep5
+                wizardData={wizardData}
+                onSubmit={handleStep5Submit}
+                onPrev={handleBack}
+                isLoading={createAdMutation.isPending}
               />
             )}
           </div>
