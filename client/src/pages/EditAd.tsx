@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { adsService, categoriesService, citiesService, streetsService } from '../services/api';
+import { adsService, categoriesService, citiesService, streetsService, neighborhoodsService } from '../services/api';
 import ImageUpload from '../components/ImageUpload';
 import AvailabilityEditor from '../components/appointments/AvailabilityEditor';
 
@@ -112,6 +112,13 @@ export default function EditAd() {
   const { data: beitShemeshCity } = useQuery({
     queryKey: ['beit-shemesh-city'],
     queryFn: citiesService.getBeitShemesh,
+  });
+
+  // Get neighborhoods for selected city
+  const { data: neighborhoods } = useQuery({
+    queryKey: ['neighborhoods', formData.cityId],
+    queryFn: () => neighborhoodsService.getNeighborhoods(formData.cityId!),
+    enabled: !!formData.cityId,
   });
 
   const { data: allStreets } = useQuery({
@@ -478,13 +485,17 @@ export default function EditAd() {
 
             {/* קטגוריה */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">קטגוריה *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                קטגוריה * 
+                <span className="text-sm text-gray-500 font-normal mr-2">(לא ניתן לשינוי)</span>
+              </label>
               <select
                 name="categoryId"
                 required
                 value={formData.categoryId}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
               >
                 <option value="">בחר קטגוריה</option>
                 {categories?.map((cat: any) => (
@@ -515,30 +526,44 @@ export default function EditAd() {
                   value={streetSearch}
                   onChange={(e) => {
                     setStreetSearch(e.target.value);
+                    // אם מחקו את הטקסט לגמרי, איפוס רחוב ושכונה
+                    if (e.target.value === '') {
+                      setFormData({
+                        ...formData,
+                        streetId: '',
+                        neighborhood: '',
+                      });
+                    }
+                    // תמיד פותח את הדרופדאון כשמקלידים
                     setShowStreetDropdown(true);
                   }}
                   onFocus={() => setShowStreetDropdown(true)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="חפש רחוב..."
+                  placeholder="חפש רחוב או השאר ריק לראות את כל הרחובות"
                 />
                 
-                {showStreetDropdown && (streetSearch.length >= 2 ? searchedStreets : allStreets) && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {(streetSearch.length >= 2 ? searchedStreets : allStreets)?.map((street: any) => (
-                      <button
-                        key={street.id}
-                        type="button"
-                        onClick={() => handleStreetSelect(street.id)}
-                        className="w-full text-right px-4 py-2 hover:bg-blue-50 transition"
-                      >
-                        {street.name}
-                        {street.neighborhoodName && (
-                          <span className="text-sm text-gray-500 mr-2">({street.neighborhoodName})</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {showStreetDropdown && (() => {
+                  // אם יש חיפוש של 2+ תווים, הצג רק תוצאות חיפוש
+                  // אחרת, הצג את כל הרחובות
+                  const streetsToShow = streetSearch.length >= 2 ? searchedStreets : allStreets;
+                  return streetsToShow && streetsToShow.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {streetsToShow.map((street: any) => (
+                        <button
+                          key={street.id}
+                          type="button"
+                          onClick={() => handleStreetSelect(street.id)}
+                          className="w-full text-right px-4 py-2 hover:bg-blue-50 transition text-black"
+                        >
+                          {street.name}
+                          {street.neighborhoodName && (
+                            <span className="text-sm text-gray-500 mr-2">({street.neighborhoodName})</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -547,16 +572,21 @@ export default function EditAd() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 שכונה {!formData.streetId && <span className="text-red-500">*</span>}
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.neighborhood}
                 onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
                 disabled={!!formData.streetId}
                 className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 ${
                   formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
                 }`}
-                placeholder={formData.streetId ? 'מתמלא אוטומטית מהרחוב' : 'הזן שם שכונה'}
-              />
+              >
+                <option value="">בחר שכונה</option>
+                {neighborhoods?.map((neighborhood: any) => (
+                  <option key={neighborhood.id} value={neighborhood.name}>
+                    {neighborhood.name}
+                  </option>
+                ))}
+              </select>
               {formData.streetId && (
                 <p className="text-sm text-gray-500 mt-1">השכונה מתמלאת אוטומטית מהרחוב שנבחר</p>
               )}
