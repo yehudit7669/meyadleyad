@@ -291,30 +291,40 @@ export class EmailOperationsFormController {
    */
   async handleGoogleFormsWebhook(req: Request, res: Response) {
     try {
+      console.log('📝 Received Google Forms webhook');
+      console.log('Raw data:', JSON.stringify(req.body, null, 2));
+
       // נתונים מ-Google Forms יגיעו בפורמט שונה
       // צריך לנרמל אותם לפורמט שלנו
       const rawData = req.body;
 
+      // תמיכה בפורמט של Apps Script (שדות אנגלית) + fallback לשדות עבריים
       const formData: FormSubmissionData = {
-        senderEmail: rawData.email || rawData['כתובת אימייל'],
-        userName: rawData.name || rawData['שם מלא'],
-        userPhone: rawData.phone || rawData['טלפון'],
+        senderEmail: rawData.senderEmail || rawData.email || rawData['כתובת אימייל'],
+        userName: rawData.userName || rawData.name || rawData['שם מלא'],
+        userPhone: rawData.userPhone || rawData.phone || rawData['טלפון'],
         formType: rawData.formType || 'publish',
         category: rawData.category || rawData['קטגוריה'],
         title: rawData.title || rawData['כותרת'],
         description: rawData.description || rawData['תיאור'],
-        price: rawData.price ? parseFloat(rawData.price) : undefined,
-        cityName: rawData.city || rawData['עיר'],
-        address: rawData.address || rawData['כתובת'],
+        price: rawData.price ? parseFloat(rawData.price.toString()) : undefined,
+        cityName: rawData.cityName || rawData.city || rawData['עיר'],
+        address: rawData.address || rawData['כתובת'] || rawData['רחוב ומספר בית'],
         customFields: rawData.customFields || {},
       };
+
+      console.log('✅ Normalized form data:', JSON.stringify(formData, null, 2));
 
       // קריאה לטיפול הרגיל
       req.body = formData;
       await this.handleFormSubmission(req, res);
     } catch (error) {
       console.error('❌ Error in Google Forms webhook:', error);
-      res.status(500).json({ error: 'Failed to process Google Forms data' });
+      console.error('Error details:', error);
+      res.status(500).json({ 
+        error: 'Failed to process Google Forms data',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 }
