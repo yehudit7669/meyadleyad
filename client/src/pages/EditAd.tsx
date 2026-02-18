@@ -10,9 +10,12 @@ export default function EditAd() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const streetDropdownRef = useRef<HTMLDivElement>(null);
+  const neighborhoodDropdownRef = useRef<HTMLDivElement>(null);
   
   const [streetSearch, setStreetSearch] = useState('');
   const [showStreetDropdown, setShowStreetDropdown] = useState(false);
+  const [neighborhoodSearch, setNeighborhoodSearch] = useState('');
+  const [showNeighborhoodDropdown, setShowNeighborhoodDropdown] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -36,6 +39,11 @@ export default function EditAd() {
   const { data: categories } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesService.getCategories,
+  });
+
+  const { data: cities } = useQuery({
+    queryKey: ['cities'],
+    queryFn: citiesService.getCities,
   });
 
   // Get selected category details
@@ -185,6 +193,9 @@ export default function EditAd() {
       if (ad.street?.name) {
         setStreetSearch(ad.street.name);
       }
+      if (ad.neighborhood) {
+        setNeighborhoodSearch(ad.neighborhood);
+      }
     }
   }, [ad]);
 
@@ -204,14 +215,17 @@ export default function EditAd() {
       if (streetDropdownRef.current && !streetDropdownRef.current.contains(event.target as Node)) {
         setShowStreetDropdown(false);
       }
+      if (neighborhoodDropdownRef.current && !neighborhoodDropdownRef.current.contains(event.target as Node)) {
+        setShowNeighborhoodDropdown(false);
+      }
     };
-    if (showStreetDropdown) {
+    if (showStreetDropdown || showNeighborhoodDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showStreetDropdown]);
+  }, [showStreetDropdown, showNeighborhoodDropdown]);
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => adsService.updateAd(id!, data),
@@ -334,7 +348,28 @@ export default function EditAd() {
       neighborhood: selectedStreet?.neighborhoodName || '',
     });
     setStreetSearch(selectedStreet?.name || '');
+    setNeighborhoodSearch(selectedStreet?.neighborhoodName || '');
     setShowStreetDropdown(false);
+  };
+
+  const handleNeighborhoodSelect = (neighborhoodName: string) => {
+    setFormData({
+      ...formData,
+      neighborhood: neighborhoodName,
+    });
+    setNeighborhoodSearch(neighborhoodName);
+    setShowNeighborhoodDropdown(false);
+  };
+
+  const handleCityChange = (cityId: string) => {
+    setFormData({
+      ...formData,
+      cityId,
+      streetId: '',
+      neighborhood: '',
+    });
+    setStreetSearch('');
+    setNeighborhoodSearch('');
   };
 
   const handleImagesChange = (images: any[]) => {
@@ -471,6 +506,7 @@ export default function EditAd() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 כותרת המודעה *
+                <span className="text-sm text-gray-500 font-normal mr-2">(לא ניתן לשינוי)</span>
               </label>
               <input
                 type="text"
@@ -478,7 +514,8 @@ export default function EditAd() {
                 required
                 value={formData.title}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
                 placeholder="לדוגמה: דירת 3 חדרים למכירה"
               />
             </div>
@@ -508,13 +545,29 @@ export default function EditAd() {
 
             {/* עיר */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">עיר *</label>
-              <input
-                type="text"
-                value="בית שמש"
-                disabled
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                עיר *
+                {(formData.streetId || formData.neighborhood) && (
+                  <span className="text-sm text-gray-500 font-normal mr-2">(ניתן לשינוי רק אם לא נבחרו רחוב או שכונה)</span>
+                )}
+              </label>
+              <select
+                name="cityId"
+                required
+                value={formData.cityId}
+                onChange={(e) => handleCityChange(e.target.value)}
+                disabled={!!formData.streetId || !!formData.neighborhood}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  formData.streetId || formData.neighborhood ? 'bg-gray-100 cursor-not-allowed text-gray-600' : ''
+                }`}
+              >
+                <option value="">בחר עיר</option>
+                {cities?.map((city: any) => (
+                  <option key={city.id} value={city.id}>
+                    {city.nameHe}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* רחוב */}
@@ -568,25 +621,52 @@ export default function EditAd() {
             </div>
 
             {/* שכונה - מופעל רק אם לא נבחר רחוב */}
-            <div>
+            <div ref={neighborhoodDropdownRef}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 שכונה {!formData.streetId && <span className="text-red-500">*</span>}
               </label>
-              <select
-                value={formData.neighborhood}
-                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                disabled={!!formData.streetId}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                  formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`}
-              >
-                <option value="">בחר שכונה</option>
-                {neighborhoods?.map((neighborhood: any) => (
-                  <option key={neighborhood.id} value={neighborhood.name}>
-                    {neighborhood.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={neighborhoodSearch}
+                  onChange={(e) => {
+                    setNeighborhoodSearch(e.target.value);
+                    if (e.target.value === '') {
+                      setFormData({
+                        ...formData,
+                        neighborhood: '',
+                      });
+                    }
+                    setShowNeighborhoodDropdown(true);
+                  }}
+                  onFocus={() => setShowNeighborhoodDropdown(true)}
+                  disabled={!!formData.streetId}
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                    formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                  placeholder="חפש שכונה או השאר ריק לראות את כל השכונות"
+                />
+                
+                {showNeighborhoodDropdown && !formData.streetId && (() => {
+                  const neighborhoodsToShow = neighborhoods?.filter((n: any) => 
+                    n.name.includes(neighborhoodSearch)
+                  ) || [];
+                  return neighborhoodsToShow.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {neighborhoodsToShow.map((neighborhood: any) => (
+                        <button
+                          key={neighborhood.id}
+                          type="button"
+                          onClick={() => handleNeighborhoodSelect(neighborhood.name)}
+                          className="w-full text-right px-4 py-2 hover:bg-blue-50 transition text-black"
+                        >
+                          {neighborhood.name}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
               {formData.streetId && (
                 <p className="text-sm text-gray-500 mt-1">השכונה מתמלאת אוטומטית מהרחוב שנבחר</p>
               )}
