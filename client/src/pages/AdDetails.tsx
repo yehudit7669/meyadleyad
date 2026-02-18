@@ -247,23 +247,34 @@ export default function AdDetails() {
               </div>
 
               {/* Description and Features - Side by side */}
-              <div className="flex flex-col md:flex-row gap-3 max-w-xl">
-                {/* Description - Right side */}
-                <div className="w-full md:w-[50%]">
-                  <h2 className="font-bold text-xl mb-4 text-[#C9A24D]">תיאור הנכס</h2>
-                  <p className="text-[#3A3A3A] leading-relaxed whitespace-pre-wrap text-base">{ad.description}</p>
-                </div>
+              {(() => {
+                const hasDescription = !!ad.description;
+                const hasFeatures = ad.customFields && (ad.customFields as any).features && Object.values((ad.customFields as any).features).some(v => v === true);
+                
+                if (!hasDescription && !hasFeatures) return null;
+                
+                return (
+                  <div className="flex flex-col md:flex-row gap-3 max-w-xl">
+                    {/* Description - Right side */}
+                    {hasDescription && (
+                      <div className="w-full md:w-[50%]">
+                        <h2 className="font-bold text-xl mb-4 text-[#C9A24D]">תיאור הנכס</h2>
+                        <p className="text-[#3A3A3A] leading-relaxed whitespace-pre-wrap text-base">{ad.description}</p>
+                      </div>
+                    )}
 
-                {/* Divider - visible only on desktop */}
-                <div className="hidden md:block w-px bg-gray-300"></div>
+                    {/* Divider - visible only on desktop */}
+                    {hasDescription && hasFeatures && (
+                      <div className="hidden md:block w-px bg-gray-300"></div>
+                    )}
 
-                {/* Features - Left side with icons */}
-                <div className="flex-1">
-                  <h2 className="font-bold text-xl mb-4 text-[#C9A24D]">מה בנכס</h2>
+                    {/* Features - Left side with icons */}
+                    {hasFeatures && (
+                      <div className="w-full md:w-[50%]">
+                        <h2 className="font-bold text-xl mb-4 text-[#C9A24D]">מה בנכס</h2>
 
-                  {/* Features Grid with Icons */}
-                  {ad.customFields && (ad.customFields as any).features && (
-                    <div className="grid grid-cols-3 gap-1">
+                        {/* Features Grid with Icons */}
+                        <div className="grid grid-cols-3 gap-1">
                       {/* Holiday Rent Features */}
                       {(ad.customFields as any).features.plata && (
                         <div className="flex flex-col items-start gap-1">
@@ -416,9 +427,11 @@ export default function AdDetails() {
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Left Sidebar - Map and Contact */}
