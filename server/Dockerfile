@@ -27,6 +27,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libxkbcommon0 \
   libpango-1.0-0 \
   libpangocairo-1.0-0 \
+  fonts-noto-core \
+  fonts-noto-extra \
+  fonts-noto-color-emoji \
   xdg-utils \
   && rm -rf /var/lib/apt/lists/*
 
