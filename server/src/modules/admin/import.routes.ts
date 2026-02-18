@@ -1156,7 +1156,7 @@ function getApartmentsForSaleSchema(): CategorySchema {
     { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
     { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
     { name: 'hasOption', hebrewName: 'אופציה', aliases: ['אופציה'], required: false, parser: normalizeBoolean },
-    { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: true, parser: requiredString },
+    { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: false, parser: requiredString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
     { name: 'image1', hebrewName: 'תמונה 1', aliases: ['תמונה 1'], required: false, parser: parseUrl },
@@ -1205,7 +1205,7 @@ function getApartmentsForRentSchema(): CategorySchema {
     { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
     { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
     { name: 'airConditioning', hebrewName: 'מיזוג', aliases: ['מיזוג'], required: false, parser: normalizeBoolean },
-    { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: true, parser: requiredString },
+    { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: false, parser: requiredString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
     { name: 'image1', hebrewName: 'תמונה 1', aliases: ['תמונה 1'], required: false, parser: parseUrl },
@@ -1403,7 +1403,7 @@ function getCommercialSchema(): CategorySchema {
     { name: 'accessibleForDisabled', hebrewName: 'נגישות לנכים', aliases: ['נגישות לנכים'], required: false, parser: normalizeBoolean },
     { name: 'internet', hebrewName: 'אינטרנט', aliases: ['אינטרנט'], required: false, parser: normalizeBoolean },
     { name: 'upgraded', hebrewName: 'מושפץ', aliases: ['מושפץ'], required: false, parser: normalizeBoolean },
-    { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: true, parser: requiredString },
+    { name: 'description', hebrewName: 'תיאור הנכס', aliases: ['תיאור הנכס'], required: false, parser: requiredString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1440,6 +1440,7 @@ function getWantedCommercialSchema(): CategorySchema {
     { name: 'accessibleForDisabled', hebrewName: 'נגישות לנכים', aliases: ['נגישות לנכים'], required: false, parser: normalizeBoolean },
     { name: 'internet', hebrewName: 'אינטרנט', aliases: ['אינטרנט'], required: false, parser: normalizeBoolean },
     { name: 'upgraded', hebrewName: 'מושפץ', aliases: ['מושפץ'], required: false, parser: normalizeBoolean },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור', 'תיאור הנכס'], required: false, parser: optionalString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1483,6 +1484,7 @@ function getSharedOwnershipSchema(): CategorySchema {
     { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
     { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
     { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור', 'תיאור הנכס'], required: false, parser: optionalString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1524,6 +1526,7 @@ function getWantedSharedOwnershipSchema(): CategorySchema {
     { name: 'frontFacing', hebrewName: 'חזית', aliases: ['חזית'], required: false, parser: normalizeBoolean },
     { name: 'upgradedKitchen', hebrewName: 'מטבח משודרג', aliases: ['מטבח משודרג'], required: false, parser: normalizeBoolean },
     { name: 'accessibleForDisabled', hebrewName: 'נגישה לנכים', aliases: ['נגישה לנכים'], required: false, parser: normalizeBoolean },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור', 'תיאור הנכס'], required: false, parser: optionalString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];
@@ -1538,7 +1541,7 @@ function getWantedSharedOwnershipSchema(): CategorySchema {
 function getBasicSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'title', hebrewName: 'כותרת', aliases: ['כותרת'], required: true, parser: requiredString },
-    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור'], required: true, parser: requiredString },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור'], required: false, parser: requiredString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];

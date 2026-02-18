@@ -306,13 +306,12 @@ const WantedHolidayStep3: React.FC<Props> = ({ data, onNext, onPrev, isPaid }) =
         <textarea
           value={formData.description ?? ''}
           onChange={(e) => handleChange('description', e.target.value || undefined)}
-          maxLength={500}
           rows={4}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] resize-none"
-          placeholder="תאר את הדירה המבוקשת בצורה חופשית (עד 500 תווים)"
+          placeholder="תאר את הדירה המבוקשת בצורה חופשית (עד 16 מילים)"
         />
         <p className="text-sm text-gray-500 mt-1">
-          {formData.description?.length || 0}/500 תווים
+          {formData.description?.trim().split(/\s+/).filter(w => w.length > 0).length || 0}/16 מילים
         </p>
       </div>
 

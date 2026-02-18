@@ -25,6 +25,7 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
     balconiesCount: data.balconiesCount || 0,
     beds: data.beds,
     priceRequested: data.priceRequested,
+    description: data.description,
     features: data.features || {
       plata: false,
       urn: false,
@@ -313,6 +314,23 @@ const HolidayRentStep3: React.FC<HolidayRentStep3Props> = ({ data, isPaid, onNex
           </p>
         </div>
       )}
+
+      {/* Description */}
+      <div>
+        <label className="block text-sm font-medium text-[#1F3F3A] mb-2">
+          תיאור (אופציונלי)
+        </label>
+        <textarea
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent resize-none"
+          rows={4}
+          placeholder="ספר קצת על הנכס (עד 16 מילים)"
+          value={formData.description || ''}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          {formData.description?.trim().split(/\s+/).filter(w => w.length > 0).length || 0}/16 מילים
+        </p>
+      </div>
 
       {/* Navigation Buttons */}
       <div className="flex justify-between pt-4">

@@ -28,6 +28,7 @@ const WantedSharedOwnershipStep3: React.FC<WizardStepProps> = ({ data, onNext, o
       requiredEquity: undefined,
       numberOfPartners: undefined,
       entryDate: undefined,
+      description: undefined,
       features: {
         parking: false,
         storage: false,
@@ -406,6 +407,23 @@ const WantedSharedOwnershipStep3: React.FC<WizardStepProps> = ({ data, onNext, o
           {errors.entryDate && (
             <p className="mt-1 text-sm text-red-500">{errors.entryDate}</p>
           )}
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            תיאור (אופציונלי)
+          </label>
+          <textarea
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent resize-none"
+            rows={4}
+            placeholder="ספר קצת על הנכס (עד 16 מילים)"
+            value={formData.description || ''}
+            onChange={(e) => handleChange('description', e.target.value)}
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            {formData.description?.trim().split(/\s+/).filter(w => w.length > 0).length || 0}/16 מילים
+          </p>
         </div>
       </div>
 

@@ -190,6 +190,7 @@ export interface SharedOwnershipStep3Data {
   requiredEquity?: number;
   numberOfPartners?: number;
   entryDate?: string;
+  description?: string;
   features: {
     parking: boolean;
     storage: boolean;
@@ -269,6 +270,7 @@ export interface HolidayRentStep3Data {
   balconiesCount: number;
   beds?: number;
   priceRequested?: number;
+  description?: string;
   features: {
     plata: boolean;
     urn: boolean;
@@ -542,6 +544,11 @@ export const sharedOwnershipStep3Schema = z.object({
   requiredEquity: z.number().min(0, 'ההון העצמי חייב להיות חיובי').optional(),
   numberOfPartners: z.number().int('מספר שותפים חייב להיות מספר שלם').min(1, 'מינימום שותף אחד').optional(),
   entryDate: z.string().optional(),
+  description: z.string().refine((val) => {
+    if (!val || val.trim().length === 0) return true;
+    const wordCount = val.trim().split(/\s+/).length;
+    return wordCount <= 16;
+  }, { message: 'התיאור מוגבל ל-16 מילים בלבד' }).optional(),
   features: z.object({
     parking: z.boolean(),
     storage: z.boolean(),
@@ -621,6 +628,11 @@ export const holidayRentStep3Schema = z.object({
   balconiesCount: z.number().min(0).max(3),
   beds: z.number().positive('מספר מיטות חייב להיות חיובי').optional(),
   priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional().or(z.literal(undefined)),
+  description: z.string().refine((val) => {
+    if (!val || val.trim().length === 0) return true;
+    const wordCount = val.trim().split(/\s+/).length;
+    return wordCount <= 16;
+  }, { message: 'התיאור מוגבל ל-16 מילים בלבד' }).optional(),
   features: z.object({
     plata: z.boolean(),
     urn: z.boolean(),
@@ -972,7 +984,11 @@ export const wantedHolidayStep3Schema = z.object({
   balconiesCount: z.number().min(0).max(3),
   beds: z.number().positive('מספר מיטות חייב להיות חיובי').optional(),
   priceRequested: z.number().positive('המחיר חייב להיות חיובי').optional().or(z.literal(undefined)),
-  description: z.string().max(500, 'התיאור חייב להיות עד 500 תווים').optional(),
+  description: z.string().refine((val) => {
+    if (!val || val.trim().length === 0) return true;
+    const wordCount = val.trim().split(/\s+/).length;
+    return wordCount <= 16;
+  }, { message: 'התיאור מוגבל ל-16 מילים בלבד' }).optional(),
   features: z.object({
     plata: z.boolean(),
     urn: z.boolean(),

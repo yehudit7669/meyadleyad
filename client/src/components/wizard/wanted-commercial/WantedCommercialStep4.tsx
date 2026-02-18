@@ -19,6 +19,7 @@ export interface WantedCommercialStep4Data {
   price?: number;
   arnona?: number;
   entryDate: string;
+  description?: string;
 }
 
 const COMMERCIAL_TYPE_OPTIONS = [
@@ -64,6 +65,7 @@ const WantedCommercialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev
       price: undefined,
       arnona: undefined,
       entryDate: 'flexible',
+      description: undefined,
     }
   );
 
@@ -273,6 +275,23 @@ const WantedCommercialStep4: React.FC<WizardStepProps> = ({ data, onNext, onPrev
             />
           </div>
         )}
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            תיאור (אופציונלי)
+          </label>
+          <textarea
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent resize-none"
+            rows={4}
+            placeholder="ספר קצת על הנכס (עד 16 מילים)"
+            value={formData.description || ''}
+            onChange={(e) => handleChange('description', e.target.value)}
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            {formData.description?.trim().split(/\s+/).filter(w => w.length > 0).length || 0}/16 מילים
+          </p>
+        </div>
       </div>
 
       <div className="flex justify-between pt-6">
