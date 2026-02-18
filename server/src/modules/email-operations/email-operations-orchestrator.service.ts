@@ -611,7 +611,7 @@ export class EmailOperationsOrchestrator {
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     
     const formUrls: Partial<Record<EmailCommandType, string>> = {
-      [EmailCommandType.PUBLISH_SALE]: `${baseUrl}/forms/publish-sale`,
+      [EmailCommandType.PUBLISH_SALE]: 'https://docs.google.com/forms/d/e/1FAIpQLSd5ZjstupkxjBc9d7j7h3hOkIHVNgfjZLlCtPbB7j0cDmbt2w/viewform?usp=dialog',
       [EmailCommandType.PUBLISH_RENT]: `${baseUrl}/forms/publish-rent`,
       [EmailCommandType.PUBLISH_SHABBAT]: `${baseUrl}/forms/publish-shabbat`,
       [EmailCommandType.PUBLISH_COMMERCIAL]: `${baseUrl}/forms/publish-commercial`,

@@ -154,16 +154,12 @@ const PublicBrokerPage: React.FC = () => {
                   ad={{
                     id: ad.id,
                     title: ad.title,
-                    description: ad.description || '',
                     price: ad.price,
                     images: ad.AdImage,
                     category: ad.Category || { nameHe: 'מודעה' },
                     city: ad.City,
-                    createdAt: ad.createdAt,
-                    views: ad.views || 0,
-                    user: ad.user || broker,
-                    isWanted: ad.isWanted,
-                    requestedLocationText: ad.requestedLocationText,
+                    address: ad.address,
+                    customFields: ad.customFields,
                   }}
                 />
               ))}
