@@ -1224,7 +1224,10 @@ function getApartmentsForRentSchema(): CategorySchema {
 function getWantedForSaleSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
-    { name: 'desiredStreet', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש', 'רחוב מבוקש'], required: true, parser: requiredString },
+    { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumber },
@@ -1266,7 +1269,10 @@ function getWantedForSaleSchema(): CategorySchema {
 function getWantedForRentSchema(): CategorySchema {
   const fields: FieldSchema[] = [
     { name: 'hasBroker', hebrewName: 'תיווך', aliases: ['תיווך'], required: true, parser: requiredBoolean },
-    { name: 'desiredStreet', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש', 'רחוב מבוקש'], required: true, parser: requiredString },
+    { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
     { name: 'rooms', hebrewName: 'מספר חדרים', aliases: ['מספר חדרים'], required: true, parser: parseRoomsRequired },
     { name: 'squareMeters', hebrewName: 'שטח במר', aliases: ['שטח במר', 'שטח'], required: false, parser: parseOptionalNumber },
@@ -1344,7 +1350,10 @@ function getShabbatApartmentSchema(): CategorySchema {
 // ===== WANTED FOR SHABBAT (דרושים - שבת) =====
 function getWantedForShabbatSchema(): CategorySchema {
   const fields: FieldSchema[] = [
-    { name: 'requestedLocation', hebrewName: 'רחוב / אזור מבוקש', aliases: ['רחוב / אזור מבוקש'], required: true, parser: requiredString },
+    { name: 'city', hebrewName: 'עיר', aliases: ['עיר'], required: true, parser: requiredString },
+    { name: 'street', hebrewName: 'רחוב', aliases: ['רחוב'], required: false, parser: optionalString },
+    { name: 'neighborhood', hebrewName: 'שכונה', aliases: ['שכונה'], required: true, parser: requiredString },
+    { name: 'houseNumber', hebrewName: 'מספר בית', aliases: ['מספר בית'], required: false, parser: optionalString },
     { name: 'isPaid', hebrewName: 'בתשלום', aliases: ['בתשלום'], required: true, parser: requiredBoolean },
     { name: 'parasha', hebrewName: 'פרשה', aliases: ['פרשה'], required: true, parser: requiredString },
     { name: 'propertyType', hebrewName: 'סוג הנכס', aliases: ['סוג הנכס'], required: true, parser: requiredString },
@@ -1365,6 +1374,7 @@ function getWantedForShabbatSchema(): CategorySchema {
     { name: 'parentalUnit', hebrewName: 'יחידת הורים', aliases: ['יחידת הורים'], required: false, parser: normalizeBoolean },
     { name: 'lodgingOnly', hebrewName: 'לינה בלבד', aliases: ['לינה בלבד'], required: false, parser: normalizeBoolean },
     { name: 'price', hebrewName: 'מחיר', aliases: ['מחיר'], required: false, parser: parseOptionalNumber },
+    { name: 'description', hebrewName: 'תיאור', aliases: ['תיאור'], required: false, parser: optionalString },
     { name: 'contactName', hebrewName: 'שם', aliases: ['שם'], required: false, parser: optionalString },
     { name: 'contactPhone', hebrewName: 'טלפון', aliases: ['טלפון'], required: true, parser: requiredString },
   ];

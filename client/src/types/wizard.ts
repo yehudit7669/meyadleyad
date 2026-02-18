@@ -721,7 +721,14 @@ export interface WantedForSaleStep1Data {
 }
 
 export interface WantedForSaleStep2Data {
-  desiredStreet: string; // Free text
+  cityId: string;
+  cityName: string;
+  streetId?: string;
+  streetName?: string;
+  neighborhoodId?: string;
+  neighborhoodName: string;
+  houseNumber?: number;
+  addressSupplement?: string;
 }
 
 export interface WantedForSaleStep3Data {
@@ -776,7 +783,14 @@ export interface WantedForRentStep1Data {
 }
 
 export interface WantedForRentStep2Data {
-  desiredStreet: string; // Free text
+  cityId: string;
+  cityName: string;
+  streetId?: string;
+  streetName?: string;
+  neighborhoodId?: string;
+  neighborhoodName: string;
+  houseNumber?: number;
+  addressSupplement?: string;
 }
 
 export interface WantedForRentStep3Data {
@@ -827,7 +841,14 @@ export interface WantedForRentWizardData {
 
 // Wanted Holiday - מחפש דירה לשבת
 export interface WantedHolidayStep1Data {
-  desiredArea: string; // Free text
+  cityId: string;
+  cityName: string;
+  streetId?: string;
+  streetName?: string;
+  neighborhoodId?: string;
+  neighborhoodName: string;
+  houseNumber?: number;
+  addressSupplement?: string;
 }
 
 export interface WantedHolidayStep2Data {
@@ -880,7 +901,17 @@ export const wantedForSaleStep1Schema = z.object({
 });
 
 export const wantedForSaleStep2Schema = z.object({
-  desiredStreet: z.string().min(1, 'יש להזין רחוב/אזור מבוקש'),
+  cityId: z.string().min(1, 'יש לבחור עיר'),
+  cityName: z.string(),
+  streetId: z.string().optional(),
+  streetName: z.string().optional(),
+  neighborhoodId: z.string().optional(),
+  neighborhoodName: z.string().min(1, 'יש לבחור שכונה'),
+  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי').optional(),
+  addressSupplement: z.string().optional(),
+}).refine((data) => data.streetId || data.neighborhoodName, {
+  message: 'יש להזין רחוב או שכונה',
+  path: ['neighborhoodName'],
 });
 
 export const wantedForSaleStep3Schema = z.object({
@@ -926,7 +957,17 @@ export const wantedForRentStep1Schema = z.object({
 });
 
 export const wantedForRentStep2Schema = z.object({
-  desiredStreet: z.string().min(1, 'יש להזין רחוב/אזור מבוקש'),
+  cityId: z.string().min(1, 'יש לבחור עיר'),
+  cityName: z.string(),
+  streetId: z.string().optional(),
+  streetName: z.string().optional(),
+  neighborhoodId: z.string().optional(),
+  neighborhoodName: z.string().min(1, 'יש לבחור שכונה'),
+  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי').optional(),
+  addressSupplement: z.string().optional(),
+}).refine((data) => data.streetId || data.neighborhoodName, {
+  message: 'יש להזין רחוב או שכונה',
+  path: ['neighborhoodName'],
 });
 
 export const wantedForRentStep3Schema = z.object({
@@ -968,7 +1009,17 @@ export const wantedForRentStep4Schema = z.object({
 });
 
 export const wantedHolidayStep1Schema = z.object({
-  desiredArea: z.string().min(1, 'יש להזין אזור/שכונה/רחוב מבוקש'),
+  cityId: z.string().min(1, 'יש לבחור עיר'),
+  cityName: z.string(),
+  streetId: z.string().optional(),
+  streetName: z.string().optional(),
+  neighborhoodId: z.string().optional(),
+  neighborhoodName: z.string().min(1, 'יש לבחור שכונה'),
+  houseNumber: z.number().int('מספר בית חייב להיות מספר שלם').positive('מספר בית חייב להיות חיובי').optional(),
+  addressSupplement: z.string().optional(),
+}).refine((data) => data.streetId || data.neighborhoodName, {
+  message: 'יש להזין רחוב או שכונה',
+  path: ['neighborhoodName'],
 });
 
 export const wantedHolidayStep2Schema = z.object({

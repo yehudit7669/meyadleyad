@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { citiesService, streetsService, neighborhoodsService } from '../../../services/api';
 import { WantedForSaleStep2Data, wantedForSaleStep2Schema } from '../../../types/wizard';
 
 interface Props {
@@ -8,54 +10,361 @@ interface Props {
 }
 
 const WantedForSaleStep2: React.FC<Props> = ({ data, onNext, onPrev }) => {
-  const [desiredStreet, setDesiredStreet] = useState(data?.desiredStreet || '');
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState<WantedForSaleStep2Data>(
+    data || {
+      cityId: '',
+      cityName: '',
+      streetId: undefined,
+      streetName: undefined,
+      neighborhoodId: '',
+      neighborhoodName: '',
+      houseNumber: undefined,
+      addressSupplement: '',
+    }
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [streetSearch, setStreetSearch] = useState(data?.streetName || '');
+  const [showStreetDropdown, setShowStreetDropdown] = useState(false);
+  const streetDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get all cities
+  const { data: cities } = useQuery({
+    queryKey: ['cities'],
+    queryFn: citiesService.getCities,
+  });
+
+  // Get neighborhoods for selected city
+  const { data: neighborhoods } = useQuery({
+    queryKey: ['neighborhoods', formData.cityId],
+    queryFn: () => neighborhoodsService.getNeighborhoods(formData.cityId!),
+    enabled: !!formData.cityId && formData.cityId.length > 10,
+  });
+
+  // Set city from data if exists
+  useEffect(() => {
+    if (data?.cityId && cities) {
+      const city = cities.find((c: any) => c.id === data.cityId);
+      if (city) {
+        setFormData((prev) => ({
+          ...prev,
+          cityId: city.id,
+          cityName: city.nameHe,
+        }));
+      }
+    }
+  }, [data?.cityId, cities]);
+
+  // Get all streets
+  const { data: allStreets } = useQuery({
+    queryKey: ['all-streets', formData.cityId],
+    queryFn: () =>
+      streetsService.getStreets({
+        cityId: formData.cityId!,
+        limit: 500,
+      }),
+    enabled: !!formData.cityId && formData.cityId.length > 10,
+  });
+
+  // Get searched streets
+  const { data: searchedStreets, isLoading: streetsLoading } = useQuery({
+    queryKey: ['streets-search', streetSearch, formData.cityId],
+    queryFn: () =>
+      streetsService.getStreets({
+        query: streetSearch,
+        cityId: formData.cityId!,
+        limit: 50,
+      }),
+    enabled: !!formData.cityId && streetSearch.length >= 2,
+  });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        streetDropdownRef.current &&
+        !streetDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowStreetDropdown(false);
+      }
+    };
+
+    if (showStreetDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStreetDropdown]);
+
+  const handleStreetSelect = (street: any) => {
+    setFormData({
+      ...formData,
+      streetId: street.id,
+      streetName: street.name,
+      neighborhoodId: street.neighborhoodId || '',
+      neighborhoodName: street.neighborhoodName || '',
+    });
+    setStreetSearch(street.name);
+    setShowStreetDropdown(false);
+
+    if (errors.streetId) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.streetId;
+        return newErrors;
+      });
+    }
+  };
+
+  const handleChange = (field: keyof WantedForSaleStep2Data, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    const formData: WantedForSaleStep2Data = {
-      desiredStreet: desiredStreet.trim(),
-    };
-
     try {
       wantedForSaleStep2Schema.parse(formData);
       onNext(formData);
     } catch (error: any) {
-      setError(error.errors?.[0]?.message || 'שגיאה בנתונים');
+      const newErrors: Record<string, string> = {};
+      if (error.errors) {
+        error.errors.forEach((err: any) => {
+          newErrors[err.path[0]] = err.message;
+        });
+      }
+      setErrors(newErrors);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-6 animate-fadeIn" dir="rtl">
       <div>
-        <h2 className="text-2xl font-bold text-[#1F3F3A] mb-2">
-          רחוב או אזור מבוקש
-        </h2>
-        <p className="text-gray-600 mb-6">
-          הזן את הרחוב או האזור המבוקש (טקסט חופשי)
-        </p>
+        <h2 className="text-2xl font-bold text-[#1F3F3A] mb-2">כתובת הנכס המבוקש</h2>
+        <p className="text-gray-600">הזן את כתובת הנכס המבוקש</p>
+      </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            רחוב/אזור מבוקש <span className="text-red-500">*</span>
+      <div className="space-y-4">
+        {/* City Selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            עיר <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.cityId}
+            onChange={(e) => {
+              const selectedCity = cities?.find((c: any) => c.id === e.target.value);
+              if (selectedCity) {
+                setFormData({
+                  ...formData,
+                  cityId: selectedCity.id,
+                  cityName: selectedCity.nameHe,
+                  streetId: '',
+                  streetName: '',
+                  neighborhoodId: '',
+                  neighborhoodName: '',
+                });
+                setStreetSearch('');
+              }
+            }}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+              errors.cityId ? 'border-red-500' : 'border-gray-300'
+            }`}
+          >
+            <option value="">בחר עיר</option>
+            {cities?.map((city: any) => (
+              <option key={city.id} value={city.id}>
+                {city.nameHe}
+              </option>
+            ))}
+          </select>
+          {errors.cityId && (
+            <p className="mt-1 text-sm text-red-500">{errors.cityId}</p>
+          )}
+        </div>
+
+        {/* Street */}
+        <div className="relative" ref={streetDropdownRef}>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            רחוב (אופציונלי)
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={streetSearch}
+              onChange={(e) => {
+                const value = e.target.value;
+                setStreetSearch(value);
+                setShowStreetDropdown(value.length >= 2 || value.length === 0);
+                
+                if (value === '') {
+                  setFormData((prev) => ({
+                    ...prev,
+                    streetId: undefined,
+                    streetName: undefined,
+                    neighborhoodId: '',
+                    neighborhoodName: '',
+                  }));
+                }
+              }}
+              onFocus={() => setShowStreetDropdown(true)}
+              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent pr-10 ${
+                errors.streetId ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="התחל להקליד שם רחוב או לחץ לבחירה..."
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              onClick={() => setShowStreetDropdown(!showStreetDropdown)}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="הצג את כל הרחובות"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          {errors.streetId && (
+            <p className="mt-1 text-sm text-red-500">{errors.streetId}</p>
+          )}
+
+          {/* Street Dropdown */}
+          {showStreetDropdown && (
+            <div className="absolute z-10 w-full mt-2 border border-gray-300 rounded-lg max-h-60 overflow-y-auto bg-white shadow-lg">
+              {streetSearch.length >= 2 ? (
+                <>
+                  {streetsLoading && (
+                    <div className="p-4 text-center text-gray-500">טוען רחובות...</div>
+                  )}
+                  {!streetsLoading && searchedStreets && searchedStreets.length === 0 && (
+                    <div className="p-4 text-center text-gray-500">
+                      לא נמצאו רחובות התואמים לחיפוש
+                    </div>
+                  )}
+                  {!streetsLoading && searchedStreets && searchedStreets.length > 0 && (
+                    <ul>
+                      {searchedStreets.map((street: any) => (
+                        <li
+                          key={street.id}
+                          onClick={() => handleStreetSelect(street)}
+                          className="px-4 py-3 hover:bg-[#C9A24D] hover:bg-opacity-10 cursor-pointer border-b last:border-b-0 transition-colors"
+                        >
+                          <div className="font-medium text-black">{street.name}</div>
+                          {street.neighborhoodName && (
+                            <div className="text-sm text-gray-600">שכונה: {street.neighborhoodName}</div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              ) : (
+                <>
+                  {!allStreets && (
+                    <div className="p-4 text-center text-gray-500">טוען רחובות...</div>
+                  )}
+                  {allStreets && allStreets.length === 0 && (
+                    <div className="p-4 text-center text-gray-500">אין רחובות זמינים</div>
+                  )}
+                  {allStreets && allStreets.length > 0 && (
+                    <ul>
+                      {allStreets.map((street: any) => (
+                        <li
+                          key={street.id}
+                          onClick={() => handleStreetSelect(street)}
+                          className="px-4 py-3 hover:bg-[#C9A24D] hover:bg-opacity-10 cursor-pointer border-b last:border-b-0 transition-colors"
+                        >
+                          <div className="font-medium text-black">{street.name}</div>
+                          {street.neighborhoodName && (
+                            <div className="text-sm text-gray-600">שכונה: {street.neighborhoodName}</div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Neighborhood */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            שכונה <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.neighborhoodName}
+            onChange={(e) => handleChange('neighborhoodName', e.target.value)}
+            disabled={!!formData.streetId}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+              formData.streetId ? 'bg-gray-100 cursor-not-allowed' : ''
+            } ${errors.neighborhoodName ? 'border-red-500' : 'border-gray-300'}`}
+          >
+            <option value="">בחר שכונה</option>
+            {neighborhoods?.map((neighborhood: any) => (
+              <option key={neighborhood.id} value={neighborhood.name}>
+                {neighborhood.name}
+              </option>
+            ))}
+          </select>
+          {formData.streetId && (
+            <p className="mt-1 text-sm text-gray-500">השכונה מתמלאת אוטומטית מהרחוב שנבחר</p>
+          )}
+          {errors.neighborhoodName && (
+            <p className="mt-1 text-sm text-red-500">{errors.neighborhoodName}</p>
+          )}
+        </div>
+
+        {/* House Number */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            מספר בית (אופציונלי)
+          </label>
+          <input
+            type="number"
+            value={formData.houseNumber || ''}
+            onChange={(e) => handleChange('houseNumber', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+            onWheel={(e) => e.currentTarget.blur()}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
+              errors.houseNumber ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="לדוגמה: 12"
+            min="1"
+          />
+          {errors.houseNumber && (
+            <p className="mt-1 text-sm text-red-500">{errors.houseNumber}</p>
+          )}
+        </div>
+
+        {/* Address Supplement */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            תוספת כתובת (אופציונלי)
           </label>
           <input
             type="text"
-            value={desiredStreet}
-            onChange={(e) => setDesiredStreet(e.target.value)}
-            placeholder='למשל: "רחוב הרצל" או "אזור גבעת שרת"'
+            value={formData.addressSupplement || ''}
+            onChange={(e) => handleChange('addressSupplement', e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent"
-            dir="rtl"
+            placeholder="לדוגמה: דירה 4, כניסה ב'"
           />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <p className="text-sm text-gray-500">
-            💡 ניתן להזין כל רחוב או אזור, לא מוגבל לרשימה מסוימת
-          </p>
         </div>
       </div>
 
+      {/* Navigation */}
       <div className="flex justify-between pt-6 border-t">
         <button
           type="button"
@@ -76,3 +385,4 @@ const WantedForSaleStep2: React.FC<Props> = ({ data, onNext, onPrev }) => {
 };
 
 export default WantedForSaleStep2;
+

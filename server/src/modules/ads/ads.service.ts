@@ -118,7 +118,7 @@ export class AdsService {
         data: {
           id: uuidv4(),
           title: data.title,
-          description: data.description,
+          description: data.description || '',
           price: data.price,
           adType: data.adType, // Include adType for wanted ads
           categoryId: data.categoryId,

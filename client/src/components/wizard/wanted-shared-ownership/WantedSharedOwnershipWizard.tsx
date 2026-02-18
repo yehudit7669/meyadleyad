@@ -110,7 +110,7 @@ const WantedSharedOwnershipWizard: React.FC = () => {
 
     return {
       title,
-      description: '',
+      description: step3.description || undefined,
       price: step3.priceRequested,
       categoryId,
       adType: AdType.WANTED_SHARED_OWNERSHIP,

@@ -75,22 +75,36 @@ const WantedHolidayWizard: React.FC = () => {
 
     const categoryId = category?.id || categories?.find((cat: any) => cat.slug === 'shabbat-apartments')?.id;
 
-    const title = `דרוש: דירה לשבת - ${data.step3.parasha}, ${data.step3.rooms} חדרים`;
+    const title = `דרוש: דירה לשבת - ${data.step3.parasha}${data.step3.rooms ? `, ${data.step3.rooms} חדרים` : ''}`;
     const isPaid = data.step2.isPaid;
 
-    // For wanted ads: send adType and requestedLocationText
-    // Do NOT send cityId/streetId/houseNumber - backend handles this
+    // For wanted ads: send adType with structured address (city, street, neighborhood)
     return {
       title,
-      description: `מחפש דירה לשבת פרשת ${data.step3.parasha}: ${data.step3.rooms} חדרים${data.step1.desiredArea ? `, אזור: ${data.step1.desiredArea}` : ''}`,
+      description: data.step3.description || undefined,
       price: isPaid && data.step3.priceRequested ? data.step3.priceRequested : undefined,
       categoryId,
       adType: AdType.WANTED_HOLIDAY,
-      requestedLocationText: data.step1.desiredArea,
+      // Send structured address data
+      cityId: data.step1.cityId,
+      streetId: data.step1.streetId,
+      neighborhood: data.step1.neighborhoodName,
+      houseNumber: data.step1.houseNumber,
+      addressSupplement: data.step1.addressSupplement,
+      // Also send as requestedLocationText for display
+      requestedLocationText: `${data.step1.cityName}${data.step1.streetName ? `, ${data.step1.streetName}` : ''}${data.step1.neighborhoodName ? `, ${data.step1.neighborhoodName}` : ''}`,
       contactName: data.step4.contactName,
       contactPhone: data.step4.contactPhone,
       customFields: {
-        desiredArea: data.step1.desiredArea,
+        // Keep address data in customFields too for compatibility
+        cityId: data.step1.cityId,
+        cityName: data.step1.cityName,
+        streetId: data.step1.streetId,
+        streetName: data.step1.streetName,
+        neighborhoodId: data.step1.neighborhoodId,
+        neighborhoodName: data.step1.neighborhoodName,
+        houseNumber: data.step1.houseNumber,
+        addressSupplement: data.step1.addressSupplement,
         isPaid: data.step2.isPaid,
         parasha: data.step3.parasha,
         propertyType: data.step3.propertyType,

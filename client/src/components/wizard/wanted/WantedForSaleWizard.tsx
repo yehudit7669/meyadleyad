@@ -78,23 +78,37 @@ const WantedForSaleWizard: React.FC = () => {
 
     const categoryId = category?.id || categories?.find((cat: any) => cat.slug === 'apartments-for-sale')?.id;
 
-    const title = `דרוש: ${data.step3.rooms} חדרים ${data.step2.desiredStreet ? `ב${data.step2.desiredStreet}` : ''}`;
+    const title = `דרוש: ${data.step3.rooms ? `${data.step3.rooms} חדרים` : 'דירה'} ${data.step2.cityName ? `ב${data.step2.cityName}` : ''}`;
 
-    // For wanted ads: send adType and requestedLocationText
-    // Do NOT send cityId/streetId/houseNumber - backend handles this
+    // For wanted ads: send adType with structured address (city, street, neighborhood)
     return {
       title,
-      description: `מחפש לקנות דירה: ${data.step3.rooms} חדרים, ${data.step3.squareMeters} מ"ר`,
+      description: data.step3.description || undefined,
       price: data.step3.priceRequested,
       categoryId,
       adType: AdType.WANTED_FOR_SALE,
-      requestedLocationText: data.step2.desiredStreet,
+      // Send structured address data
+      cityId: data.step2.cityId,
+      streetId: data.step2.streetId,
+      neighborhood: data.step2.neighborhoodName,
+      houseNumber: data.step2.houseNumber,
+      addressSupplement: data.step2.addressSupplement,
+      // Also send as requestedLocationText for display
+      requestedLocationText: `${data.step2.cityName}${data.step2.streetName ? `, ${data.step2.streetName}` : ''}${data.step2.neighborhoodName ? `, ${data.step2.neighborhoodName}` : ''}`,
       contactName: data.step4.contactName,
       contactPhone: data.step4.contactPhone,
       sendCopyToEmail: data.step4.sendCopyToEmail,
       customFields: {
         hasBroker: data.step1.hasBroker,
-        desiredStreet: data.step2.desiredStreet,
+        // Keep address data in customFields too for compatibility
+        cityId: data.step2.cityId,
+        cityName: data.step2.cityName,
+        streetId: data.step2.streetId,
+        streetName: data.step2.streetName,
+        neighborhoodId: data.step2.neighborhoodId,
+        neighborhoodName: data.step2.neighborhoodName,
+        houseNumber: data.step2.houseNumber,
+        addressSupplement: data.step2.addressSupplement,
         propertyType: data.step3.propertyType,
         rooms: data.step3.rooms,
         squareMeters: data.step3.squareMeters,

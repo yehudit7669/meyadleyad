@@ -135,7 +135,7 @@ const WantedCommercialWizard: React.FC = () => {
 
     return {
       title,
-      description: step4.description || '',
+      description: step4.description || undefined,
       price: step4.price,
       categoryId,
       adType: AdType.WANTED_COMMERCIAL,
