@@ -130,7 +130,7 @@ const WantedSlider: React.FC = () => {
           ) : (
             ads.map((ad: any) => (
               <div key={ad.id} className="min-w-[200px] max-w-[200px]">
-                <AdCardCompact ad={ad} />
+                <AdCardCompact ad={ad} showCategory={true} />
               </div>
             ))
           )}
