@@ -190,10 +190,10 @@ const WantedForSaleStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
           />
           <div className="flex-1">
             <span className="font-medium text-gray-900">
-              שלח לי את הלוח השבועי באימייל לאחר הפרסום
+              שלח לי את המודעה שלי במייל כקובץ PDF
             </span>
             <p className="text-sm text-gray-600 mt-1">
-              קובץ PDF מסודר עם כל פרטי המודעה כפי שתפורסם באתר
+              קבל עותק דיגיטלי של המודעה שפרסמת - נוח לשמירה ושיתוף
             </p>
           </div>
         </label>

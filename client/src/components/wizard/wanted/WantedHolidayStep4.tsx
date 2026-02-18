@@ -176,10 +176,10 @@ const WantedHolidayStep4: React.FC<Props> = ({ data, onNext, onPrev, isLoading }
         />
         <label htmlFor="sendCopyToEmail" className="flex-1 cursor-pointer">
           <div className="font-medium text-[#1F3F3A]">
-            שלח לי את הלוח השבועי באימייל לאחר הפרסום
+            שלח לי את המודעה שלי במייל כקובץ PDF
           </div>
           <div className="text-sm text-gray-600 mt-1">
-            קובץ PDF מסודר עם כל פרטי המודעה כפי שתפורסם באתר
+            קבל עותק דיגיטלי של המודעה שפרסמת - נוח לשמירה ושיתוף
           </div>
         </label>
       </div>

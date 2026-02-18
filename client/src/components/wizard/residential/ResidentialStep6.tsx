@@ -15,13 +15,15 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
   const step4 = wizardData.step4;
   const step5 = wizardData.step5;
 
+  const [sendCopyToEmail, setSendCopyToEmail] = React.useState(false);
+
   // Debug: log step3 data
   console.log('ResidentialStep6 - step3 data:', step3);
   console.log('Arnona:', step3?.arnona, 'Type:', typeof step3?.arnona);
   console.log('Vaad:', step3?.vaad, 'Type:', typeof step3?.vaad);
 
   const handleSubmit = () => {
-    onSubmit(false);
+    onSubmit(sendCopyToEmail);
   };
 
   const getPropertyTypeLabel = (type?: string) => {
@@ -276,6 +278,26 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
           </div>
 
         </div>
+      </div>
+
+      {/* Send Copy to Email Checkbox */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <label className="flex items-start cursor-pointer">
+          <input
+            type="checkbox"
+            checked={sendCopyToEmail}
+            onChange={(e) => setSendCopyToEmail(e.target.checked)}
+            className="mt-1 ml-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div className="flex-1">
+            <span className="font-medium text-gray-900">
+              שלח לי את המודעה שלי במייל כקובץ PDF
+            </span>
+            <p className="text-sm text-gray-600 mt-1">
+              קבל עותק דיגיטלי של המודעה שפרסמת - נוח לשמירה ושיתוף
+            </p>
+          </div>
+        </label>
       </div>
 
       {/* Navigation */}

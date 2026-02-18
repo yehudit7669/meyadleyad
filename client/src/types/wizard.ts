@@ -800,6 +800,7 @@ export interface WantedForRentStep3Data {
 export interface WantedForRentStep4Data {
   contactName?: string;
   contactPhone: string;
+  sendCopyToEmail?: boolean;
 }
 
 export interface WantedForRentWizardData {
@@ -949,6 +950,7 @@ export const wantedForRentStep3Schema = z.object({
 export const wantedForRentStep4Schema = z.object({
   contactName: z.string().optional(),
   contactPhone: z.string().regex(phoneRegex, 'מספר טלפון לא תקין'),
+  sendCopyToEmail: z.boolean().optional(),
 });
 
 export const wantedHolidayStep1Schema = z.object({

@@ -22,10 +22,12 @@ const CommercialSpacePreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev,
   const step4 = wizardData.step4;
   const step5 = wizardData.step5;
 
+  const [sendCopyToEmail, setSendCopyToEmail] = React.useState(false);
+
   const handleSubmit = () => {
     console.log('🎯 Preview handleSubmit called');
     console.log('Wizard data:', wizardData);
-    onSubmit(false);
+    onSubmit(sendCopyToEmail);
   };
 
   const getTransactionTypeLabel = (type?: string) => {
@@ -232,6 +234,26 @@ const CommercialSpacePreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev,
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Send Copy to Email Checkbox */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <label className="flex items-start cursor-pointer">
+          <input
+            type="checkbox"
+            checked={sendCopyToEmail}
+            onChange={(e) => setSendCopyToEmail(e.target.checked)}
+            className="mt-1 ml-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <div className="flex-1">
+            <span className="font-medium text-gray-900">
+              שלח לי את המודעה שלי במייל כקובץ PDF
+            </span>
+            <p className="text-sm text-gray-600 mt-1">
+              קבל עותק דיגיטלי של המודעה שפרסמת - נוח לשמירה ושיתוף
+            </p>
+          </div>
+        </label>
       </div>
 
       {/* Navigation */}
