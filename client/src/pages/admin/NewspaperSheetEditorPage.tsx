@@ -490,7 +490,6 @@ export default function NewspaperSheetEditorPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newspaper-sheet', sheetId] });
-      alert('✅ השינויים נשמרו בהצלחה');
     },
     onError: (error: any) => {
       alert(`❌ שגיאה: ${error.response?.data?.error || error.message}`);
@@ -538,7 +537,6 @@ export default function NewspaperSheetEditorPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['newspaper-sheet', sheetId] });
-      alert('✅ PDF נוצר בהצלחה!');
     },
     onError: (error: any) => {
       alert(`❌ שגיאה ביצירת PDF: ${error.response?.data?.error || error.message}`);

@@ -9,6 +9,7 @@
   background: #FFFFFF;
   position: relative;
   overflow: visible;
+  padding-bottom: 10mm; /* שוליים תחתונים קטנים */
 }
 
 .newspaper-header {
@@ -124,6 +125,9 @@
   gap: 1rem;
   margin-top: 0.75rem;
   padding: 0 1.5rem;
+  /* מניעת פיצול שורות בין עמודים */
+  page-break-inside: avoid;
+  break-inside: avoid-page;
 }
 
 /* ====== Individual Card (Property) ====== */
@@ -139,6 +143,9 @@
   display: flex;
   flex-direction: column;
   height: 100%; /* Fill the grid cell(s) completely */
+  /* מניעת פיצול כרטיס בין עמודים */
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .newspaper-property-card:hover {
@@ -172,7 +179,7 @@
   padding: 0.4rem 0.5rem 0.3rem 0.5rem;
   font-weight: 700;
   font-size: 0.85rem;
-  line-height: 1.2;
+  line-height: 1;
   text-align: center;
   border-radius: 0.4rem 0.4rem 0 0;
 }
@@ -287,6 +294,24 @@
     min-height: 297mm;
     margin: 0;
     box-shadow: none;
+    padding-bottom: 15mm; /* שוליים תחתונים */
+  }
+
+  /* מניעת פיצול של כרטיסים בין עמודים */
+  .newspaper-property-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* מניעת פיצול של שורת כרטיסים */
+  .newspaper-grid {
+    page-break-inside: auto;
+  }
+
+  /* הוספת התנהגות לשורות בגריד */
+  .newspaper-grid > * {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
 

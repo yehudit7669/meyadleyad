@@ -6,6 +6,8 @@ import { brandingService } from '../branding/branding.service';
 import fs from 'fs/promises';
 import path from 'path';
 import { config } from '../../config/index.js';
+import { calculateNewspaperLayout } from './newspaper-layout.service';
+import sharp from 'sharp';
 
 /**
  * Service for General Newspaper Sheet
@@ -75,9 +77,10 @@ export class NewspaperGeneralSheetService {
       margin: {
         top: '0mm',
         right: '0mm',
-        bottom: '0mm',
+        bottom: '10mm',
         left: '0mm'
-      }
+      },
+      preferCSSPageSize: true
     });
 
     await browser.close();
@@ -134,6 +137,9 @@ export class NewspaperGeneralSheetService {
             }
           }
         },
+        ads: {
+          orderBy: { createdAt: 'asc' }
+        },
         _count: {
           select: { listings: true }
         }
@@ -180,7 +186,9 @@ export class NewspaperGeneralSheetService {
     `;
 
     // דפים נוספים - כל דף בדיוק כמו הקובץ המקורי עם כל הפרטים
-    const additionalPagesHTML = sheets.map(sheet => this.generateRegularSheetPage(sheet)).join('');
+    const additionalPagesPromises = sheets.map(sheet => this.generateRegularSheetPage(sheet));
+    const additionalPages = await Promise.all(additionalPagesPromises);
+    const additionalPagesHTML = additionalPages.join('');
 
     return `
 <!DOCTYPE html>
@@ -200,17 +208,36 @@ export class NewspaperGeneralSheetService {
   }
 
   /**
-   * Generate HTML for a single regular sheet page (without header - only ribbon and grid)
-   * יצירת HTML לדף בודד - ללא כותרת, רק סרט אנכי וגריד
+   * Generate HTML for a single regular sheet - split into multiple pages if needed
+   * יצירת HTML לגיליון - מחולק לעמודים מרובים אם צריך
    */
-  private generateRegularSheetPage(sheet: SheetWithListings): string {
-    // כרטיסי נכסים
-    const cardsHTML = this.generatePropertyCards(sheet);
+  private async generateRegularSheetPage(sheet: SheetWithListings): Promise<string> {
+    // Generate all cards HTML
+    let allCardsHTML = '';
+    if (sheet.ads && sheet.ads.length > 0) {
+      allCardsHTML = await this.generateLayoutHTML(sheet);
+    } else {
+      allCardsHTML = this.generatePropertyCards(sheet);
+    }
 
-    return `
-      <div class="newspaper-page">
+    // Split cards into array - match both <a> tags and <div> tags with newspaper-property-card-link
+    const cardMatches = allCardsHTML.match(/(?:<a href="[^"]*" class="newspaper-property-card-link"[\s\S]*?<\/a>|<div class="newspaper-property-card-link"[\s\S]*?<\/div>\s*<\/div>)/g) || [];
+    
+    // Calculate cards per page: 3 columns x 4 rows = 12 cards per page
+    const cardsPerPage = 12;
+    const totalPages = Math.ceil(cardMatches.length / cardsPerPage);
+    
+    let pagesHTML = '';
+    
+    for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+      const startIdx = pageIndex * cardsPerPage;
+      const endIdx = Math.min(startIdx + cardsPerPage, cardMatches.length);
+      const pageCards = cardMatches.slice(startIdx, endIdx).join('');
+      
+      pagesHTML += `
+      <div class="newspaper-page newspaper-page-content">
         <!-- Content with Ribbon + Grid (ללא כותרת) -->
-        <div class="newspaper-content" style="margin-top: 10mm;">
+        <div class="newspaper-content">
           <!-- Vertical Ribbon -->
           <div class="newspaper-ribbon">
             <span style="font-size: 4.5mm;">${this.escapeHtml(sheet.category.nameHe)}</span>
@@ -219,11 +246,17 @@ export class NewspaperGeneralSheetService {
 
           <!-- Grid -->
           <div class="newspaper-grid">
-            ${cardsHTML}
+            ${pageCards}
           </div>
         </div>
       </div>
-    `;
+      `;
+    }
+
+    // מוסיף page break אחרי הלוח השלם
+    pagesHTML += '<div style="page-break-after: always;"></div>';
+
+    return pagesHTML;
   }
 
   /**
@@ -232,7 +265,14 @@ export class NewspaperGeneralSheetService {
    */
   private async getSharedStyles(): Promise<string> {
     return `
-    @page { size: A4 portrait; margin: 0; }
+    @page { 
+      size: A4 portrait; 
+      margin: 0;
+    }
+    
+    @page :first {
+      margin: 0;
+    }
     
     * {
       margin: 0;
@@ -248,13 +288,25 @@ export class NewspaperGeneralSheetService {
       print-color-adjust: exact;
     }
 
+    /* מניעת פיצול כרטיסים */
+    .newspaper-property-card,
+    .newspaper-property-card-link {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
     .newspaper-page {
       position: relative;
       width: 210mm;
       height: 297mm;
       background: #FFFFFF;
-      padding: 5mm 0 0 0;
+      padding: 0 0 10mm 0;
       overflow: visible;
+    }
+
+    /* עמודי תוכן (לא העמוד הראשון) - עם מרווח עליון קבוע */
+    .newspaper-page-content {
+      padding: 10mm 0 10mm 0;
     }
 
     /* ====== Header ====== */
@@ -349,8 +401,8 @@ export class NewspaperGeneralSheetService {
 
     /* ====== Cards Grid ====== */
     .newspaper-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
+      flex-wrap: wrap;
       gap: 4.23mm;
       padding: 0 6.35mm;
       margin-top: 3.17mm;
@@ -358,10 +410,15 @@ export class NewspaperGeneralSheetService {
 
     /* ====== Property Card Link ====== */
     .newspaper-property-card-link {
+      width: calc(33.333% - 2.82mm);
+      flex-shrink: 0;
       text-decoration: none;
       color: inherit;
       display: block;
       transition: transform 0.2s ease;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      height: 53mm;
     }
 
     .newspaper-property-card-link:hover {
@@ -630,6 +687,171 @@ export class NewspaperGeneralSheetService {
         `;
       })
       .join('');
+  }
+
+  /**
+   * Generate HTML from calculated layout (with ads)
+   */
+  private async generateLayoutHTML(sheet: SheetWithListings): Promise<string> {
+    const listings = sheet.listings
+      .sort((a, b) => a.positionIndex - b.positionIndex)
+      .map(l => ({
+        ...l.listing,
+        id: l.listingId
+      }));
+
+    const ads = (sheet.ads || []).map(ad => ({
+      id: ad.id,
+      imageUrl: ad.imageUrl,
+      size: ad.size as '1x1' | '2x1' | '3x1' | '2x2',
+      anchorType: ad.anchorType as 'beforeIndex' | 'pagePosition',
+      beforeListingId: ad.beforeListingId ?? undefined,
+      page: ad.page ?? undefined,
+      row: ad.row ?? undefined,
+      col: ad.col ?? undefined
+    }));
+
+    const layout = calculateNewspaperLayout(listings, ads);
+    
+    let html = '';
+    
+    // Flatten all items from all pages
+    const allItems: any[] = [];
+    for (const page of layout.pages) {
+      for (const row of page.rows) {
+        for (const item of row) {
+          if (item.type === 'listing' || (item.type === 'ad' && !item.data?.isOccupied)) {
+            allItems.push(item);
+          }
+        }
+      }
+    }
+    
+    // Generate HTML for each item
+    for (const item of allItems) {
+      if (item.type === 'listing') {
+        const sheetListing = sheet.listings.find(l => l.listingId === item.id);
+        if (!sheetListing) continue;
+        
+        const listing = sheetListing.listing;
+        const customFields = listing.customFields || {};
+        const rooms = customFields.rooms || '';
+        const size = customFields.size || '';
+        const floor = customFields.floor || '';
+        const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
+        const description = listing.title || '';
+        const address = listing.address || 'נכס';
+        const priceDisplay = listing.price && listing.price > 0 ? `₪${listing.price.toLocaleString('he-IL')}` : '';
+
+        const features: string[] = [];
+        const featuresObj = customFields.features || {};
+        
+        if (featuresObj.hasOption) features.push('אופציה');
+        if (featuresObj.parking) features.push('חניה');
+        if (featuresObj.parentalUnit || featuresObj.masterUnit) features.push('יחידת הורים');
+        if (featuresObj.storage) features.push('מחסן');
+        if (featuresObj.ac || featuresObj.airConditioning) features.push('מיזוג');
+        if (featuresObj.elevator) features.push('מעלית');
+        if (featuresObj.balcony) features.push('מרפסת');
+        if (featuresObj.safeRoom) features.push('ממ״ד');
+        if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
+        if (featuresObj.view) features.push('נוף');
+        if (featuresObj.yard) features.push('חצר');
+        if (featuresObj.housingUnit) features.push('יח׳ דיור');
+
+        const contactName = customFields.contactName || 'פרטים נוספים';
+        const contactPhone = customFields.contactPhone || listing.User?.phone || '050-000-0000';
+
+        const formatAddress = (fullAddress: string) => {
+          if (!fullAddress) return 'נכס';
+          const parts = fullAddress.split(',');
+          return parts[0].trim();
+        };
+
+        const adUrl = `${config.clientUrl}/ads/${listing.id}`;
+
+        html += `
+          <a href="${adUrl}" class="newspaper-property-card-link" style="text-decoration: none; color: inherit; display: block;">
+            <div class="newspaper-property-card">
+              ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
+              
+              <div class="property-card-header">
+                <div class="property-title">${this.escapeHtml(formatAddress(address))}</div>
+              </div>
+
+              <div class="property-card-body">
+                <div class="property-meta">
+                  ${size ? `<div class="meta-item"><span class="meta-icon">📐</span><span class="meta-value">${size}</span></div>` : ''}
+                  ${floor ? `<div class="meta-item"><span class="meta-icon">🏢</span><span class="meta-value">${floor}</span></div>` : ''}
+                  ${rooms ? `<div class="meta-item"><span class="meta-icon">🚪</span><span class="meta-value">${rooms}</span></div>` : ''}
+                </div>
+
+                <div class="property-description">${this.escapeHtml(description)}</div>
+
+                ${features.length > 0 ? `<div class="property-features">${features.join(' · ')}</div>` : ''}
+
+                ${priceDisplay && listing.price ? `<div class="property-price">₪${listing.price.toLocaleString('he-IL')}</div>` : ''}
+              </div>
+
+              <div class="property-contact">
+                <div class="contact-name">${this.escapeHtml(contactName)}</div>
+                <div class="contact-phone">${this.escapeHtml(contactPhone)}</div>
+              </div>
+            </div>
+          </a>
+        `;
+      } else if (item.type === 'ad') {
+        const colspan = item.colspan || 1;
+        const adImageBase64 = await this.imageToBase64(item.data.imageUrl);
+        
+        html += `
+          <div class="newspaper-property-card-link" style="width: calc(${colspan * 33.333}% - ${(3 - colspan) * 0.94}mm);">
+            <div class="newspaper-property-card" style="overflow: hidden;">
+              <img src="${adImageBase64}" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    return html;
+  }
+
+  /**
+   * Convert image URL to base64
+   */
+  private async imageToBase64(imageUrl: string | null): Promise<string | null> {
+    if (!imageUrl) return null;
+
+    try {
+      let imagePath: string;
+
+      if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          console.error(`Failed to fetch image: ${imageUrl}`);
+          return null;
+        }
+        const buffer = await response.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString('base64');
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        return `data:${contentType};base64,${base64}`;
+      } else {
+        imagePath = path.join(process.cwd(), 'uploads', imageUrl.replace(/^\/uploads\//, ''));
+        
+        const imageBuffer = await fs.readFile(imagePath);
+        const processedBuffer = await sharp(imageBuffer)
+          .resize(800, 600, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+
+        const base64 = processedBuffer.toString('base64');
+        return `data:image/jpeg;base64,${base64}`;
+      }
+    } catch (error) {
+      console.error(`Error converting image to base64:`, error);
+      return null;
+    }
   }
 
   /**

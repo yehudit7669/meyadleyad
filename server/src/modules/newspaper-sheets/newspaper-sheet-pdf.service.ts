@@ -83,9 +83,10 @@ export class NewspaperSheetPDFService {
       margin: {
         top: '0mm',
         right: '0mm',
-        bottom: '0mm',
+        bottom: '10mm',
         left: '0mm'
-      }
+      },
+      preferCSSPageSize: true
     });
 
     await browser.close();
@@ -157,7 +158,15 @@ export class NewspaperSheetPDFService {
 <head>
   <meta charset="UTF-8">
   <style>
-    @page { size: A4 portrait; margin: 0; }
+    @page { 
+      size: A4 portrait; 
+      margin: 0; 
+      margin-top: 10mm;
+    }
+    
+    @page :first {
+      margin-top: 0;
+    }
     
     * {
       margin: 0;
@@ -173,12 +182,28 @@ export class NewspaperSheetPDFService {
       print-color-adjust: exact;
     }
 
+    /* מניעת פיצול כרטיסים וקבוצות שורות */
+    .newspaper-property-card,
+    .newspaper-property-card-link,
+    .grid-row-wrapper {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* מניעת פיצול לפני ואחרי שורה */
+    .grid-row-wrapper {
+      page-break-before: auto;
+      page-break-after: auto;
+      display: contents;
+    }
+
     .newspaper-page {
       position: relative;
       width: 210mm;
       height: 297mm;
       background: #FFFFFF;
       padding: 0;
+      padding-bottom: 10mm;
       overflow: visible;
     }
 
@@ -274,9 +299,8 @@ export class NewspaperSheetPDFService {
 
     /* ====== Cards Grid ====== */
     .newspaper-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-auto-rows: 53mm;
+      display: flex;
+      flex-wrap: wrap;
       gap: 4.23mm;
       padding: 0 6.35mm;
       margin-top: 3.17mm;
@@ -284,10 +308,15 @@ export class NewspaperSheetPDFService {
 
     /* ====== Property Card Link ====== */
     .newspaper-property-card-link {
+      width: calc(33.333% - 2.82mm);
+      flex-shrink: 0;
       text-decoration: none;
       color: inherit;
       display: block;
       transition: transform 0.2s ease;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      height: 53mm;
     }
 
     .newspaper-property-card-link:hover {
@@ -306,6 +335,8 @@ export class NewspaperSheetPDFService {
       overflow: visible;
       box-shadow: 0 0.53mm 1.06mm rgba(0, 0, 0, 0.05);
       transition: box-shadow 0.2s ease;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     .newspaper-property-card-link:hover .newspaper-property-card {
@@ -420,17 +451,6 @@ export class NewspaperSheetPDFService {
       font-size: 3.17mm;
       font-weight: 600;
       border-radius: 1.69mm 1.69mm 0 0;
-      margin-top: auto;
-    }
-
-    .contact-name {
-      font-weight: 600;
-    }
-
-    .contact-phone {
-      font-weight: 700;
-      direction: ltr;
-    }
       margin-top: auto;
     }
 
