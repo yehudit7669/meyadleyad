@@ -165,6 +165,31 @@ export class EmailOperationsFormController {
         }
       }
 
+      console.log('📋 Creating ad with customFields:', JSON.stringify(formData.customFields, null, 2));
+
+      // בדיקה למניעת מודעות כפולות - בודק אם כבר נוצרה מודעה דומה ב-30 השניות האחרונות
+      const recentAd = await prisma.ad.findFirst({
+        where: {
+          userId: user.id,
+          title: formData.title,
+          categoryId: category.id,
+          createdAt: {
+            gte: new Date(Date.now() - 30000), // 30 שניות אחורה
+          },
+        },
+      });
+
+      if (recentAd) {
+        console.log('⚠️ Duplicate ad detected, returning existing ad:', recentAd.adNumber);
+        res.status(200).json({
+          success: true,
+          message: 'Ad already exists (duplicate prevented)',
+          adId: recentAd.id,
+          adNumber: recentAd.adNumber,
+        });
+        return;
+      }
+
       // יצירת המודעה
       const ad = await prisma.ad.create({
         data: {
@@ -380,16 +405,20 @@ export class EmailOperationsFormController {
 
       console.log('✅ Normalized form data:', JSON.stringify(formData, null, 2));
 
-      // קריאה לטיפול הרגיל
+      // קריאה לטיפול הרגיל - זה ישלח תשובה בעצמו
       req.body = formData;
-      await this.handleFormSubmission(req, res);
+      return await this.handleFormSubmission(req, res);
     } catch (error) {
       console.error('❌ Error in Google Forms webhook:', error);
       console.error('Error details:', error);
-      res.status(500).json({ 
-        error: 'Failed to process Google Forms data',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      });
+      
+      // רק אם עדיין לא נשלחה תשובה
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: 'Failed to process Google Forms data',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
   }
 }
