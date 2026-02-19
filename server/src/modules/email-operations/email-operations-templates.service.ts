@@ -34,7 +34,7 @@ export class EmailOperationsTemplatesService {
     to: string,
     originalCommandType: EmailCommandType
   ): Promise<void> {
-    const registrationUrl = `${this.frontendUrl}/register`;
+    const registrationUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfn_PZ-3UxvshbDPQUy68ua4qBjj-1zLMpw1Q-Q82W1NEy_Tg/viewform?usp=header';
 
     const html = `
       <!DOCTYPE html>

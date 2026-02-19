@@ -13,6 +13,7 @@ import { emailOperationsTemplates } from './email-operations-templates.service';
 import { emailAuditLogger } from './email-audit-logger.service';
 import { EmailCommandType } from './email-command-parser.service';
 import { emailOperationsOrchestrator } from './email-operations-orchestrator.service';
+import { AuthService } from '../auth/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
@@ -24,7 +25,7 @@ export interface FormSubmissionData {
   userPhone?: string;
 
   // סוג הפעולה
-  formType: 'publish' | 'wanted';
+  formType: 'publish' | 'wanted' | 'registration';
   category: string; // "דירות למכירה", "דירות להשכרה", וכו'
 
   // פרטי המודעה/בקשה
@@ -61,6 +62,12 @@ export class EmailOperationsFormController {
         res.status(400).json({ 
           error: 'Missing required fields: senderEmail, title, category' 
         });
+        return;
+      }
+
+      // טיפול מיוחד בטופס הרשמה
+      if (formData.formType === 'registration') {
+        await this.handleRegistrationFormSubmission(formData, res);
         return;
       }
 
@@ -341,6 +348,98 @@ export class EmailOperationsFormController {
     } catch (error) {
       console.error('❌ Error in registration completed:', error);
       res.status(500).json({ error: 'Failed to process registration completion' });
+    }
+  }
+
+  /**
+   * טיפול בטופס הרשמה מ-Google Forms
+   * יוצר משתמש חדש ומעבד Pending Intents
+   */
+  async handleRegistrationFormSubmission(formData: FormSubmissionData, res: Response) {
+    try {
+      console.log('📝 Processing registration form submission');
+      
+      const email = formData.senderEmail.toLowerCase().trim();
+      const name = formData.userName || 'משתמש';
+      const phone = formData.userPhone;
+      
+      // בדיקה שיש סיסמה
+      const password = formData.customFields?.password;
+      const passwordConfirm = formData.customFields?.passwordConfirm;
+      
+      if (!password) {
+        res.status(400).json({ error: 'Password is required for registration' });
+        return;
+      }
+      
+      // בדיקה שהסיסמאות תואמות
+      if (password !== passwordConfirm) {
+        res.status(400).json({ error: 'Passwords do not match' });
+        return;
+      }
+      
+      // בדיקה אם המשתמש כבר קיים
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+      
+      if (existingUser) {
+        res.status(400).json({ error: 'User already registered' });
+        return;
+      }
+      
+      // יצירת משתמש חדש
+      const authService = new AuthService();
+      
+      const registrationData = {
+        email,
+        password,
+        name,
+        phone,
+        role: 'USER' as const,
+      };
+      
+      console.log('Creating new user:', { email, name, phone });
+      
+      const result = await authService.register(registrationData);
+      
+      console.log('✅ User created successfully:', result.user.id);
+      
+      // שליחת אימייל השלמת הרשמה
+      await emailOperationsTemplates.sendRegistrationCompletedEmail(
+        email,
+        name
+      );
+      
+      // עיבוד Pending Intents
+      await emailOperationsOrchestrator.processPendingIntentsForUser(email, result.user.id);
+      
+      // אם המשתמש רוצה לקבל את הגיליון השבועי, הרשם אותו
+      const weeklyDigestOptIn = formData.customFields?.weeklyDigestOptIn;
+      if (weeklyDigestOptIn === true || weeklyDigestOptIn === 'true' || weeklyDigestOptIn === 'כן') {
+        try {
+          await prisma.user.update({
+            where: { id: result.user.id },
+            data: { weeklyDigestOptIn: true },
+          });
+          console.log('✅ User opted in to weekly digest');
+        } catch (error) {
+          console.error('⚠️ Failed to update weekly digest preference:', error);
+        }
+      }
+      
+      res.status(201).json({ 
+        success: true,
+        message: 'Registration successful',
+        userId: result.user.id,
+      });
+      
+    } catch (error) {
+      console.error('❌ Error in registration form submission:', error);
+      res.status(500).json({ 
+        error: 'Failed to process registration',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
 
