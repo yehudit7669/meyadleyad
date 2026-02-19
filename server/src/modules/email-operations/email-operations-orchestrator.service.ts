@@ -619,7 +619,7 @@ export class EmailOperationsOrchestrator {
       [EmailCommandType.PUBLISH_SHABBAT]: 'https://docs.google.com/forms/d/e/1FAIpQLSfURSOKEw-gbIa2xdAgd9qWncXfa-zKgFhS96EER68i17T02A/viewform?usp=header',
       [EmailCommandType.PUBLISH_HOUSING_UNIT]: 'https://docs.google.com/forms/d/e/1FAIpQLScLIOjFVcz2-Zoyt6AZ0TUQgpSeozTzGMnNVZxESzBRPOT_Hw/viewform?usp=header',
       [EmailCommandType.PUBLISH_COMMERCIAL]: 'https://docs.google.com/forms/d/e/1FAIpQLSfAD9q6J1H8AZD9pdniJX5bNjjpZZmGpfdIu40QKLWW0fdIGQ/viewform?usp=header',
-      [EmailCommandType.PUBLISH_SHARED_OWNERSHIP]: `${baseUrl}/forms/publish-shared-ownership`,
+      [EmailCommandType.PUBLISH_SHARED_OWNERSHIP]: 'https://docs.google.com/forms/d/e/1FAIpQLServd1wD1AIEWJ1K1bLt1I9LiAVwRQN0kjOfFxHyW0Fc9EuVg/viewform?usp=header',
       [EmailCommandType.WANTED_BUY]: `${baseUrl}/forms/wanted-buy`,
       [EmailCommandType.WANTED_RENT]: `${baseUrl}/forms/wanted-rent`,
       [EmailCommandType.WANTED_SHABBAT]: `${baseUrl}/forms/wanted-shabbat`,
