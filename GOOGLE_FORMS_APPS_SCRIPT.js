@@ -235,7 +235,7 @@ function buildPayload(responses) {
   // מצב הנכס
   const propertyCondition = getFieldValue(responses, FIELD_MAPPING.propertyCondition);
   if (propertyCondition) {
-    customFields.propertyCondition = propertyCondition;
+    customFields.condition = propertyCondition;  // שים לב: השדה נקרא 'condition' בממשק!
   }
   
   // קומה
@@ -279,47 +279,52 @@ function buildPayload(responses) {
   // מאפיינים (checkbox list) - מגיע כמערך או string מופרד בפסיקים
   const features = getFieldValue(responses, FIELD_MAPPING.features);
   if (features) {
+    // יצירת אובייקט features מקונן - זה המבנה שהממשק מצפה לו!
+    const featuresObj = {};
+    
     // אם זה מערך - Google Forms מחזיר מערך עבור checkbox
     if (Array.isArray(features)) {
-      customFields.features = features;
-      
-      // פיצול המאפיינים לשדות ספציפיים
-      customFields.parking = features.includes('חניה') || features.includes('חנייה');
-      customFields.warehouse = features.includes('מחסן');
-      customFields.mamad = features.includes('ממ"ד') || features.includes('ממד');
-      customFields.sukkaBalcony = features.includes('מרפסת סוכה');
-      customFields.elevator = features.includes('מעלית');
-      customFields.view = features.includes('נוף');
-      customFields.parentalUnit = features.includes('יחידת הורים');
-      customFields.housingUnit = features.includes('יחידת דיור');
-      customFields.yard = features.includes('חצר');
-      customFields.airConditioning = features.includes('מיזוג');
-      customFields.garden = features.includes('גינה');
-      customFields.renovated = features.includes('חדית') || features.includes('משופץ');
-      customFields.upgradedKitchen = features.includes('מטבח משודרג');
-      customFields.accessibleForDisabled = features.includes('גישה לנכים');
-      customFields.option = features.includes('אופציה');
+      // פיצול המאפיינים לשדות ספציפיים - שמות השדות חייבים להתאים לממשק!
+      featuresObj.parking = features.includes('חניה') || features.includes('חנייה');
+      featuresObj.storage = features.includes('מחסן');  // שים לב: storage ולא warehouse!
+      featuresObj.safeRoom = features.includes('ממ"ד') || features.includes('ממד');  // safeRoom ולא mamad!
+      featuresObj.sukkaBalcony = features.includes('מרפסת סוכה');
+      featuresObj.elevator = features.includes('מעלית');
+      featuresObj.view = features.includes('נוף');
+      featuresObj.parentalUnit = features.includes('יחידת הורים');
+      featuresObj.housingUnit = features.includes('יחידת דיור');
+      featuresObj.yard = features.includes('חצר');
+      featuresObj.airConditioning = features.includes('מיזוג');
+      featuresObj.garden = features.includes('גינה');
+      featuresObj.renovated = features.includes('חדית') || features.includes('משופץ');
+      featuresObj.upgradedKitchen = features.includes('מטבח משודרג');
+      featuresObj.accessibleForDisabled = features.includes('גישה לנכים');
+      featuresObj.hasOption = features.includes('אופציה');  // hasOption ולא option!
+      featuresObj.frontFacing = features.includes('חזית');
     } else if (typeof features === 'string') {
       // אם זה string - פיצול לפי פסיקים
       const featuresArray = features.split(',').map(f => f.trim());
-      customFields.features = featuresArray;
       
-      customFields.parking = featuresArray.some(f => f.includes('חניה') || f.includes('חנייה'));
-      customFields.warehouse = featuresArray.some(f => f.includes('מחסן'));
-      customFields.mamad = featuresArray.some(f => f.includes('ממ"ד') || f.includes('ממד'));
-      customFields.sukkaBalcony = featuresArray.some(f => f.includes('מרפסת סוכה'));
-      customFields.elevator = featuresArray.some(f => f.includes('מעלית'));
-      customFields.view = featuresArray.some(f => f.includes('נוף'));
-      customFields.parentalUnit = featuresArray.some(f => f.includes('יחידת הורים'));
-      customFields.housingUnit = featuresArray.some(f => f.includes('יחידת דיור'));
-      customFields.yard = featuresArray.some(f => f.includes('חצר'));
-      customFields.airConditioning = featuresArray.some(f => f.includes('מיזוג'));
-      customFields.garden = featuresArray.some(f => f.includes('גינה'));
-      customFields.renovated = featuresArray.some(f => f.includes('חדית') || f.includes('משופץ'));
-      customFields.upgradedKitchen = featuresArray.some(f => f.includes('מטבח משודרג'));
-      customFields.accessibleForDisabled = featuresArray.some(f => f.includes('גישה לנכים'));
-      customFields.option = featuresArray.some(f => f.includes('אופציה'));
+      featuresObj.parking = featuresArray.some(f => f.includes('חניה') || f.includes('חנייה'));
+      featuresObj.storage = featuresArray.some(f => f.includes('מחסן'));
+      featuresObj.safeRoom = featuresArray.some(f => f.includes('ממ"ד') || f.includes('ממד'));
+      featuresObj.sukkaBalcony = featuresArray.some(f => f.includes('מרפסת סוכה'));
+      featuresObj.elevator = featuresArray.some(f => f.includes('מעלית'));
+      featuresObj.view = featuresArray.some(f => f.includes('נוף'));
+      featuresObj.parentalUnit = featuresArray.some(f => f.includes('יחידת הורים'));
+      featuresObj.housingUnit = featuresArray.some(f => f.includes('יחידת דיור'));
+      featuresObj.yard = featuresArray.some(f => f.includes('חצר'));
+      featuresObj.airConditioning = featuresArray.some(f => f.includes('מיזוג'));
+      featuresObj.garden = featuresArray.some(f => f.includes('גינה'));
+      featuresObj.renovated = featuresArray.some(f => f.includes('חדית') || f.includes('משופץ'));
+      featuresObj.upgradedKitchen = featuresArray.some(f => f.includes('מטבח משודרג'));
+      featuresObj.accessibleForDisabled = featuresArray.some(f => f.includes('גישה לנכים'));
+      featuresObj.hasOption = featuresArray.some(f => f.includes('אופציה'));
+      featuresObj.frontFacing = featuresArray.some(f => f.includes('חזית'));
     }
+    
+    // שמירת features כאובייקט מקונן - רק זה! בלי שדות נוספים בשורש
+    customFields.features = featuresObj;
   }
   
   payload.customFields = customFields;
