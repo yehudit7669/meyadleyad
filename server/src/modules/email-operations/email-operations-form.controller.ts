@@ -637,11 +637,11 @@ export class EmailOperationsFormController {
       const ad = await prisma.ad.findFirst({
         where: { adNumber: parseInt(adNumber) },
         include: {
-          User: { select: { email: true, name: true, phone: true } },
-          Category: { select: { name: true, nameHe: true } },
-          City: { select: { name: true, nameHe: true } },
-          Street: { select: { name: true, nameHe: true } },
-          AdImage: { select: { url: true, order: true } },
+          User: true,
+          Category: true,
+          City: true,
+          Street: true,
+          AdImage: true,
         },
       });
 
@@ -668,7 +668,7 @@ export class EmailOperationsFormController {
         // מיקום
         cityName: ad.City?.nameHe || ad.City?.name || '',
         cityId: ad.cityId,
-        streetName: ad.Street?.nameHe || ad.Street?.name || '',
+        streetName: ad.Street?.name || '',
         streetId: ad.streetId,
         address: ad.address || '',
         neighborhood: ad.neighborhood || '',

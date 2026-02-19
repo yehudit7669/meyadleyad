@@ -468,7 +468,7 @@ export class EmailOperationsOrchestrator {
     // קריאה ל-API לקבלת ה-URL עם prefill
     try {
       const response = await fetch(editFormApiUrl);
-      const data = await response.json();
+      const data = await response.json() as { formUrl?: string; error?: string };
       
       if (!response.ok || !data.formUrl) {
         throw new Error('Failed to get form URL');
