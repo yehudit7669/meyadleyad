@@ -92,7 +92,17 @@ export class EmailCommandParser {
       extractAdId: true,
     },
     {
+      regex: /^(\d+)#עדכון\s*$/i, // תמיכה בפורמט הפוך (RTL)
+      command: EmailCommandType.UPDATE_AD,
+      extractAdId: true,
+    },
+    {
       regex: /^הסרה#(\d+)\s*$/i,
+      command: EmailCommandType.REMOVE_AD,
+      extractAdId: true,
+    },
+    {
+      regex: /^(\d+)#הסרה\s*$/i, // תמיכה בפורמט הפוך (RTL)
       command: EmailCommandType.REMOVE_AD,
       extractAdId: true,
     },
