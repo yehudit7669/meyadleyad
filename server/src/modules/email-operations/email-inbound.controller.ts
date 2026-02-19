@@ -34,6 +34,8 @@ export class EmailInboundController {
       console.log(`   Subject: ${req.body.subject || req.body.Subject || 'no subject'}`);
       console.log(`   Attachments: ${attachmentsCount} file(s)`);
       console.log(`   Content-Type: ${req.headers['content-type'] || 'unknown'}`);
+      console.log(`🔍 SendGrid body.text field:`, req.body.text ? req.body.text.substring(0, 200) : 'EMPTY/NULL');
+      console.log(`🔍 SendGrid body keys:`, Object.keys(req.body).join(', '));
 
       // ניתוח הנתונים מהספק (SendGrid/Mailgun/etc.)
       const emailData = this.parseWebhookPayload(req.body, req.headers, req.files as any[]);
@@ -45,6 +47,8 @@ export class EmailInboundController {
       }
 
       console.log(`✅ Email parsed successfully - MessageID: ${emailData.messageId}`);
+      console.log(`📄 Body Text (first 200 chars): ${emailData.bodyText ? emailData.bodyText.substring(0, 200) : 'EMPTY/NULL'}`);
+      console.log(`📄 Body Text length: ${emailData.bodyText?.length || 0}`);
 
       // עיבוד אסינכרוני (לא לחסום את ה-webhook)
       this.processEmailAsync(emailData);
