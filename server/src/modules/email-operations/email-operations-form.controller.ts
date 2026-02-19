@@ -459,17 +459,8 @@ export class EmailOperationsFormController {
     try {
       console.log('✏️ Processing ad update form submission');
       
-      // חילוץ מספר מודעה מ-customFields (נשלח מה-URL prefill)
-      const submittedAdNumber = parseInt(formData.customFields?.adNumber);
       const email = formData.senderEmail.toLowerCase().trim();
-
-      // בדיקה שיש מספר מודעה
-      if (!submittedAdNumber || isNaN(submittedAdNumber)) {
-        res.status(400).json({ error: 'Invalid ad number' });
-        return;
-      }
-
-      console.log(`📝 Update request for ad #${submittedAdNumber} from ${email}`);
+      console.log(`📝 Update request from ${email}`);
 
       // בדיקה שהמשתמש קיים
       const user = await prisma.user.findUnique({
@@ -481,12 +472,39 @@ export class EmailOperationsFormController {
         return;
       }
 
+      // 🔒 חיפוש מספר המודעה המקורי ב-EmailAuditLog
+      // חשוב: אנחנו משתמשים במספר שנרשם כשהמשתמש ביקש עדכון, לא במה שהמשתמש שלח בטופס!
+      // זה מונע מהמשתמש לשנות את מספר המודעה בטופס ולערוך מודעה אחרת
+      const recentUpdateRequest = await prisma.emailAuditLog.findFirst({
+        where: {
+          email: email,
+          action: 'UPDATE_FORM_SENT',
+          commandType: 'UPDATE_AD',
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      if (!recentUpdateRequest || !recentUpdateRequest.adId) {
+        console.log(`❌ No recent update request found for ${email}`);
+        res.status(403).json({ error: 'No update request found. Please send an email with "עדכון#<מספר_מודעה>" first.' });
+        return;
+      }
+
+      const originalAdNumber = parseInt(recentUpdateRequest.adId);
+      console.log(`🔒 Using original ad number from audit log: #${originalAdNumber}`);
+
+      // בדיקה שמספר המודעה בטופס תואם למקורי (אם שונה - אזהרה)
+      const submittedAdNumber = parseInt(formData.customFields?.adNumber);
+      if (submittedAdNumber && submittedAdNumber !== originalAdNumber) {
+        console.log(`⚠️ WARNING: User tried to change ad number from ${originalAdNumber} to ${submittedAdNumber}. Using original.`);
+      }
+
       // מציאת המודעה ובדיקה שהיא שייכת למשתמש
-      // חשוב: אנחנו משתמשים במספר שנשלח מה-URL, וגם בודקים שהמודעה שייכת למשתמש
-      // זה מונע ממשתמש לערוך מודעה של מישהו אחר גם אם הוא ישנה את השדה בטופס
       const ad = await prisma.ad.findFirst({
         where: {
-          adNumber: submittedAdNumber,
+          adNumber: originalAdNumber,
           userId: user.id,
         },
         include: {
@@ -496,7 +514,7 @@ export class EmailOperationsFormController {
       });
 
       if (!ad) {
-        console.log(`❌ Ad #${submittedAdNumber} not found or does not belong to user ${user.id}`);
+        console.log(`❌ Ad #${originalAdNumber} not found or does not belong to user ${user.id}`);
         res.status(404).json({ error: 'Ad not found or does not belong to user' });
         return;
       }
