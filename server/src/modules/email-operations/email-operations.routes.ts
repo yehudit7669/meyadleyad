@@ -113,6 +113,26 @@ router.get(
   (req, res) => emailOperationsFormController.getFormUrl(req, res)
 );
 
+/**
+ * קבלת נתוני מודעה לעריכה
+ * GET /api/email-operations/forms/ad-data/:adNumber
+ * מחזיר את נתוני המודעה בפורמט JSON למילוי טופס
+ */
+router.get(
+  '/forms/ad-data/:adNumber',
+  (req, res) => emailOperationsFormController.getAdDataForEdit(req, res)
+);
+
+/**
+ * קבלת URL לטופס עריכה
+ * GET /api/email-operations/forms/edit-url/:adNumber
+ * מחזיר קישור לGoogle Forms המתאים עם מספר המודעה
+ */
+router.get(
+  '/forms/edit-url/:adNumber',
+  (req, res) => emailOperationsFormController.getEditFormUrl(req, res)
+);
+
 // ===============================================
 // Mailing List Management (למנהל)
 // ===============================================

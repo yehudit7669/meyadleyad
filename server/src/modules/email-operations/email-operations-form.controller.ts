@@ -71,6 +71,14 @@ export class EmailOperationsFormController {
         return;
       }
 
+      // טיפול מיוחד בעדכון מודעה
+      // אם יש adNumber ב-customFields, זה אומר שזה עדכון
+      const adNumberToUpdate = formData.customFields?.adNumber;
+      if (adNumberToUpdate) {
+        await this.handleAdUpdateFormSubmission(formData, res);
+        return;
+      }
+
       // בדיקה אם המשתמש קיים
       const user = await prisma.user.findUnique({
         where: { email: formData.senderEmail.toLowerCase().trim() },
@@ -440,6 +448,333 @@ export class EmailOperationsFormController {
         error: 'Failed to process registration',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  }
+
+  /**
+   * טיפול בעדכון מודעה דרך Google Forms
+   * יוצר Pending Changes במקום עדכון ישיר (למודעות ACTIVE)
+   */
+  async handleAdUpdateFormSubmission(formData: FormSubmissionData, res: Response) {
+    try {
+      console.log('✏️ Processing ad update form submission');
+      
+      const adNumber = parseInt(formData.customFields?.adNumber);
+      const email = formData.senderEmail.toLowerCase().trim();
+
+      // בדיקה שיש מספר מודעה
+      if (!adNumber || isNaN(adNumber)) {
+        res.status(400).json({ error: 'Invalid ad number' });
+        return;
+      }
+
+      // בדיקה שהמשתמש קיים
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        res.status(403).json({ error: 'User not registered' });
+        return;
+      }
+
+      // מציאת המודעה ובדיקה שהיא שייכת למשתמש
+      const ad = await prisma.ad.findFirst({
+        where: {
+          adNumber,
+          userId: user.id,
+        },
+        include: {
+          Category: true,
+          City: true,
+        },
+      });
+
+      if (!ad) {
+        res.status(404).json({ error: 'Ad not found or does not belong to user' });
+        return;
+      }
+
+      // מציאת הקטגוריה אם השתנתה
+      let categoryId = ad.categoryId;
+      if (formData.category && formData.category !== ad.Category.nameHe && formData.category !== ad.Category.name) {
+        const newCategory = await prisma.category.findFirst({
+          where: {
+            OR: [
+              { nameHe: formData.category },
+              { name: formData.category },
+            ],
+          },
+        });
+        if (newCategory) {
+          categoryId = newCategory.id;
+        }
+      }
+
+      // אם יש שם עיר אבל cityId לא השתנה, חפש את העיר
+      let cityId = formData.cityId || ad.cityId;
+      if (formData.cityName) {
+        const city = await prisma.city.findFirst({
+          where: {
+            OR: [
+              { name: formData.cityName },
+              { nameHe: formData.cityName },
+            ],
+          },
+        });
+        if (city) {
+          cityId = city.id;
+        }
+      }
+
+      // בניית customFields מעודכנים
+      const updatedCustomFields = {
+        ...(ad.customFields as any),
+        ...formData.customFields,
+      };
+      
+      // הסרת adNumber מה-customFields (הוא לא צריך להישמר שם)
+      delete updatedCustomFields.adNumber;
+
+      // בניית אובייקט שינויים ממתינים
+      const pendingChanges = {
+        title: formData.title,
+        description: formData.description || ad.description,
+        price: formData.price !== undefined ? formData.price : ad.price,
+        categoryId,
+        cityId,
+        streetId: formData.streetId || ad.streetId,
+        address: formData.address || ad.address,
+        neighborhood: formData.neighborhood || ad.neighborhood,
+        customFields: updatedCustomFields,
+        requestedAt: new Date().toISOString(),
+        requestedBy: user.id,
+      };
+
+      // אם המודעה ACTIVE - שמור כ-Pending Changes
+      // אם לא ACTIVE - עדכן ישירות
+      if (ad.status === 'ACTIVE') {
+        // שמירת שינויים ממתינים
+        await prisma.ad.update({
+          where: { id: ad.id },
+          data: {
+            hasPendingChanges: true,
+            pendingChanges: pendingChanges as any,
+            pendingChangesAt: new Date(),
+          },
+        });
+
+        console.log(`✅ Saved pending changes for ad ${adNumber}`);
+
+        res.status(200).json({
+          success: true,
+          message: 'Changes saved and pending admin approval',
+          adNumber: ad.adNumber,
+          hasPendingChanges: true,
+        });
+
+        // שליחת אימייל למשתמש המתאים
+        await emailOperationsTemplates.sendAdUpdatedConfirmationEmail(
+          email,
+          ad.adNumber.toString()
+        );
+
+      } else {
+        // מודעה לא ACTIVE - עדכן ישירות
+        await prisma.ad.update({
+          where: { id: ad.id },
+          data: {
+            title: formData.title,
+            description: pendingChanges.description,
+            price: pendingChanges.price,
+            categoryId,
+            cityId,
+            streetId: pendingChanges.streetId,
+            address: pendingChanges.address,
+            neighborhood: pendingChanges.neighborhood,
+            customFields: updatedCustomFields,
+            updatedAt: new Date(),
+          },
+        });
+
+        console.log(`✅ Updated ad ${adNumber} directly (status: ${ad.status})`);
+
+        res.status(200).json({
+          success: true,
+          message: 'Ad updated successfully',
+          adNumber: ad.adNumber,
+        });
+      }
+
+      // תיעוד
+      await emailAuditLogger.logSuccess({
+        email,
+        action: 'AD_UPDATE_FORM_SUBMITTED',
+        commandType: EmailCommandType.UPDATE_AD,
+        adId: ad.adNumber.toString(),
+        userId: user.id,
+      });
+
+    } catch (error) {
+      console.error('❌ Error in ad update form submission:', error);
+      res.status(500).json({
+        error: 'Failed to process ad update',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * קבלת נתוני מודעה לעריכה
+   * GET /api/email-operations/forms/ad-data/:adNumber
+   * מחזיר את כל נתוני המודעה בפורמט שמתאים למילוי Google Forms
+   */
+  async getAdDataForEdit(req: Request, res: Response) {
+    try {
+      const { adNumber } = req.params;
+      
+      // מציאת המודעה
+      const ad = await prisma.ad.findFirst({
+        where: { adNumber: parseInt(adNumber) },
+        include: {
+          User: { select: { email: true, name: true, phone: true } },
+          Category: { select: { name: true, nameHe: true } },
+          City: { select: { name: true, nameHe: true } },
+          Street: { select: { name: true, nameHe: true } },
+          AdImage: { select: { url: true, order: true } },
+        },
+      });
+
+      if (!ad) {
+        res.status(404).json({ error: 'Ad not found' });
+        return;
+      }
+
+      // בניית אובייקט נתונים לטופס
+      const formData = {
+        // פרטי משתמש
+        senderEmail: ad.User.email,
+        userName: ad.User.name,
+        userPhone: ad.User.phone,
+        
+        // פרט מודעה
+        adNumber: ad.adNumber,
+        title: ad.title,
+        description: ad.description || '',
+        price: ad.price,
+        category: ad.Category.nameHe || ad.Category.name,
+        categoryId: ad.categoryId,
+        
+        // מיקום
+        cityName: ad.City?.nameHe || ad.City?.name || '',
+        cityId: ad.cityId,
+        streetName: ad.Street?.nameHe || ad.Street?.name || '',
+        streetId: ad.streetId,
+        address: ad.address || '',
+        neighborhood: ad.neighborhood || '',
+        
+        // שדות מותאמים
+        customFields: (ad.customFields as any) || {},
+        
+        // תמונות
+        images: ad.AdImage.map(img => ({
+          url: img.url,
+          order: img.order,
+        })),
+      };
+
+      res.status(200).json(formData);
+    } catch (error) {
+      console.error('❌ Error getting ad data for edit:', error);
+      res.status(500).json({ error: 'Failed to get ad data' });
+    }
+  }
+
+  /**
+   * קבלת URL לטופס עריכה עם prefill
+   * GET /api/email-operations/forms/edit-url/:adNumber
+   * מחזיר קישור לטופס Google Forms המתאים עם הנתונים הקיימים
+   */
+  async getEditFormUrl(req: Request, res: Response) {
+    try {
+      const { adNumber } = req.params;
+      
+      // מציאת המודעה
+      const ad = await prisma.ad.findFirst({
+        where: { adNumber: parseInt(adNumber) },
+        include: {
+          User: { select: { email: true } },
+          Category: { select: { name: true, nameHe: true } },
+        },
+      });
+
+      if (!ad) {
+        res.status(404).json({ error: 'Ad not found' });
+        return;
+      }
+
+      // זיהוי סוג הטופס לפי קטגוריה ו-adType
+      const categoryName = (ad.Category.nameHe || ad.Category.name || '').toLowerCase();
+      let formUrl = '';
+      let entryId = '';
+      
+      if (ad.adType === 'WANTED') {
+        // טפסי "דרוש"
+        if (categoryName.includes('למכירה') || categoryName.includes('קנייה')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdMwDw2sNMb5jPcBoIl6AJ-n9CQu0_80omLW3Ck3uIRW3TJyA/viewform';
+          entryId = '449392419'; // דרושה דירה לקניה
+        } else if (categoryName.includes('להשכרה') || categoryName.includes('שכירות')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScPERp7DqSEqJQJfrOFvmc_Qn4PBjeK_A9Al8UQtKzL3Za7ZA/viewform';
+          entryId = '365904041'; // דרושה דירה להשכרה
+        } else if (categoryName.includes('שבת')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfBeO33PMHLvQdikhCiIWxwRNWr7I-Thb2YtO-s6gpYQ9letQ/viewform';
+          entryId = '1027845874'; // דרושה דירה לשבת
+        } else if (categoryName.includes('מסחרי')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc9LedNhusFbQ7lUHlYlQmz8PVEZ6KvHv44inPHf5d7YT1g7g/viewform';
+          entryId = '2122624981'; // דרושים - נדלן מסחרי
+        } else if (categoryName.includes('טאבו משותף')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSd6B2x9iYh-WsXT7bRis5tx-AAVvDDnQnT_Fp3nQa61bAsKsg/viewform';
+          entryId = '1570047191'; // דרושים - טאבו משותף
+        }
+      } else {
+        // טפסי פרסום
+        if (categoryName.includes('למכירה')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSd5ZjstupkxjBc9d7j7h3hOkIHVNgfjZLlCtPbB7j0cDmbt2w/viewform';
+          entryId = '1648351638'; // דירה למכירה
+        } else if (categoryName.includes('להשכרה')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc8JTt1ZTlzdS5uRiVzHYiJ0-6dZLJ4pcqW2-E8q6xuz1SOFA/viewform';
+          entryId = '1505905751'; // דירה להשכרה
+        } else if (categoryName.includes('שבת')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfURSOKEw-gbIa2xdAgd9qWncXfa-zKgFhS96EER68i17T02A/viewform';
+          entryId = '622992691'; // דירה לשבת
+        } else if (categoryName.includes('יחידת דיור') || categoryName.includes('יחידות דיור')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLScLIOjFVcz2-Zoyt6AZ0TUQgpSeozTzGMnNVZxESzBRPOT_Hw/viewform';
+          entryId = '1148879052'; // יחידת דיור
+        } else if (categoryName.includes('מסחרי')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfAD9q6J1H8AZD9pdniJX5bNjjpZZmGpfdIu40QKLWW0fdIGQ/viewform';
+          entryId = '1904534500'; // נדלן מסחרי
+        } else if (categoryName.includes('טאבו משותף')) {
+          formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLServd1wD1AIEWJ1K1bLt1I9LiAVwRQN0kjOfFxHyW0Fc9EuVg/viewform';
+          entryId = '1719612777'; // טאבו משותף
+        }
+      }
+
+      if (!formUrl || !entryId) {
+        res.status(400).json({ error: 'Could not determine form type for this ad' });
+        return;
+      }
+
+      // הוספת מספר מודעה כ-parameter (ימלא מראש את השדה המוסתר)
+      formUrl += `?usp=pp_url&entry.${entryId}=${ad.adNumber}`;
+
+      res.status(200).json({ 
+        formUrl,
+        adNumber: ad.adNumber,
+        message: 'Form URL for editing'
+      });
+    } catch (error) {
+      console.error('❌ Error getting edit form URL:', error);
+      res.status(500).json({ error: 'Failed to get edit form URL' });
     }
   }
 

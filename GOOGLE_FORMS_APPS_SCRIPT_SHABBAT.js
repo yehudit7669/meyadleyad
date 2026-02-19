@@ -35,6 +35,7 @@ const CATEGORY = 'דירות לשבת';  // שם הקטגוריה (חייב לה
 const FIELD_MAPPING = {
   // שדות חובה
   email: 'Email Address',          // או 'כתובת אימייל' אם זו שאלה רגילה
+  adNumber: 'מספר_מודעה',          // שדה מוסתר לעריכת מודעות קיימות
   name: 'שם',
   phone: 'טלפון',
   description: 'תיאור הנכס',
@@ -198,6 +199,12 @@ function buildPayload(responses) {
   
   // שדות מותאמים אישית
   const customFields = {};
+  
+  // מספר מודעה (לעריכת מודעות קיימות)
+  const adNumber = getFieldValue(responses, FIELD_MAPPING.adNumber);
+  if (adNumber) {
+    customFields.adNumber = adNumber;
+  }
   
   // שדות ייחודיים לדירה לשבת
   if (parasha) {

@@ -38,6 +38,7 @@ const FIELD_MAPPING = {
   // 1. "Email Address" (אם מופעל "Collect email addresses")
   // 2. שאלה רגילה בשם "כתובת אימייל"
   email: 'Email Address',          // או 'כתובת אימייל' אם זו שאלה רגילה
+  adNumber: 'מספר_מודעה',          // שדה מוסתר לעריכת מודעות קיימות
   name: 'שם',
   phone: 'טלפון',
   description: 'תיאור הדרוש',
@@ -192,6 +193,12 @@ function buildPayload(responses) {
   
   // שדות מותאמים אישית
   const customFields = {};
+  
+  // מספר מודעה (לעריכת מודעות קיימות)
+  const adNumber = getFieldValue(responses, FIELD_MAPPING.adNumber);
+  if (adNumber) {
+    customFields.adNumber = adNumber;
+  }
   
   // סוג עסקה (השכרה/מכירה)
   if (transactionType) {

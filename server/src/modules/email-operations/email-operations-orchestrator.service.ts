@@ -427,26 +427,89 @@ export class EmailOperationsOrchestrator {
     authResult: EmailAuthResult,
     emailRequestId: string
   ): Promise<ProcessingResult> {
-    // שליחת מייל "פנייתך התקבלה - עדכון" עם קישור לטופס עדכון
-    const updateFormUrl = this.getUpdateFormUrl(parsedCommand.adId!);
-    
-    await emailOperationsTemplates.sendUpdateRequestReceivedEmail(emailData.from);
+    // בדיקה שיש מספר מודעה
+    if (!parsedCommand.adId) {
+      await emailOperationsTemplates.sendUpdateRequestReceivedEmail(emailData.from);
+      return {
+        success: false,
+        emailRequestId,
+        action: 'MISSING_AD_NUMBER',
+        message: 'No ad number provided',
+        shouldNotifyUser: false,
+      };
+    }
 
-    await emailAuditLogger.logSuccess({
-      email: emailData.from,
-      action: 'UPDATE_REQUEST_RECEIVED',
-      commandType: parsedCommand.commandType,
-      adId: parsedCommand.adId,
-      userId: authResult.userId,
+    // בדיקה שהמודעה קיימת ושייכת למשתמש
+    const ad = await prisma.ad.findFirst({
+      where: {
+        adNumber: parseInt(parsedCommand.adId),
+        userId: authResult.userId,
+      },
+      include: {
+        Category: { select: { nameHe: true, name: true } },
+      },
     });
 
-    return {
-      success: true,
-      emailRequestId,
-      action: 'UPDATE_FORM_SENT',
-      message: 'Update form link sent',
-      shouldNotifyUser: false,
-    };
+    if (!ad) {
+      await emailOperationsTemplates.sendUpdateRequestReceivedEmail(emailData.from);
+      return {
+        success: false,
+        emailRequestId,
+        action: 'AD_NOT_FOUND',
+        message: 'Ad not found or does not belong to user',
+        shouldNotifyUser: false,
+      };
+    }
+
+    // קבלת URL לטופס עריכה
+    const baseApiUrl = process.env.BACKEND_URL || 'https://amakom.co.il';
+    const editFormApiUrl = `${baseApiUrl}/api/email-operations/forms/edit-url/${ad.adNumber}`;
+
+    // קריאה ל-API לקבלת ה-URL עם prefill
+    try {
+      const response = await fetch(editFormApiUrl);
+      const data = await response.json();
+      
+      if (!response.ok || !data.formUrl) {
+        throw new Error('Failed to get form URL');
+      }
+
+      // שליחת מייל עם הקישור לטופס ממולא
+      await emailOperationsTemplates.sendRequestReceivedEmail(
+        emailData.from,
+        EmailCommandType.UPDATE_AD,
+        data.formUrl
+      );
+
+      await emailAuditLogger.logSuccess({
+        email: emailData.from,
+        action: 'UPDATE_FORM_SENT',
+        commandType: parsedCommand.commandType,
+        adId: parsedCommand.adId,
+        userId: authResult.userId,
+      });
+
+      return {
+        success: true,
+        emailRequestId,
+        action: 'UPDATE_FORM_SENT',
+        message: 'Update form link sent',
+        shouldNotifyUser: false,
+      };
+    } catch (error) {
+      console.error('Error getting edit form URL:', error);
+      
+      // Fallback: שליחת מייל חינוכי
+      await emailOperationsTemplates.sendUpdateRequestReceivedEmail(emailData.from);
+      
+      return {
+        success: false,
+        emailRequestId,
+        action: 'EDIT_FORM_ERROR',
+        message: 'Failed to generate edit form URL',
+        shouldNotifyUser: false,
+      };
+    }
   }
 
   /**
