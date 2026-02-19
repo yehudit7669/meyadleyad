@@ -459,14 +459,17 @@ export class EmailOperationsFormController {
     try {
       console.log('✏️ Processing ad update form submission');
       
-      const adNumber = parseInt(formData.customFields?.adNumber);
+      // חילוץ מספר מודעה מ-customFields (נשלח מה-URL prefill)
+      const submittedAdNumber = parseInt(formData.customFields?.adNumber);
       const email = formData.senderEmail.toLowerCase().trim();
 
       // בדיקה שיש מספר מודעה
-      if (!adNumber || isNaN(adNumber)) {
+      if (!submittedAdNumber || isNaN(submittedAdNumber)) {
         res.status(400).json({ error: 'Invalid ad number' });
         return;
       }
+
+      console.log(`📝 Update request for ad #${submittedAdNumber} from ${email}`);
 
       // בדיקה שהמשתמש קיים
       const user = await prisma.user.findUnique({
@@ -479,9 +482,11 @@ export class EmailOperationsFormController {
       }
 
       // מציאת המודעה ובדיקה שהיא שייכת למשתמש
+      // חשוב: אנחנו משתמשים במספר שנשלח מה-URL, וגם בודקים שהמודעה שייכת למשתמש
+      // זה מונע ממשתמש לערוך מודעה של מישהו אחר גם אם הוא ישנה את השדה בטופס
       const ad = await prisma.ad.findFirst({
         where: {
-          adNumber,
+          adNumber: submittedAdNumber,
           userId: user.id,
         },
         include: {
@@ -491,9 +496,12 @@ export class EmailOperationsFormController {
       });
 
       if (!ad) {
+        console.log(`❌ Ad #${submittedAdNumber} not found or does not belong to user ${user.id}`);
         res.status(404).json({ error: 'Ad not found or does not belong to user' });
         return;
       }
+
+      console.log(`✅ Ad found: #${ad.adNumber} belongs to user ${user.id}`);
 
       // מציאת הקטגוריה אם השתנתה
       let categoryId = ad.categoryId;
@@ -564,7 +572,7 @@ export class EmailOperationsFormController {
           },
         });
 
-        console.log(`✅ Saved pending changes for ad ${adNumber}`);
+        console.log(`✅ Saved pending changes for ad ${ad.adNumber}`);
 
         res.status(200).json({
           success: true,
@@ -597,7 +605,7 @@ export class EmailOperationsFormController {
           },
         });
 
-        console.log(`✅ Updated ad ${adNumber} directly (status: ${ad.status})`);
+        console.log(`✅ Updated ad ${ad.adNumber} directly (status: ${ad.status})`);
 
         res.status(200).json({
           success: true,
