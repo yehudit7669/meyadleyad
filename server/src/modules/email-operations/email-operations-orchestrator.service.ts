@@ -613,7 +613,7 @@ export class EmailOperationsOrchestrator {
     const formUrls: Partial<Record<EmailCommandType, string>> = {
       [EmailCommandType.PUBLISH_SALE]: 'https://docs.google.com/forms/d/e/1FAIpQLSd5ZjstupkxjBc9d7j7h3hOkIHVNgfjZLlCtPbB7j0cDmbt2w/viewform?usp=dialog',
       [EmailCommandType.PUBLISH_RENT]: 'https://docs.google.com/forms/d/e/1FAIpQLSc8JTt1ZTlzdS5uRiVzHYiJ0-6dZLJ4pcqW2-E8q6xuz1SOFA/viewform?usp=header',
-      [EmailCommandType.PUBLISH_SHABBAT]: `${baseUrl}/forms/publish-shabbat`,
+      [EmailCommandType.PUBLISH_SHABBAT]: 'https://docs.google.com/forms/d/e/1FAIpQLSfURSOKEw-gbIa2xdAgd9qWncXfa-zKgFhS96EER68i17T02A/viewform?usp=header',
       [EmailCommandType.PUBLISH_COMMERCIAL]: `${baseUrl}/forms/publish-commercial`,
       [EmailCommandType.PUBLISH_SHARED_OWNERSHIP]: `${baseUrl}/forms/publish-shared-ownership`,
       [EmailCommandType.WANTED_BUY]: `${baseUrl}/forms/wanted-buy`,
