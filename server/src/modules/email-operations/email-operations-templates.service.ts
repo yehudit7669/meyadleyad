@@ -207,6 +207,14 @@ export class EmailOperationsTemplatesService {
         subject: 'פנייתך התקבלה – דרושים טאבו משותף',
         body: 'קיבלנו את פנייתך בנושא דרושים טאבו משותף. כדי שנוכל לפרסם את הבקשה, יש למלא את טופס הבקשה בקישור המצורף למייל זה.',
       },
+      [EmailCommandType.UPDATE_AD]: {
+        subject: 'עדכון מודעה – קישור לטופס עריכה',
+        body: 'קיבלנו את בקשתך לעדכן את המודעה. כדי לעדכן את פרטי המודעה, יש למלא את הטופס בקישור הבא:',
+      },
+      [EmailCommandType.REMOVE_AD]: {
+        subject: 'הסרת מודעה – אישור מבוקש',
+        body: 'קיבלנו את בקשתך להסיר את המודעה. כדי לאשר את ההסרה, יש ללחוץ על הקישור הבא:',
+      },
     };
 
     const template = commandTexts[commandType];
@@ -283,7 +291,7 @@ export class EmailOperationsTemplatesService {
             </p>
             <h3 style="color: #2563eb;">ניהול המודעה:</h3>
             <p style="font-size: 16px; line-height: 1.6;">
-              כדי לעדכן או להסיר את המודעה שלך, שלח מייל חדש ל-<strong>info@amakom.co.il</strong> וכתוב בשורת הנושא בלבד את המילה המתאימה בצירוף מספר המודעה שלך.
+              כדי לעדכן או להסיר את המודעה שלך, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> וכתוב בשורת הנושא בלבד את המילה המתאימה בצירוף מספר המודעה שלך.
             </p>
             <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 5px 0; font-size: 15px;"><strong>לעדכון המודעה שלך:</strong></p>
@@ -391,7 +399,7 @@ export class EmailOperationsTemplatesService {
               קיבלנו את פנייתך בנושא עדכון מודעה ב„המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
-              כדי לעדכן מודעה קיימת, שלח מייל חדש ל-<strong>info@amakom.co.il</strong> עם שורת הנושא:
+              כדי לעדכן מודעה קיימת, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם שורת הנושא:
             </p>
             <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
               <p style="margin: 5px 0; font-size: 18px; color: #2563eb; font-weight: bold;">עדכון#[מספר_המודעה]</p>
@@ -435,7 +443,7 @@ export class EmailOperationsTemplatesService {
               קיבלנו את פנייתך בנושא הסרת מודעה ב„המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
-              כדי להסיר מודעה קיימת, שלח מייל חדש ל-<strong>info@amakom.co.il</strong> עם שורת הנושא:
+              כדי להסיר מודעה קיימת, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם שורת הנושא:
             </p>
             <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
               <p style="margin: 5px 0; font-size: 18px; color: #dc2626; font-weight: bold;">הסרה#[מספר_המודעה]</p>
@@ -482,7 +490,7 @@ export class EmailOperationsTemplatesService {
               המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר „המקום."
             </p>
             <p style="font-size: 16px; line-height: 1.6;">
-              להמשך עדכון או הסרה, שלח מייל חדש ל-<strong>info@amakom.co.il</strong> עם מספר המודעה:
+              להמשך עדכון או הסרה, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם מספר המודעה:
             </p>
             <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 5px 0; font-size: 16px; color: #2563eb;">
