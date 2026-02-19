@@ -100,18 +100,83 @@ export class EmailOperationsFormController {
       const shouldAutoApprove = isAdminOrSuperAdmin || hasPublishPermission;
       const adStatus = shouldAutoApprove ? 'ACTIVE' : 'PENDING';
 
+      // אם יש שם עיר אבל אין cityId, חפש את העיר
+      let cityId = formData.cityId;
+      if (!cityId && formData.cityName) {
+        const city = await prisma.city.findFirst({
+          where: {
+            OR: [
+              { name: formData.cityName },
+              { nameHe: formData.cityName },
+            ],
+          },
+        });
+        if (city) {
+          cityId = city.id;
+        }
+      }
+
+      // בניית כתובת מלאה אם לא הוגדרה
+      let address = formData.address;
+      if (!address && formData.customFields) {
+        const addressParts: string[] = [];
+        
+        // הוסף רחוב ומספר בית אם יש
+        if (formData.customFields.street) {
+          addressParts.push(formData.customFields.street);
+        }
+        if (formData.customFields.houseNumber) {
+          addressParts.push(formData.customFields.houseNumber);
+        }
+        if (formData.customFields.addressAddition) {
+          addressParts.push(formData.customFields.addressAddition);
+        }
+        
+        // אם יש שכונה, הוסף אותה
+        if (formData.customFields.neighborhood) {
+          addressParts.push(`שכונת ${formData.customFields.neighborhood}`);
+        }
+        
+        // אם יש עיר, הוסף אותה
+        if (formData.cityName) {
+          addressParts.push(formData.cityName);
+        }
+        
+        if (addressParts.length > 0) {
+          address = addressParts.join(', ');
+        }
+      }
+
+      // בניית תיאור אם לא הוגדר
+      let description = formData.description?.trim() || '';
+      if (!description && formData.customFields) {
+        const descParts: string[] = [];
+        
+        if (formData.customFields.propertyType) descParts.push(`סוג: ${formData.customFields.propertyType}`);
+        if (formData.customFields.rooms) descParts.push(`${formData.customFields.rooms} חדרים`);
+        if (formData.customFields.squareMeters) descParts.push(`${formData.customFields.squareMeters} מ"ר`);
+        if (formData.customFields.floor) descParts.push(`קומה ${formData.customFields.floor}`);
+        if (formData.customFields.neighborhood) descParts.push(`שכונת ${formData.customFields.neighborhood}`);
+        
+        if (descParts.length > 0) {
+          description = descParts.join(' | ');
+        } else {
+          description = 'פרטים נוספים יתווספו בקרוב';
+        }
+      }
+
       // יצירת המודעה
       const ad = await prisma.ad.create({
         data: {
           id: uuidv4(),
           userId: user.id,
           categoryId: category.id,
-          cityId: formData.cityId,
+          cityId: cityId,
           streetId: formData.streetId,
           title: formData.title,
-          description: formData.description,
+          description: description,
           price: formData.price,
-          address: formData.address,
+          address: address,
           customFields: formData.customFields || {},
           status: adStatus,
           publishedAt: shouldAutoApprove ? new Date() : null,

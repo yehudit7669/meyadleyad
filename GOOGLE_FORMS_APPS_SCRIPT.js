@@ -63,7 +63,7 @@ const FIELD_MAPPING = {
   balconies: 'מרפסות',
   furniture: 'ריהוט',
   entryDate: 'תאריך כניסה',
-  broker: 'תיווך',
+  broker: 'תיווך ',  // שים לב לרווח בסוף!
   
   // מאפיינים (checkbox list)
   features: 'מאפיינים',
@@ -203,6 +203,17 @@ function buildPayload(responses) {
   const neighborhood = getFieldValue(responses, FIELD_MAPPING.neighborhood);
   if (neighborhood) {
     customFields.neighborhood = neighborhood;
+  }
+  
+  // רחוב, מספר בית ותוספת כתובת
+  if (street) {
+    customFields.street = street;
+  }
+  if (houseNumber) {
+    customFields.houseNumber = houseNumber;
+  }
+  if (addressAddition) {
+    customFields.addressAddition = addressAddition;
   }
   
   // סוג הנכס
