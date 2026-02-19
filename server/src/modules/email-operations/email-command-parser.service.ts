@@ -129,27 +129,40 @@ export class EmailCommandParser {
    * @returns פקודה מנותחת
    */
   parseCommand(subject: string, bodyText?: string): ParsedEmailCommand {
+    console.log('🔍 [EMAIL PARSER] Starting to parse command...');
+    console.log('📧 Subject (raw):', JSON.stringify(subject));
+    console.log('📧 Subject (trimmed):', JSON.stringify(subject.trim()));
+    console.log('📧 Subject length:', subject.trim().length);
+    console.log('📧 Subject char codes:', subject.trim().split('').map((c, i) => `[${i}]=${c}(${c.charCodeAt(0)})`).join(', '));
+    
     // שלב 1: ניתוח שורת נושא
     const subjectResult = this.parseFromText(subject.trim(), 'subject');
     if (subjectResult.commandType !== EmailCommandType.UNKNOWN) {
+      console.log('✅ [EMAIL PARSER] Command recognized from subject:', subjectResult.commandType);
       return subjectResult;
     }
+    console.log('❌ [EMAIL PARSER] No command recognized from subject');
 
     // שלב 2: Fallback - 5 השורות הראשונות של גוף ההודעה
     if (bodyText) {
+      console.log('🔍 [EMAIL PARSER] Trying body fallback...');
       const first5Lines = this.extractFirst5Lines(bodyText);
+      console.log('📄 First 5 lines of body:', first5Lines);
       for (const line of first5Lines) {
         const bodyResult = this.parseFromText(line.trim(), 'body-fallback');
         if (bodyResult.commandType !== EmailCommandType.UNKNOWN) {
+          console.log('✅ [EMAIL PARSER] Command recognized from body:', bodyResult.commandType);
           return {
             ...bodyResult,
             confidence: 'medium', // נמוך יותר כי לא מה-subject
           };
         }
       }
+      console.log('❌ [EMAIL PARSER] No command recognized from body');
     }
 
     // לא זוהה
+    console.log('❌ [EMAIL PARSER] UNKNOWN command - nothing matched');
     return {
       commandType: EmailCommandType.UNKNOWN,
       confidence: 'low',
@@ -165,9 +178,18 @@ export class EmailCommandParser {
     text: string,
     source: 'subject' | 'body-fallback'
   ): ParsedEmailCommand {
-    for (const pattern of this.COMMAND_PATTERNS) {
+    console.log(`🔍 [PARSER] Checking text from ${source}: "${text}"`);
+    
+    for (let i = 0; i < this.COMMAND_PATTERNS.length; i++) {
+      const pattern = this.COMMAND_PATTERNS[i];
       const match = text.match(pattern.regex);
+      
+      if (pattern.command === EmailCommandType.UPDATE_AD || pattern.command === EmailCommandType.REMOVE_AD) {
+        console.log(`   Testing pattern [${i}]: ${pattern.regex} for ${pattern.command} => ${match ? '✅ MATCH' : '❌ no match'}`);
+      }
+      
       if (match) {
+        console.log(`✅ [PARSER] MATCHED pattern [${i}]: ${pattern.regex} => ${pattern.command}`);
         const result: ParsedEmailCommand = {
           commandType: pattern.command,
           confidence: source === 'subject' ? 'high' : 'medium',
@@ -178,12 +200,14 @@ export class EmailCommandParser {
         // אם יש extractAdId, נחלץ את מספר המודעה
         if (pattern.extractAdId && match[1]) {
           result.adId = match[1];
+          console.log(`   Extracted adId: ${result.adId}`);
         }
 
         return result;
       }
     }
 
+    console.log(`❌ [PARSER] No pattern matched for text: "${text}"`);
     return {
       commandType: EmailCommandType.UNKNOWN,
       confidence: 'low',
