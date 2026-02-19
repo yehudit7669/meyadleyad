@@ -34,8 +34,14 @@ export class EmailAuthVerifier {
     commandType: EmailCommandType,
     adId?: string
   ): Promise<EmailAuthResult> {
+    console.log('🔐 [EMAIL AUTH] Starting verification');
+    console.log('   Email:', senderEmail);
+    console.log('   Command:', commandType);
+    console.log('   AdId:', adId);
+    
     // נרמול אימייל
     const normalizedEmail = senderEmail.toLowerCase().trim();
+    console.log('   Normalized email:', normalizedEmail);
 
     // בדיקה האם המשתמש קיים במערכת
     const user = await prisma.user.findUnique({
@@ -47,6 +53,8 @@ export class EmailAuthVerifier {
       },
     });
 
+    console.log('🔍 [EMAIL AUTH] User lookup result:', user ? { id: user.id, email: user.email, status: user.status } : 'NOT FOUND');
+
     // פעולות שדורשות משתמש רשום
     const requiresRegistration = [
       EmailCommandType.UPDATE_AD,
@@ -56,6 +64,7 @@ export class EmailAuthVerifier {
     if (requiresRegistration.includes(commandType)) {
       // חובה שהמשתמש יהיה רשום
       if (!user) {
+        console.log('❌ [EMAIL AUTH] User not registered');
         return {
           authorized: false,
           userExists: false,
@@ -66,6 +75,7 @@ export class EmailAuthVerifier {
 
       // חובה שהמשתמש יהיה פעיל
       if (user.status !== 'ACTIVE') {
+        console.log('❌ [EMAIL AUTH] User not active, status:', user.status);
         return {
           authorized: false,
           userExists: true,
@@ -77,16 +87,20 @@ export class EmailAuthVerifier {
 
       // אימות בעלות על המודעה (לעדכון/הסרה)
       if (adId) {
+        console.log('🔍 [EMAIL AUTH] Verifying ad ownership for adId:', adId);
         const ownershipResult = await this.verifyAdOwnership(
           user.id,
           normalizedEmail,
           adId
         );
         if (!ownershipResult.authorized) {
+          console.log('❌ [EMAIL AUTH] Ownership verification failed:', ownershipResult.failReason);
           return ownershipResult;
         }
+        console.log('✅ [EMAIL AUTH] Ownership verified');
       }
 
+      console.log('✅ [EMAIL AUTH] User authorized');
       return {
         authorized: true,
         userExists: true,
@@ -95,6 +109,7 @@ export class EmailAuthVerifier {
     }
 
     // פעולות שלא דורשות רישום (פרסום חדש, הצטרפות לרשימת תפוצה)
+    console.log('✅ [EMAIL AUTH] Command does not require registration');
     return {
       authorized: true,
       userExists: !!user,

@@ -427,8 +427,15 @@ export class EmailOperationsOrchestrator {
     authResult: EmailAuthResult,
     emailRequestId: string
   ): Promise<ProcessingResult> {
+    console.log('🔍 [UPDATE REQUEST] Starting handleUpdateRequest');
+    console.log('   Email from:', emailData.from);
+    console.log('   Parsed adId:', parsedCommand.adId);
+    console.log('   Auth userId:', authResult.userId);
+    console.log('   Auth authorized:', authResult.authorized);
+    
     // בדיקה שיש מספר מודעה
     if (!parsedCommand.adId) {
+      console.log('❌ [UPDATE REQUEST] No adId provided - sending educational email');
       await emailOperationsTemplates.sendUpdateRequestReceivedEmail(emailData.from);
       return {
         success: false,
@@ -440,6 +447,11 @@ export class EmailOperationsOrchestrator {
     }
 
     // בדיקה שהמודעה קיימת ושייכת למשתמש
+    console.log('🔍 [UPDATE REQUEST] Looking for ad:', {
+      adNumber: parseInt(parsedCommand.adId),
+      userId: authResult.userId,
+    });
+    
     const ad = await prisma.ad.findFirst({
       where: {
         adNumber: parseInt(parsedCommand.adId),
@@ -451,6 +463,7 @@ export class EmailOperationsOrchestrator {
     });
 
     if (!ad) {
+      console.log('❌ [UPDATE REQUEST] Ad not found or does not belong to user - sending educational email');
       await emailOperationsTemplates.sendUpdateRequestReceivedEmail(emailData.from);
       return {
         success: false,
@@ -460,6 +473,9 @@ export class EmailOperationsOrchestrator {
         shouldNotifyUser: false,
       };
     }
+
+    console.log('✅ [UPDATE REQUEST] Ad found:', ad.adNumber);
+    console.log('   Ad belongs to userId:', ad.userId);
 
     // קבלת URL לטופס עריכה
     const baseApiUrl = process.env.BACKEND_URL || 'https://amakom.co.il';
