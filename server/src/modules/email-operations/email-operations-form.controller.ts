@@ -207,8 +207,6 @@ export class EmailOperationsFormController {
         }
       }
 
-      console.log('📋 Creating ad with customFields:', JSON.stringify(formData.customFields, null, 2));
-
       // בדיקה למניעת מודעות כפולות - בודק אם כבר נוצרה מודעה דומה ב-30 השניות האחרונות
       const recentAd = await prisma.ad.findFirst({
         where: {
@@ -232,6 +230,23 @@ export class EmailOperationsFormController {
         return;
       }
 
+      // הכנת customFields עם פרטי קשר
+      const finalCustomFields = {
+        ...(formData.customFields || {}),
+      };
+
+      // 📞 הוספת contactPhone אם סופק userPhone
+      if (formData.userPhone) {
+        finalCustomFields.contactPhone = formData.userPhone;
+      }
+
+      // 👤 הוספת contactName אם סופק userName
+      if (formData.userName) {
+        finalCustomFields.contactName = formData.userName;
+      }
+
+      console.log('📋 Creating ad with customFields:', JSON.stringify(finalCustomFields, null, 2));
+
       // יצירת המודעה
       const ad = await prisma.ad.create({
         data: {
@@ -244,7 +259,8 @@ export class EmailOperationsFormController {
           description: description,
           price: formData.price,
           address: address,
-          customFields: formData.customFields || {},
+          neighborhood: formData.neighborhood || formData.customFields?.neighborhood,
+          customFields: finalCustomFields,
           status: adStatus,
           publishedAt: shouldAutoApprove ? new Date() : null,
           isWanted: formData.isWanted || false,
@@ -585,9 +601,44 @@ export class EmailOperationsFormController {
         ...(ad.customFields as any),
         ...formData.customFields,
       };
+
+      // 📞 עדכון contactPhone מ-userPhone אם הוא סופק
+      if (formData.userPhone) {
+        updatedCustomFields.contactPhone = formData.userPhone;
+      }
+
+      // 👤 עדכון contactName מ-userName אם הוא סופק
+      if (formData.userName) {
+        updatedCustomFields.contactName = formData.userName;
+      }
       
       // הסרת adNumber מה-customFields (הוא לא צריך להישמר שם)
       delete updatedCustomFields.adNumber;
+
+      // 🏘️ שכונה - יכולה להגיע ב-formData.neighborhood או ב-customFields.neighborhood
+      const neighborhoodValue = formData.neighborhood || updatedCustomFields.neighborhood || ad.neighborhood || undefined;
+
+      // 🏠 כתובת - אם לא סיפקו, ננסה לבנות מהשדות
+      let addressValue = formData.address;
+      if (!addressValue && updatedCustomFields.street) {
+        const addressParts: string[] = [];
+        if (updatedCustomFields.street) addressParts.push(updatedCustomFields.street);
+        if (updatedCustomFields.houseNumber) addressParts.push(updatedCustomFields.houseNumber);
+        if (updatedCustomFields.addressAddition) addressParts.push(updatedCustomFields.addressAddition);
+        if (neighborhoodValue) addressParts.push(`שכונת ${neighborhoodValue}`);
+        if (formData.cityName) addressParts.push(formData.cityName);
+        if (addressParts.length > 0) {
+          addressValue = addressParts.join(', ');
+        }
+      }
+      addressValue = addressValue || ad.address || undefined;
+
+      console.log('📝 Update details:', {
+        neighborhood: neighborhoodValue,
+        address: addressValue,
+        phone: updatedCustomFields.contactPhone,
+        customFieldsKeys: Object.keys(updatedCustomFields),
+      });
 
       // בניית אובייקט שינויים ממתינים
       const pendingChanges = {
@@ -597,8 +648,8 @@ export class EmailOperationsFormController {
         categoryId,
         cityId,
         streetId: formData.streetId || ad.streetId,
-        address: formData.address || ad.address,
-        neighborhood: formData.neighborhood || ad.neighborhood,
+        address: addressValue,
+        neighborhood: neighborhoodValue,
         customFields: updatedCustomFields,
         requestedAt: new Date().toISOString(),
         requestedBy: user.id,
