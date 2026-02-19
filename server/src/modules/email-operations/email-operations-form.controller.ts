@@ -50,6 +50,30 @@ export interface FormSubmissionData {
 
 export class EmailOperationsFormController {
   /**
+   * מחזיר את EmailCommandType הנכון לפי קטגוריה וסוג טופס
+   */
+  private getCommandTypeForCategory(categoryName: string, isWanted: boolean): EmailCommandType {
+    if (!isWanted) {
+      // טפסי פרסום רגילים
+      if (categoryName.includes('השכרה')) return EmailCommandType.PUBLISH_RENT;
+      if (categoryName.includes('למכירה')) return EmailCommandType.PUBLISH_SALE;
+      if (categoryName.includes('יחידות דיור')) return EmailCommandType.PUBLISH_HOUSING_UNIT;
+      if (categoryName.includes('לשבת')) return EmailCommandType.PUBLISH_SHABBAT;
+      if (categoryName.includes('מסחרי')) return EmailCommandType.PUBLISH_COMMERCIAL;
+      if (categoryName.includes('טאבו משותף')) return EmailCommandType.PUBLISH_SHARED_OWNERSHIP;
+      return EmailCommandType.PUBLISH_SALE; // ברירת מחדל
+    } else {
+      // טפסי דרושים
+      if (categoryName.includes('השכרה')) return EmailCommandType.WANTED_RENT;
+      if (categoryName.includes('למכירה')) return EmailCommandType.WANTED_BUY;
+      if (categoryName.includes('לשבת')) return EmailCommandType.WANTED_SHABBAT;
+      if (categoryName.includes('מסחרי')) return EmailCommandType.WANTED_COMMERCIAL;
+      if (categoryName.includes('טאבו משותף')) return EmailCommandType.WANTED_SHARED_OWNERSHIP;
+      return EmailCommandType.WANTED_BUY; // ברירת מחדל
+    }
+  }
+
+  /**
    * קבלת טופס פרסום מודעה
    * POST /api/email-operations/forms/submit
    */
@@ -95,20 +119,36 @@ export class EmailOperationsFormController {
       const categoryMappings: Record<string, string> = {
         'שטחים מסחריים': 'נדל״ן מסחרי',
         'נדלן מסחרי': 'נדל״ן מסחרי',
-        'דירה למכירה': 'דירות למכירה',
-        'דירה להשכרה': 'דירות להשכרה',
+        'דירה למכירה': 'דירה למכירה',
+        'דירות למכירה': 'דירה למכירה',
+        'דירה להשכרה': 'דירה להשכרה',
+        'דירות להשכרה': 'דירה להשכרה',
         'יחידת דיור': 'יחידות דיור',
         'דירה לשבת': 'דירות לשבת',
+        'דירות לשבת': 'דירות לשבת',
         'טאבו משותף': 'טאבו משותף',
-        'דרושה דירה לקניה': 'דרושים - דירות למכירה',
-        'דרושה דירה להשכרה': 'דרושים - דירות להשכרה',
-        'דרושה דירה לשבת': 'דרושים - דירות לשבת',
-        'דרושים - נדלן מסחרי': 'דרושים - נדל״ן מסחרי',
-        'דרושים נדלן מסחרי': 'דרושים - נדל״ן מסחרי',
+        'דרושה דירה לקניה': 'דירה למכירה',
+        'דרושה דירה להשכרה': 'דירה להשכרה',
+        'דרושה דירה לשבת': 'דירות לשבת',
+        'דרושים - נדלן מסחרי': 'נדל״ן מסחרי',
+        'דרושים נדלן מסחרי': 'נדל״ן מסחרי',
+        'דרושים - טאבו משותף': 'טאבו משותף',
+        'דרושים טאבו משותף': 'טאבו משותף',
       };
 
       // נרמול שם הקטגוריה
-      const normalizedCategory = categoryMappings[formData.category] || formData.category;
+      let normalizedCategory = categoryMappings[formData.category] || formData.category;
+
+      // 🎯 אם זה טופס דרושים - הוסף "דרושים - " רק לקטגוריות שיש להן קטגוריית דרושים נפרדת
+      // (נדל"ן מסחרי וטאבו משותף בלבד - דירות משתמשות באותן קטגוריות עם isWanted)
+      const isWantedAd = formData.formType === 'wanted' || formData.isWanted === true;
+      if (isWantedAd && !normalizedCategory.startsWith('דרושים - ')) {
+        // רק נדל"ן מסחרי וטאבו משותף צריכים קטגוריות דרושים נפרדות
+        if (normalizedCategory.includes('מסחרי') || normalizedCategory.includes('טאבו')) {
+          normalizedCategory = `דרושים - ${normalizedCategory}`;
+        }
+        // דירות, לשבת, יחידות דיור - נשארים עם אותה קטגוריה, מזוהים לפי isWanted: true
+      }
 
       // מציאת הקטגוריה
       const category = await prisma.category.findFirst({
@@ -155,6 +195,21 @@ export class EmailOperationsFormController {
         });
         if (city) {
           cityId = city.id;
+        }
+      }
+
+      // 🎯 עבור דרושים - בניית מיקום מבוקש מהעיר והשכונה
+      let requestedLocationText = formData.requestedLocationText;
+      if (isWantedAd && !requestedLocationText) {
+        const locationParts: string[] = [];
+        if (formData.customFields?.neighborhood) {
+          locationParts.push(`שכונת ${formData.customFields.neighborhood}`);
+        }
+        if (formData.cityName) {
+          locationParts.push(formData.cityName);
+        }
+        if (locationParts.length > 0) {
+          requestedLocationText = locationParts.join(', ');
         }
       }
 
@@ -245,6 +300,11 @@ export class EmailOperationsFormController {
         finalCustomFields.contactName = formData.userName;
       }
 
+      // 🎯 סימון מודעות דרושים ב-customFields
+      if (isWantedAd) {
+        finalCustomFields.isWanted = true;
+      }
+
       console.log('📋 Creating ad with customFields:', JSON.stringify(finalCustomFields, null, 2));
 
       // יצירת המודעה
@@ -263,26 +323,28 @@ export class EmailOperationsFormController {
           customFields: finalCustomFields,
           status: adStatus,
           publishedAt: shouldAutoApprove ? new Date() : null,
-          isWanted: formData.isWanted || false,
-          requestedLocationText: formData.requestedLocationText,
+          isWanted: isWantedAd,
+          requestedLocationText: requestedLocationText,
           updatedAt: new Date(),
         },
       });
 
-      console.log(`✅ Created ad ${ad.adNumber} in ${adStatus} status`);
+      console.log(`✅ Created ad ${ad.adNumber} in ${adStatus} status (isWanted: ${isWantedAd}, category: ${category.nameHe})`);
+
+      // קביעת EmailCommandType הנכון
+      const commandType = this.getCommandTypeForCategory(category.nameHe, isWantedAd);
 
       // תיעוד
       await emailAuditLogger.logSuccess({
         email: formData.senderEmail,
         action: 'FORM_SUBMITTED',
-        commandType: formData.isWanted 
-          ? EmailCommandType.WANTED_BUY 
-          : EmailCommandType.PUBLISH_SALE,
+        commandType: commandType,
         adId: ad.adNumber.toString(),
         userId: user.id,
         metadata: {
           formType: formData.formType,
           category: formData.category,
+          isWanted: isWantedAd,
         },
       });
 
