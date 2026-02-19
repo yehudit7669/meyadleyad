@@ -624,7 +624,7 @@ export class EmailOperationsOrchestrator {
       [EmailCommandType.WANTED_RENT]: 'https://docs.google.com/forms/d/e/1FAIpQLScPERp7DqSEqJQJfrOFvmc_Qn4PBjeK_A9Al8UQtKzL3Za7ZA/viewform?usp=header',
       [EmailCommandType.WANTED_SHABBAT]: 'https://docs.google.com/forms/d/e/1FAIpQLSfBeO33PMHLvQdikhCiIWxwRNWr7I-Thb2YtO-s6gpYQ9letQ/viewform?usp=header',
       [EmailCommandType.WANTED_COMMERCIAL]: 'https://docs.google.com/forms/d/e/1FAIpQLSc9LedNhusFbQ7lUHlYlQmz8PVEZ6KvHv44inPHf5d7YT1g7g/viewform?usp=header',
-      [EmailCommandType.WANTED_SHARED_OWNERSHIP]: `${baseUrl}/forms/wanted-shared-ownership`,
+      [EmailCommandType.WANTED_SHARED_OWNERSHIP]: 'https://docs.google.com/forms/d/e/1FAIpQLSd6B2x9iYh-WsXT7bRis5tx-AAVvDDnQnT_Fp3nQa61bAsKsg/viewform?usp=header',
     };
 
     return formUrls[commandType] || `${baseUrl}/forms/general`;
