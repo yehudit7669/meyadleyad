@@ -623,7 +623,7 @@ export class EmailOperationsOrchestrator {
       [EmailCommandType.WANTED_BUY]: 'https://docs.google.com/forms/d/e/1FAIpQLSdMwDw2sNMb5jPcBoIl6AJ-n9CQu0_80omLW3Ck3uIRW3TJyA/viewform?usp=header',
       [EmailCommandType.WANTED_RENT]: 'https://docs.google.com/forms/d/e/1FAIpQLScPERp7DqSEqJQJfrOFvmc_Qn4PBjeK_A9Al8UQtKzL3Za7ZA/viewform?usp=header',
       [EmailCommandType.WANTED_SHABBAT]: 'https://docs.google.com/forms/d/e/1FAIpQLSfBeO33PMHLvQdikhCiIWxwRNWr7I-Thb2YtO-s6gpYQ9letQ/viewform?usp=header',
-      [EmailCommandType.WANTED_COMMERCIAL]: `${baseUrl}/forms/wanted-commercial`,
+      [EmailCommandType.WANTED_COMMERCIAL]: 'https://docs.google.com/forms/d/e/1FAIpQLSc9LedNhusFbQ7lUHlYlQmz8PVEZ6KvHv44inPHf5d7YT1g7g/viewform?usp=header',
       [EmailCommandType.WANTED_SHARED_OWNERSHIP]: `${baseUrl}/forms/wanted-shared-ownership`,
     };
 
