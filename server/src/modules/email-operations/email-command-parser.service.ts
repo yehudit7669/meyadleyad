@@ -12,11 +12,14 @@ export enum EmailCommandType {
   PUBLISH_SALE = 'PUBLISH_SALE',              // פרסום דירה למכירה
   PUBLISH_RENT = 'PUBLISH_RENT',              // פרסום דירה להשכרה
   PUBLISH_SHABBAT = 'PUBLISH_SHABBAT',        // פרסום דירה לשבת
-  PUBLISH_COMMERCIAL = 'PUBLISH_COMMERCIAL',  // פרסום שטח מסחרי
+  PUBLISH_HOUSING_UNIT = 'PUBLISH_HOUSING_UNIT', // פרסום יחידת דיור
+  PUBLISH_COMMERCIAL = 'PUBLISH_COMMERCIAL',  // פרסום נדל"ן מסחרי
   PUBLISH_SHARED_OWNERSHIP = 'PUBLISH_SHARED_OWNERSHIP', // פרסום טאבו משותף
   WANTED_BUY = 'WANTED_BUY',                  // דרושה דירה לקנייה
   WANTED_RENT = 'WANTED_RENT',                // דרושה דירה להשכרה
   WANTED_SHABBAT = 'WANTED_SHABBAT',          // דרושה דירה לשבת
+  WANTED_COMMERCIAL = 'WANTED_COMMERCIAL',    // דרושים - נדל"ן מסחרי
+  WANTED_SHARED_OWNERSHIP = 'WANTED_SHARED_OWNERSHIP', // דרושים - טאבו משותף
   UPDATE_AD = 'UPDATE_AD',                    // עדכון#<adId>
   REMOVE_AD = 'REMOVE_AD',                    // הסרה#<adId>
   MAILING_LIST_SUBSCRIBE = 'MAILING_LIST_SUBSCRIBE',       // הצטרפות
@@ -50,7 +53,11 @@ export class EmailCommandParser {
       command: EmailCommandType.PUBLISH_SHABBAT,
     },
     {
-      regex: /^פרסום\s+שטח\s+מסחרי\s*$/i,
+      regex: /^פרסום\s+יחידת\s+דיור\s*$/i,
+      command: EmailCommandType.PUBLISH_HOUSING_UNIT,
+    },
+    {
+      regex: /^פרסום\s+(שטח\s+מסחרי|נדל"ן\s+מסחרי)\s*$/i,
       command: EmailCommandType.PUBLISH_COMMERCIAL,
     },
     {
@@ -69,6 +76,14 @@ export class EmailCommandParser {
     {
       regex: /^דרושה\s+דירה\s+לשבת\s*$/i,
       command: EmailCommandType.WANTED_SHABBAT,
+    },
+    {
+      regex: /^דרושים\s+-?\s*(שטח\s+מסחרי|נדל"ן\s+מסחרי)\s*$/i,
+      command: EmailCommandType.WANTED_COMMERCIAL,
+    },
+    {
+      regex: /^דרושים\s+-?\s*טאבו\s+משותף\s*$/i,
+      command: EmailCommandType.WANTED_SHARED_OWNERSHIP,
     },
     // עדכון/הסרה עם מספר מודעה
     {
@@ -202,11 +217,14 @@ export class EmailCommandParser {
       [EmailCommandType.PUBLISH_SALE]: 'פרסום דירה למכירה',
       [EmailCommandType.PUBLISH_RENT]: 'פרסום דירה להשכרה',
       [EmailCommandType.PUBLISH_SHABBAT]: 'פרסום דירה לשבת',
-      [EmailCommandType.PUBLISH_COMMERCIAL]: 'פרסום שטח מסחרי',
+      [EmailCommandType.PUBLISH_HOUSING_UNIT]: 'פרסום יחידת דיור',
+      [EmailCommandType.PUBLISH_COMMERCIAL]: 'פרסום נדל"ן מסחרי',
       [EmailCommandType.PUBLISH_SHARED_OWNERSHIP]: 'פרסום טאבו משותף',
       [EmailCommandType.WANTED_BUY]: 'דרושה דירה לקנייה',
       [EmailCommandType.WANTED_RENT]: 'דרושה דירה להשכרה',
       [EmailCommandType.WANTED_SHABBAT]: 'דרושה דירה לשבת',
+      [EmailCommandType.WANTED_COMMERCIAL]: 'דרושים - נדל"ן מסחרי',
+      [EmailCommandType.WANTED_SHARED_OWNERSHIP]: 'דרושים - טאבו משותף',
       [EmailCommandType.UPDATE_AD]: 'עדכון מודעה',
       [EmailCommandType.REMOVE_AD]: 'הסרת מודעה',
       [EmailCommandType.MAILING_LIST_SUBSCRIBE]: 'הצטרפות לרשימת תפוצה',
@@ -225,11 +243,14 @@ export class EmailCommandParser {
       [EmailCommandType.PUBLISH_SALE]: 'דירות למכירה',
       [EmailCommandType.PUBLISH_RENT]: 'דירות להשכרה',
       [EmailCommandType.PUBLISH_SHABBAT]: 'דירות לשבת',
+      [EmailCommandType.PUBLISH_HOUSING_UNIT]: 'יחידות דיור',
       [EmailCommandType.PUBLISH_COMMERCIAL]: 'שטחים מסחריים',
       [EmailCommandType.PUBLISH_SHARED_OWNERSHIP]: 'טאבו משותף',
       [EmailCommandType.WANTED_BUY]: 'דירות למכירה', // דרוש
       [EmailCommandType.WANTED_RENT]: 'דירות להשכרה', // דרוש
       [EmailCommandType.WANTED_SHABBAT]: 'דירות לשבת', // דרוש
+      [EmailCommandType.WANTED_COMMERCIAL]: 'שטחים מסחריים', // דרוש
+      [EmailCommandType.WANTED_SHARED_OWNERSHIP]: 'טאבו משותף', // דרוש
     };
     return categoryMap[commandType] || null;
   }
@@ -242,6 +263,8 @@ export class EmailCommandParser {
       EmailCommandType.WANTED_BUY,
       EmailCommandType.WANTED_RENT,
       EmailCommandType.WANTED_SHABBAT,
+      EmailCommandType.WANTED_COMMERCIAL,
+      EmailCommandType.WANTED_SHARED_OWNERSHIP,
     ].includes(commandType);
   }
 }
