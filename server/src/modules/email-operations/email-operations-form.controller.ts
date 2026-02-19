@@ -91,20 +91,47 @@ export class EmailOperationsFormController {
         return;
       }
 
+      // מיפוי קטגוריות - תמיכה בשמות שונים לאותה קטגוריה
+      const categoryMappings: Record<string, string> = {
+        'שטחים מסחריים': 'נדל״ן מסחרי',
+        'נדלן מסחרי': 'נדל״ן מסחרי',
+        'דירה למכירה': 'דירות למכירה',
+        'דירה להשכרה': 'דירות להשכרה',
+        'יחידת דיור': 'יחידות דיור',
+        'דירה לשבת': 'דירות לשבת',
+        'טאבו משותף': 'טאבו משותף',
+        'דרושה דירה לקניה': 'דרושים - דירות למכירה',
+        'דרושה דירה להשכרה': 'דרושים - דירות להשכרה',
+        'דרושה דירה לשבת': 'דרושים - דירות לשבת',
+        'דרושים - נדלן מסחרי': 'דרושים - נדל״ן מסחרי',
+        'דרושים נדלן מסחרי': 'דרושים - נדל״ן מסחרי',
+      };
+
+      // נרמול שם הקטגוריה
+      const normalizedCategory = categoryMappings[formData.category] || formData.category;
+
       // מציאת הקטגוריה
       const category = await prisma.category.findFirst({
         where: {
           OR: [
-            { nameHe: formData.category },
+            { nameHe: normalizedCategory },
+            { name: normalizedCategory },
+            { nameHe: formData.category }, // גם השם המקורי
             { name: formData.category },
           ],
         },
       });
 
       if (!category) {
-        res.status(400).json({ error: 'Invalid category' });
+        console.error(`❌ Category not found: "${formData.category}" (normalized: "${normalizedCategory}")`);
+        res.status(400).json({ 
+          error: 'Invalid category',
+          details: `Category "${formData.category}" not found in system`
+        });
         return;
       }
+
+      console.log(`✅ Found category: ${category.nameHe} (from input: "${formData.category}")`);
 
       // Auto-approve for ADMIN and SUPER_ADMIN
       const isAdminOrSuperAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
