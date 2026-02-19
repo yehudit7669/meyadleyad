@@ -25,7 +25,7 @@ const SERVER_URL = 'https://amakom.co.il/api/email-operations/forms/google-forms
 
 // סוג הפרסום (לפי הטופס)
 const FORM_TYPE = 'publish';  // 'publish' או 'wanted'
-const CATEGORY = 'דירות למכירה';  // שם הקטגוריה
+const CATEGORY = 'דירה למכירה';  // שם הקטגוריה (חייב להיות בדיוק כמו בבסיס הנתונים!)
 
 // ===============================
 // מיפוי שדות הטופס לשדות המערכת
@@ -34,27 +34,42 @@ const CATEGORY = 'דירות למכירה';  // שם הקטגוריה
 
 const FIELD_MAPPING = {
   // שדות חובה
-  email: 'כתובת אימייל',           // שם השאלה בטופס
-  name: 'שם מלא',                  // שם השאלה בטופס
-  phone: 'מספר טלפון',             // שם השאלה בטופס
-  title: 'כותרת המודעה',           // שם השאלה בטופס
-  description: 'תיאור הנכס',       // שם השאלה בטופס
+  // Google Forms יכול לאסוף אימייל בשתי דרכים:
+  // 1. "Email Address" (אם מופעל "Collect email addresses")
+  // 2. שאלה רגילה בשם "כתובת אימייל"
+  email: 'Email Address',          // או 'כתובת אימייל' אם זו שאלה רגילה
+  name: 'שם',
+  phone: 'טלפון',
+  description: 'תיאור הנכס',
   
-  // שדות אופציונליים
-  price: 'מחיר',                   // שם השאלה בטופס
-  city: 'עיר',                     // שם השאלה בטופס
-  address: 'רחוב ומספר בית',       // שם השאלה בטופס
+  // שדות מיקום
+  city: 'עיר',
+  neighborhood: 'שכונה',
+  street: 'רחובות',
+  houseNumber: 'מספר בית',
+  addressAddition: 'תוספת כתובת (לדוג: דירה 14, כניסה ב\')',
   
-  // שדות מותאמים אישית (customFields)
-  rooms: 'מספר חדרים',             // שם השאלה בטופס
-  squareMeters: 'שטח במ״ר',       // שם השאלה בטופס
-  floor: 'קומה',                   // שם השאלה בטופס
-  parking: 'חניה',                 // שם השאלה בטופס
-  elevator: 'מעלית',               // שם השאלה בטופס
-  balcony: 'מרפסת',                // שם השאלה בטופס
-  warehouse: 'מחסן',               // שם השאלה בטופס
-  propertyCondition: 'מצב הנכס',   // שם השאלה בטופס
-  entryDate: 'תאריך כניסה',        // שם השאלה בטופס
+  // מחיר
+  price: 'מחיר מבוקש',
+  arnona: 'ארנונה',
+  vaadBayit: 'וועד בית (לחודש)',
+  
+  // פרטי הנכס
+  propertyType: 'סוג הנכס',
+  rooms: 'מספר חדרים',
+  squareMeters: 'שטח במ"ר',
+  propertyCondition: 'מצב הנכס',
+  floor: 'קומה',
+  balconies: 'מרפסות',
+  furniture: 'ריהוט',
+  entryDate: 'תאריך כניסה',
+  broker: 'תיווך',
+  
+  // מאפיינים (checkbox list)
+  features: 'מאפיינים',
+  
+  // הרשמה ללוח
+  subscribeToNewsletter: 'שלח לי את הלוח השבועי באימייל לאחר הפרסום',
 };
 
 // ===============================
@@ -68,8 +83,18 @@ function onFormSubmit(e) {
     const formResponse = e.response;
     const itemResponses = formResponse.getItemResponses();
     
+    // קבלת אימייל המשיב (אם מופעל Collect email addresses)
+    const respondentEmail = formResponse.getRespondentEmail();
+    Logger.log('Respondent email: ' + respondentEmail);
+    
     // יצירת אובייקט עם כל התשובות
     const responses = {};
+    
+    // אם יש אימייל מהמערכת, הוסף אותו
+    if (respondentEmail) {
+      responses['Email Address'] = respondentEmail;
+    }
+    
     for (var i = 0; i < itemResponses.length; i++) {
       var item = itemResponses[i];
       var question = item.getItem().getTitle();
@@ -100,81 +125,190 @@ function onFormSubmit(e) {
 // ===============================
 
 function buildPayload(responses) {
+  // בניית כותרת אוטומטית מהנתונים
+  const rooms = getFieldValue(responses, FIELD_MAPPING.rooms);
+  const propertyType = getFieldValue(responses, FIELD_MAPPING.propertyType);
+  const city = getFieldValue(responses, FIELD_MAPPING.city);
+  
+  let autoTitle = '';
+  if (propertyType) autoTitle += propertyType + ' ';
+  if (rooms) autoTitle += rooms + ' חדרים ';
+  if (city) autoTitle += 'ב' + city;
+  if (!autoTitle) autoTitle = 'מודעה חדשה';
+  
+  // בניית כתובת מלאה
+  const street = getFieldValue(responses, FIELD_MAPPING.street);
+  const houseNumber = getFieldValue(responses, FIELD_MAPPING.houseNumber);
+  const addressAddition = getFieldValue(responses, FIELD_MAPPING.addressAddition);
+  
+  let fullAddress = '';
+  if (street) fullAddress += street;
+  if (houseNumber) fullAddress += ' ' + houseNumber;
+  if (addressAddition) fullAddress += ', ' + addressAddition;
+  
+  // אימייל - תמיכה בשתי דרכים (Email Address או כתובת אימייל)
+  const email = getFieldValue(responses, FIELD_MAPPING.email) || 
+                getFieldValue(responses, 'כתובת אימייל') ||
+                getFieldValue(responses, 'אימייל') ||
+                getFieldValue(responses, 'Email Address');
+  
+  // שם - עם fallback
+  const name = getFieldValue(responses, FIELD_MAPPING.name) || 
+               getFieldValue(responses, 'שם מלא') ||
+               'משתמש';
+  
+  // וידוא שיש אימייל (שדה חובה!)
+  if (!email) {
+    throw new Error('חובה למלא כתובת אימייל! ודא שבטופס יש שאלה "Email Address" או הפעל "Collect email addresses" בהגדרות הטופס.');
+  }
+  
   // שדות בסיסיים
   const payload = {
-    senderEmail: getFieldValue(responses, FIELD_MAPPING.email),
-    userName: getFieldValue(responses, FIELD_MAPPING.name),
+    senderEmail: email,
+    userName: name,
     userPhone: getFieldValue(responses, FIELD_MAPPING.phone),
     formType: FORM_TYPE,
     category: CATEGORY,
-    title: getFieldValue(responses, FIELD_MAPPING.title),
-    description: getFieldValue(responses, FIELD_MAPPING.description),
+    title: autoTitle,
+    description: getFieldValue(responses, FIELD_MAPPING.description) || '',
   };
   
-  // שדות אופציונליים
-  const price = getFieldValue(responses, FIELD_MAPPING.price);
-  if (price) {
-    // ניקוי המחיר מסימנים (₪, запятые וכו')
-    const cleanPrice = price.toString().replace(/[^\d.]/g, '');
-    payload.price = parseFloat(cleanPrice);
-  }
-  
-  const city = getFieldValue(responses, FIELD_MAPPING.city);
+  // עיר
   if (city) {
     payload.cityName = city;
   }
   
-  const address = getFieldValue(responses, FIELD_MAPPING.address);
-  if (address) {
-    payload.address = address;
+  // כתובת
+  if (fullAddress) {
+    payload.address = fullAddress;
+  }
+  
+  // מחיר
+  const price = getFieldValue(responses, FIELD_MAPPING.price);
+  if (price) {
+    const cleanPrice = price.toString().replace(/[^\d.]/g, '');
+    payload.price = parseFloat(cleanPrice);
   }
   
   // שדות מותאמים אישית
   const customFields = {};
   
-  const rooms = getFieldValue(responses, FIELD_MAPPING.rooms);
+  // תיווך
+  const broker = getFieldValue(responses, FIELD_MAPPING.broker);
+  if (broker) {
+    customFields.broker = broker;
+  }
+  
+  // שכונה
+  const neighborhood = getFieldValue(responses, FIELD_MAPPING.neighborhood);
+  if (neighborhood) {
+    customFields.neighborhood = neighborhood;
+  }
+  
+  // סוג הנכס
+  if (propertyType) {
+    customFields.propertyType = propertyType;
+  }
+  
+  // מספר חדרים
   if (rooms) {
     customFields.rooms = parseFloat(rooms.toString().replace(/[^\d.]/g, ''));
   }
   
+  // שטח
   const squareMeters = getFieldValue(responses, FIELD_MAPPING.squareMeters);
   if (squareMeters) {
     customFields.squareMeters = parseFloat(squareMeters.toString().replace(/[^\d.]/g, ''));
   }
   
-  const floor = getFieldValue(responses, FIELD_MAPPING.floor);
-  if (floor) {
-    customFields.floor = floor;
-  }
-  
-  const parking = getFieldValue(responses, FIELD_MAPPING.parking);
-  if (parking) {
-    customFields.parking = convertYesNo(parking);
-  }
-  
-  const elevator = getFieldValue(responses, FIELD_MAPPING.elevator);
-  if (elevator) {
-    customFields.elevator = convertYesNo(elevator);
-  }
-  
-  const balcony = getFieldValue(responses, FIELD_MAPPING.balcony);
-  if (balcony) {
-    customFields.balcony = convertYesNo(balcony);
-  }
-  
-  const warehouse = getFieldValue(responses, FIELD_MAPPING.warehouse);
-  if (warehouse) {
-    customFields.warehouse = convertYesNo(warehouse);
-  }
-  
+  // מצב הנכס
   const propertyCondition = getFieldValue(responses, FIELD_MAPPING.propertyCondition);
   if (propertyCondition) {
     customFields.propertyCondition = propertyCondition;
   }
   
+  // קומה
+  const floor = getFieldValue(responses, FIELD_MAPPING.floor);
+  if (floor) {
+    customFields.floor = floor;
+  }
+  
+  // מרפסות
+  const balconies = getFieldValue(responses, FIELD_MAPPING.balconies);
+  if (balconies) {
+    customFields.balconies = balconies;
+  }
+  
+  // ריהוט
+  const furniture = getFieldValue(responses, FIELD_MAPPING.furniture);
+  if (furniture) {
+    customFields.furniture = furniture;
+  }
+  
+  // תאריך כניסה
   const entryDate = getFieldValue(responses, FIELD_MAPPING.entryDate);
   if (entryDate) {
     customFields.entryDate = entryDate;
+  }
+  
+  // ארנונה
+  const arnona = getFieldValue(responses, FIELD_MAPPING.arnona);
+  if (arnona) {
+    const cleanArnona = arnona.toString().replace(/[^\d.]/g, '');
+    customFields.arnona = parseFloat(cleanArnona);
+  }
+  
+  // וועד בית
+  const vaadBayit = getFieldValue(responses, FIELD_MAPPING.vaadBayit);
+  if (vaadBayit) {
+    const cleanVaad = vaadBayit.toString().replace(/[^\d.]/g, '');
+    customFields.vaadBayit = parseFloat(cleanVaad);
+  }
+  
+  // מאפיינים (checkbox list) - מגיע כמערך או string מופרד בפסיקים
+  const features = getFieldValue(responses, FIELD_MAPPING.features);
+  if (features) {
+    // אם זה מערך - Google Forms מחזיר מערך עבור checkbox
+    if (Array.isArray(features)) {
+      customFields.features = features;
+      
+      // פיצול המאפיינים לשדות ספציפיים
+      customFields.parking = features.includes('חניה') || features.includes('חנייה');
+      customFields.warehouse = features.includes('מחסן');
+      customFields.mamad = features.includes('ממ"ד') || features.includes('ממד');
+      customFields.sukkaBalcony = features.includes('מרפסת סוכה');
+      customFields.elevator = features.includes('מעלית');
+      customFields.view = features.includes('נוף');
+      customFields.parentalUnit = features.includes('יחידת הורים');
+      customFields.housingUnit = features.includes('יחידת דיור');
+      customFields.yard = features.includes('חצר');
+      customFields.airConditioning = features.includes('מיזוג');
+      customFields.garden = features.includes('גינה');
+      customFields.renovated = features.includes('חדית') || features.includes('משופץ');
+      customFields.upgradedKitchen = features.includes('מטבח משודרג');
+      customFields.accessibleForDisabled = features.includes('גישה לנכים');
+      customFields.option = features.includes('אופציה');
+    } else if (typeof features === 'string') {
+      // אם זה string - פיצול לפי פסיקים
+      const featuresArray = features.split(',').map(f => f.trim());
+      customFields.features = featuresArray;
+      
+      customFields.parking = featuresArray.some(f => f.includes('חניה') || f.includes('חנייה'));
+      customFields.warehouse = featuresArray.some(f => f.includes('מחסן'));
+      customFields.mamad = featuresArray.some(f => f.includes('ממ"ד') || f.includes('ממד'));
+      customFields.sukkaBalcony = featuresArray.some(f => f.includes('מרפסת סוכה'));
+      customFields.elevator = featuresArray.some(f => f.includes('מעלית'));
+      customFields.view = featuresArray.some(f => f.includes('נוף'));
+      customFields.parentalUnit = featuresArray.some(f => f.includes('יחידת הורים'));
+      customFields.housingUnit = featuresArray.some(f => f.includes('יחידת דיור'));
+      customFields.yard = featuresArray.some(f => f.includes('חצר'));
+      customFields.airConditioning = featuresArray.some(f => f.includes('מיזוג'));
+      customFields.garden = featuresArray.some(f => f.includes('גינה'));
+      customFields.renovated = featuresArray.some(f => f.includes('חדית') || f.includes('משופץ'));
+      customFields.upgradedKitchen = featuresArray.some(f => f.includes('מטבח משודרג'));
+      customFields.accessibleForDisabled = featuresArray.some(f => f.includes('גישה לנכים'));
+      customFields.option = featuresArray.some(f => f.includes('אופציה'));
+    }
   }
   
   payload.customFields = customFields;
@@ -224,23 +358,29 @@ function sendToServer(payload) {
 function testSubmission() {
   // צור כאן נתוני דמה לבדיקה
   const testResponses = {
-    'כתובת אימייל': 'test@example.com',
-    'שם מלא': 'יוסי כהן',
-    'מספר טלפון': '050-1234567',
-    'כותרת המודעה': 'דירת 4 חדרים מרווחת',
-    'תיאור הנכס': 'דירה מרווחת ומשופצת עם נוף פתוח',
-    'מחיר': '1500000',
+    'Email Address': 'test@example.com',  // Google Forms Collect email
+    'שם': 'יוסי כהן',
+    'טלפון': '050-1234567',
+    'תיאור הנכס': 'דירה מרווחת ומשופצת עם נוף פתוח למרכז העיר. הדירה כוללת חדרי שינה מרווחים, סלון גדול ומטבח מודרני.',
     'עיר': 'ירושלים',
-    'רחוב ומספר בית': 'הרב קוק 15',
+    'שכונה': 'קטמון',
+    'רחובות': 'הרב קוק',
+    'מספר בית': '15',
+    'תוספת כתובת (לדוג: דירה 14, כניסה ב\')': 'דירה 3, כניסה א\'',
+    'סוג הנכס': 'דירה',
     'מספר חדרים': '4',
-    'שטח במ״ר': '95',
-    'קומה': '3',
-    'חניה': 'כן',
-    'מעלית': 'כן',
-    'מרפסת': 'כן',
-    'מחסן': 'לא',
+    'שטח במ"ר': '95',
     'מצב הנכס': 'משופץ',
+    'קומה': '3',
+    'מרפסות': '2',
+    'ריהוט': 'ללא ריהוט',
     'תאריך כניסה': 'מיידי',
+    'מחיר מבוקש': '1500000',
+    'ארנונה': '800',
+    'וועד בית (לחודש)': '400',
+    'תיווך': 'פרטי',
+    'מאפיינים': ['חניה', 'מעלית', 'מרפסת סוכה', 'מיזוג'],
+    'שלח לי את הלוח השבועי באימייל לאחר הפרסום': 'כן',
   };
   
   try {

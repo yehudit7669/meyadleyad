@@ -306,7 +306,7 @@ export class EmailOperationsFormController {
         formType: rawData.formType || 'publish',
         category: rawData.category || rawData['קטגוריה'],
         title: rawData.title || rawData['כותרת'],
-        description: rawData.description || rawData['תיאור'],
+        description: rawData.description || rawData['תיאור'] || '',
         price: rawData.price ? parseFloat(rawData.price.toString()) : undefined,
         cityName: rawData.cityName || rawData.city || rawData['עיר'],
         address: rawData.address || rawData['כתובת'] || rawData['רחוב ומספר בית'],
