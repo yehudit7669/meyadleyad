@@ -1,8 +1,8 @@
 /**
- * Google Forms Apps Script - אינטגרציה עם מערכת המקום (דירה לשבת)
+ * Google Forms Apps Script - אינטגרציה עם מערכת המקום (דרושה דירה לשבת)
  * 
  * הוראות התקנה:
- * 1. פתח את טופס דירה לשבת ב-Google Forms
+ * 1. פתח את טופס דרושה דירה לשבת ב-Google Forms
  * 2. לחץ על שלוש הנקודות ⋮ למעלה → Extensions → Apps Script
  * 3. מחק את הקוד הקיים והעתק את כל הקוד מכאן
  * 4. שמור (Ctrl+S)
@@ -24,7 +24,7 @@
 const SERVER_URL = 'https://amakom.co.il/api/email-operations/forms/google-forms-webhook';
 
 // סוג הפרסום (לפי הטופס)
-const FORM_TYPE = 'publish';  // 'publish' או 'wanted'
+const FORM_TYPE = 'wanted';  // 'publish' או 'wanted'
 const CATEGORY = 'דירות לשבת';  // שם הקטגוריה (חייב להיות בדיוק כמו בבסיס הנתונים!)
 
 // ===============================
@@ -34,15 +34,18 @@ const CATEGORY = 'דירות לשבת';  // שם הקטגוריה (חייב לה
 
 const FIELD_MAPPING = {
   // שדות חובה
+  // Google Forms יכול לאסוף אימייל בשתי דרכים:
+  // 1. "Email Address" (אם מופעל "Collect email addresses")
+  // 2. שאלה רגילה בשם "כתובת אימייל"
   email: 'Email Address',          // או 'כתובת אימייל' אם זו שאלה רגילה
   name: 'שם',
   phone: 'טלפון',
-  description: 'תיאור הנכס',
+  description: 'תיאור הדרוש',
   
   // שדות מיקום
   city: 'עיר',
   neighborhood: 'שכונה',
-  street: 'רחובות',
+  street: 'רחוב',
   houseNumber: 'מספר בית',
   addressAddition: 'תוספת כתובת (לדוג: דירה 14, כניסה ב\')',
   
@@ -54,15 +57,15 @@ const FIELD_MAPPING = {
   numberOfBeds: 'מספר מיטות',        // מספר מיטות בדירה
   
   // פרטי הנכס
-  propertyType: 'סוג הנכס',
+  propertyType: 'סוג הנכס',  // דירה, בית פרטי וכו'
   rooms: 'מספר חדרים',
   squareMeters: 'שטח במ"ר',
   propertyCondition: 'מצב הנכס',
   floor: 'קומה',
-  balconies: 'מרפסות',              // או 'מספר מרפסות'
+  balconies: 'מרפסות',
   furniture: 'ריהוט',
   entryDate: 'תאריך כניסה',
-  broker: 'תיווך ',                  // שים לב לרווח בסוף!
+  broker: 'תיווך',
   
   // מאפיינים (checkbox list)
   features: 'מאפיינים',
@@ -130,12 +133,11 @@ function buildPayload(responses) {
   const city = getFieldValue(responses, FIELD_MAPPING.city);
   const parasha = getFieldValue(responses, FIELD_MAPPING.parasha);
   
-  let autoTitle = '';
-  if (propertyType) autoTitle += propertyType + ' ';
+  let autoTitle = 'דרושה דירה לשבת ';
+  if (parasha) autoTitle += 'פרשת ' + parasha + ' ';
+  if (propertyType && propertyType !== 'דירה') autoTitle = 'דרושה ' + propertyType + ' לשבת ';
   if (rooms) autoTitle += rooms + ' חדרים ';
-  if (parasha) autoTitle += 'לשבת פרשת ' + parasha + ' ';
   if (city) autoTitle += 'ב' + city;
-  if (!autoTitle) autoTitle = 'דירה לשבת';
   
   // בניית כתובת מלאה
   const street = getFieldValue(responses, FIELD_MAPPING.street);
@@ -147,7 +149,7 @@ function buildPayload(responses) {
   if (houseNumber) fullAddress += ' ' + houseNumber;
   if (addressAddition) fullAddress += ', ' + addressAddition;
   
-  // אימייל - תמיכה בשתי דרכים
+  // אימייל - תמיכה בשתי דרכים (Email Address או כתובת אימייל)
   const email = getFieldValue(responses, FIELD_MAPPING.email) || 
                 getFieldValue(responses, 'כתובת אימייל') ||
                 getFieldValue(responses, 'אימייל') ||
@@ -170,7 +172,7 @@ function buildPayload(responses) {
     userPhone: getFieldValue(responses, FIELD_MAPPING.phone),
     formType: FORM_TYPE,
     category: CATEGORY,
-    title: autoTitle,
+    title: autoTitle.trim(),
     description: getFieldValue(responses, FIELD_MAPPING.description) || '',
   };
   
@@ -184,44 +186,30 @@ function buildPayload(responses) {
     payload.address = fullAddress;
   }
   
-  // מחיר - רק אם זה אירוח בתשלום
-  const isPaidValue = getFieldValue(responses, FIELD_MAPPING.isPaid);
-  const isPaid = convertYesNo(isPaidValue);
-  
-  if (isPaid) {
-    const price = getFieldValue(responses, FIELD_MAPPING.priceRequested);
-    if (price) {
-      const cleanPrice = price.toString().replace(/[^\d.]/g, '');
-      payload.price = parseFloat(cleanPrice);
-    }
-  }
-  
   // שדות מותאמים אישית
   const customFields = {};
   
   // שדות ייחודיים לדירה לשבת
+  const isPaid = getFieldValue(responses, FIELD_MAPPING.isPaid);
+  if (isPaid) {
+    customFields.isPaid = convertYesNo(isPaid);
+  }
+  
   if (parasha) {
     customFields.parasha = parasha;
   }
   
-  customFields.isPaid = isPaid;
-  
-  // מטרת האירוח - המרה לפורמט של המערכת
-  const purposeValue = getFieldValue(responses, FIELD_MAPPING.purpose);
-  if (purposeValue) {
-    if (purposeValue.includes('מלא') || purposeValue.includes('HOSTING')) {
-      customFields.purpose = 'HOSTING';
-    } else if (purposeValue.includes('לינה') || purposeValue.includes('SLEEPING')) {
-      customFields.purpose = 'SLEEPING_ONLY';
-    }
+  const purpose = getFieldValue(responses, FIELD_MAPPING.purpose);
+  if (purpose) {
+    customFields.purpose = purpose;
   }
   
-  // מחיר מבוקש (אם בתשלום)
-  if (isPaid) {
-    const priceRequested = getFieldValue(responses, FIELD_MAPPING.priceRequested);
-    if (priceRequested) {
-      const cleanPrice = priceRequested.toString().replace(/[^\d.]/g, '');
-      customFields.priceRequested = parseFloat(cleanPrice);
+  // מחיר (רק אם בתשלום)
+  const priceRequested = getFieldValue(responses, FIELD_MAPPING.priceRequested);
+  if (priceRequested) {
+    const cleanPrice = priceRequested.toString().replace(/[^\d.]/g, '');
+    if (cleanPrice) {
+      payload.price = parseFloat(cleanPrice);
     }
   }
   
@@ -250,7 +238,21 @@ function buildPayload(responses) {
   
   // סוג הנכס
   if (propertyType) {
-    customFields.propertyType = propertyType;
+    // מיפוי בין שמות עבריים לערכי ENUM
+    let mappedType = propertyType;
+    
+    if (propertyType.includes('בית פרטי')) mappedType = 'PRIVATE_HOUSE';
+    else if (propertyType.includes('דירת גן')) mappedType = 'GARDEN_APARTMENT';
+    else if (propertyType.includes('דופלקס')) mappedType = 'DUPLEX';
+    else if (propertyType.includes('דירה')) mappedType = 'APARTMENT';
+    else if (propertyType.includes('פנטהאוז')) mappedType = 'PENTHOUSE';
+    else if (propertyType.includes('סטודיו')) mappedType = 'STUDIO';
+    else if (propertyType.includes('דו משפחתי')) mappedType = 'SEMI_DETACHED';
+    else if (propertyType.includes('בניין מגורים')) mappedType = 'RESIDENTIAL_BUILDING';
+    else if (propertyType.includes('דו קומתי')) mappedType = 'TWO_STORY';
+    else if (propertyType.includes('מיני פנטהאוז')) mappedType = 'MINI_PENTHOUSE';
+    
+    customFields.propertyType = mappedType;
   }
   
   // מספר חדרים
@@ -279,14 +281,7 @@ function buildPayload(responses) {
   // מרפסות
   const balconies = getFieldValue(responses, FIELD_MAPPING.balconies);
   if (balconies) {
-    // אם זה מספר, שמור כמספר; אם זה טקסט, שמור כטקסט
-    const balconiesNum = parseFloat(balconies.toString().replace(/[^\d.]/g, ''));
-    if (!isNaN(balconiesNum)) {
-      customFields.balconies = balconies;  // שמור כטקסט מקורי
-      customFields.balconiesCount = balconiesNum;  // שמור גם כמספר
-    } else {
-      customFields.balconies = balconies;
-    }
+    customFields.balconies = balconies;
   }
   
   // ריהוט
@@ -320,8 +315,8 @@ function buildPayload(responses) {
     if (Array.isArray(features)) {
       // פיצול המאפיינים לשדות ספציפיים - שמות השדות חייבים להתאים לממשק!
       featuresObj.parking = features.includes('חניה') || features.includes('חנייה');
-      featuresObj.storage = features.includes('מחסן');
-      featuresObj.safeRoom = features.includes('ממ"ד') || features.includes('ממד');
+      featuresObj.storage = features.includes('מחסן');  // שים לב: storage ולא warehouse!
+      featuresObj.safeRoom = features.includes('ממ"ד') || features.includes('ממד');  // safeRoom ולא mamad!
       featuresObj.sukkaBalcony = features.includes('מרפסת סוכה');
       featuresObj.elevator = features.includes('מעלית');
       featuresObj.view = features.includes('נוף');
@@ -333,7 +328,7 @@ function buildPayload(responses) {
       featuresObj.renovated = features.includes('חדית') || features.includes('משופץ');
       featuresObj.upgradedKitchen = features.includes('מטבח משודרג');
       featuresObj.accessibleForDisabled = features.includes('גישה לנכים') || features.includes('נגיש');
-      featuresObj.hasOption = features.includes('אופציה');
+      featuresObj.hasOption = features.includes('אופציה');  // hasOption ולא option!
       featuresObj.frontFacing = features.includes('חזית');
       featuresObj.shabbosClock = features.includes('שעון שבת');
       // מאפיינים ייחודיים לדירה לשבת
@@ -428,30 +423,30 @@ function sendToServer(payload) {
 function testSubmission() {
   // צור כאן נתוני דמה לבדיקה
   const testResponses = {
-    'Email Address': 'test@example.com',
-    'שם': 'משה לוי',
-    'טלפון': '050-9876543',
-    'תיאור הנכס': 'דירה מושלמת לאירוח שבת, מרווחת ונעימה עם כל הציוד הדרוש לשבת קודש.',
+    'Email Address': 'test@example.com',  // Google Forms Collect email
+    'שם': 'רחל אברהם',
+    'טלפון': '053-1234567',
+    'תיאור הדרוש': 'דרושה דירה לשבת פרשת ויצא, 4-5 אורחים. מעדיפים דירה מרוהטת עם חניה וקרוב לבית כנסת. אירוח מלא עדיף.',
     'עיר': 'ירושלים',
-    'שכונה': 'גאולה',
-    'רחובות': 'מלכי ישראל',
-    'מספר בית': '42',
-    'תוספת כתובת (לדוג: דירה 14, כניסה ב\')': 'דירה 5',
-    'סוג הנכס': 'דירה',
-    'מספר חדרים': '5',
-    'שטח במ"ר': '120',
-    'מצב הנכס': 'מצוין',
-    'קומה': '2',
-    'מרפסות': '1',
-    'ריהוט': 'מלא',
-    'תאריך כניסה': 'גמיש',
+    'שכונה': 'רמות',
+    'רחוב': '',
+    'מספר בית': '',
+    'תוספת כתובת (לדוג: דירה 14, כניסה ב\')': '',
     'אירוח בתשלום': 'כן',
-    'לאיזו שבת הדירה תהיה זמינה?': 'ויקרא',
+    'לאיזו שבת הדירה תהיה זמינה?': 'ויצא',
     'שימוש בדירה': 'אירוח מלא',
-    'גובה התשלום': '2500',
-    'מספר מיטות': '10',
-    'תיווך': 'פרטי',
-    'מאפיינים': ['חניה', 'מעלית', 'שעון שבת', 'מיזוג', 'ממ"ד', 'פלטה', 'מיחם', 'מצעים', 'בריכה'],
+    'גובה התשלום': '800',
+    'מספר מיטות': '8',
+    'סוג הנכס': 'דירה',
+    'מספר חדרים': '4',
+    'שטח במ"ר': '100',
+    'מצב הנכס': 'לא משנה',
+    'קומה': '1-3',
+    'מרפסות': '1',
+    'ריהוט': 'מרוהט',
+    'תאריך כניסה': 'שבת',
+    'תיווך': 'לא משנה',
+    'מאפיינים': ['חניה', 'מעלית', 'מיזוג', 'פלטה', 'מיחם', 'מצעים'],
     'שלח לי את הלוח השבועי באימייל לאחר הפרסום': 'כן',
   };
   
