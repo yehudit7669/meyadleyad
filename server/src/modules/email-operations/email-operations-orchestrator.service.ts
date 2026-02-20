@@ -261,25 +261,8 @@ export class EmailOperationsOrchestrator {
     parsedCommand: ParsedEmailCommand,
     inboundMessageId: string
   ) {
-    // שמירת הכוונה (intent) עד שהמשתמש ישלים הרשמה
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 ימים
-
-    await prisma.pendingIntent.create({
-      data: {
-        email: emailData.from.toLowerCase().trim(),
-        commandType: parsedCommand.commandType,
-        inboundMessageId,
-        payload: {
-          subject: emailData.subject,
-          bodyText: emailData.bodyText,
-          parsedCommand: parsedCommand as any,
-        } as any,
-        expiresAt,
-      },
-    });
-
     // שליחת מייל הרשמה
+    // לאחר ההרשמה, המשתמש יצטרך לשלוח שוב את המייל עם הבקשה
     await emailOperationsTemplates.sendRegistrationRequiredEmail(
       emailData.from,
       parsedCommand.commandType

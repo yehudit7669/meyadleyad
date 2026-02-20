@@ -44,30 +44,39 @@ export class EmailOperationsTemplatesService {
         </head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #2563eb; text-align: center;">השלמת הרשמה למערכת „המקום"</h2>
+            <h2 style="color: #2563eb; text-align: center;">🔐 נדרשת הרשמה למערכת „המקום"</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6;">
               קיבלנו את פנייתך למערכת „המקום".
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
-              כדי שנוכל לפרסם מודעות,<br>
-              לאפשר עדכון או הסרה בעתיד,<br>
-              ולנהל את הפניות שלך בצורה מסודרת–<br>
-              יש להשלים הרשמה קצרה למערכת.
-            </p>
+            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 15px; font-weight: bold; color: #92400e;">📝 לפרסום מודעות נדרשת הרשמה</p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.6; color: #92400e;">
+                כדי שנוכל לפרסם מודעות, לאפשר עדכון והסרה בעתיד, ולנהל את הפניות שלך בצורה מסודרת – יש להשלים הרשמה קצרה למערכת.
+              </p>
+            </div>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${registrationUrl}" 
                  style="display: inline-block; padding: 15px 40px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
-                קישור לטופס הרשמה
+                📋 לחץ להרשמה
               </a>
             </div>
+            <div style="background-color: #e0f2fe; padding: 15px; border-right: 4px solid #0284c7; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 15px; font-weight: bold; color: #0c4a6e;">⏭️ מה קורה לאחר ההרשמה?</p>
+              <ol style="margin: 10px 0 0 20px; font-size: 14px; line-height: 1.8; color: #0c4a6e;">
+                <li>תקבל מייל אישור הרשמה</li>
+                <li>במייל האישור תמצא את רשימת כל הפקודות הזמינות</li>
+                <li>תוכל לשלוח שוב את המייל שרצית (עם הנושא המתאים)</li>
+              </ol>
+            </div>
             <p style="font-size: 16px; line-height: 1.6;">
-              <strong>לאחר השלמת ההרשמה:</strong>
+              <strong>יתרונות ההרשמה:</strong>
             </p>
             <ul style="font-size: 16px; line-height: 1.8;">
-              <li>תוכל לפרסם מודעות ובקשות</li>
-              <li>תוכל לעדכן או להסיר פרסומים קיימים</li>
-              <li>תקבל אישורי מערכת מסודרים במייל</li>
+              <li>✅ פרסום מודעות ובקשות דרך מייל</li>
+              <li>✅ עדכון והסרת פרסומים קיימים</li>
+              <li>✅ אישורי מערכת מסודרים במייל</li>
+              <li>✅ ניהול נוח של כל המודעות שלך</li>
             </ul>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
@@ -81,7 +90,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'השלמת הרשמה למערכת „המקום"',
+      '🔐 נדרשת הרשמה למערכת „המקום"',
       html
     );
   }
@@ -89,6 +98,7 @@ export class EmailOperationsTemplatesService {
   /**
    * מייל "ההרשמה הושלמה בהצלחה"
    * נשלח לאחר שהמשתמש השלים הרשמה
+   * כולל רשימה מלאה של כל הפקודות הזמינות
    */
   async sendRegistrationCompletedEmail(to: string, userName?: string): Promise<void> {
     const html = `
@@ -99,46 +109,76 @@ export class EmailOperationsTemplatesService {
         </head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #10b981; text-align: center;">ההרשמה הושלמה בהצלחה – „המקום"</h2>
+            <h2 style="color: #10b981; text-align: center;">✅ ההרשמה הושלמה בהצלחה!</h2>
             <p style="font-size: 16px; line-height: 1.6;">שלום${userName ? ` ${userName}` : ''},</p>
             <p style="font-size: 16px; line-height: 1.6;">
-              ההרשמה שלך למערכת „המקום" הושלמה בהצלחה!
+              🎉 ההרשמה שלך למערכת „המקום" הושלמה בהצלחה!<br>
+              כעת תוכל לפרסם, לעדכן ולנהל מודעות דרך מייל.
             </p>
-            <h3 style="color: #2563eb;">כיצד לפרסם מודעה או בקשה דרך אימייל:</h3>
-            <p style="font-size: 16px; line-height: 1.6;">
-              <strong>המערכת מזהה את הפעולה לפי שורת הנושא בלבד.</strong>
-            </p>
-            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0;">
-              <p style="margin: 0; font-size: 14px; font-weight: bold;">חשוב לדעת:</p>
-              <ul style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.8;">
-                <li><strong>אין לכתוב את הבקשה בגוף האימייל</strong></li>
-                <li><strong>יש לשלוח אימייל אחד לכל פעולה</strong></li>
-                <li><strong>אין להוסיף מילים נוספות בשורת הנושא</strong></li>
+            
+            <div style="background-color: #dbeafe; padding: 15px; border-right: 4px solid #2563eb; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 15px; font-weight: bold; color: #1e40af;">📧 כיצד לפרסם דרך אימייל?</p>
+              <ul style="margin: 10px 0 0 20px; font-size: 14px; line-height: 1.8; color: #1e3a8a;">
+                <li><strong>כתוב את הפקודה בשורת הנושא בלבד</strong> (לא בגוף המייל)</li>
+                <li><strong>שלח אימייל אחד לכל פעולה</strong></li>
+                <li><strong>אל תוסיף מילים נוספות</strong> לשורת הנושא</li>
+                <li>שלח ל: <strong>publish@amakom.co.il</strong></li>
               </ul>
             </div>
-            <h4 style="color: #2563eb;">פעולות זמינות:</h4>
-            <ul style="font-size: 15px; line-height: 2;">
-              <li>פרסום דירה למכירה</li>
-              <li>פרסום דירה להשכרה</li>
-              <li>פרסום דירה לשבת</li>
-              <li>פרסום יחידת דיור</li>
-              <li>פרסום נדל"ן מסחרי</li>
-              <li>פרסום טאבו משותף</li>
-              <li>דרושה דירה לקנייה</li>
-              <li>דרושה דירה להשכרה</li>
-              <li>דרושה דירה לשבת</li>
-              <li>דרושים - נדל"ן מסחרי</li>
-              <li>דרושים - טאבו משותף</li>
-            </ul>
-            <p style="font-size: 16px; line-height: 1.6;">
-              <strong>לעדכון או הסרת מודעה קיימת:</strong><br>
-              עדכון#&lt;מספר_מודעה&gt;<br>
-              הסרה#&lt;מספר_מודעה&gt;
-            </p>
+
+            <h3 style="color: #2563eb; margin-top: 30px;">📋 פקודות פרסום זמינות:</h3>
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">🏠 דירות:</p>
+              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0;">
+                <li>• פרסום דירה למכירה</li>
+                <li>• פרסום דירה להשכרה</li>
+                <li>• פרסום דירה לשבת</li>
+                <li>• פרסום יחידת דיור</li>
+                <li>• פרסום טאבו משותף</li>
+              </ul>
+            </div>
+
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">🏢 נדל״ן מסחרי:</p>
+              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0;">
+                <li>• פרסום נדל"ן מסחרי</li>
+              </ul>
+            </div>
+
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">🔍 דרושים:</p>
+              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0;">
+                <li>• דרושה דירה לקנייה</li>
+                <li>• דרושה דירה להשכרה</li>
+                <li>• דרושה דירה לשבת</li>
+                <li>• דרושים - נדל"ן מסחרי</li>
+                <li>• דרושים - טאבו משותף</li>
+              </ul>
+            </div>
+
+            <h3 style="color: #2563eb; margin-top: 30px;">✏️ עדכון והסרת מודעות:</h3>
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <p style="margin: 0; font-size: 15px; line-height: 1.8;">
+                <strong>לעדכון:</strong> עדכון#&lt;מספר_מודעה&gt;<br>
+                <strong>להסרה:</strong> הסרה#&lt;מספר_מודעה&gt;
+              </p>
+              <p style="margin: 10px 0 0 0; font-size: 13px; color: #92400e;">
+                💡 למשל: עדכון#42 או הסרה#42
+              </p>
+            </div>
+
+            <div style="background-color: #dcfce7; padding: 15px; border-right: 4px solid #10b981; border-radius: 5px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 15px; font-weight: bold; color: #065f46;">🚀 התחל עכשיו!</p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.6; color: #065f46;">
+                שלח מייל ל-<strong>publish@amakom.co.il</strong> עם אחת הפקודות לעיל בנושא, ותקבל טופס למילוי פרטי המודעה.
+              </p>
+            </div>
+
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               בברכה,<br>
-              צוות המקום
+              צוות המקום<br>
+              publish@amakom.co.il
             </p>
           </div>
         </body>
@@ -147,7 +187,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'ההרשמה הושלמה בהצלחה – „המקום"',
+      '✅ ההרשמה הושלמה בהצלחה – „המקום"',
       html
     );
   }

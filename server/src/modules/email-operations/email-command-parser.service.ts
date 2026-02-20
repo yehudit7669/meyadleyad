@@ -227,10 +227,27 @@ export class EmailCommandParser {
   /**
    * בדיקה האם הפקודה דורשת משתמש רשום
    */
+  /**
+   * בדיקה האם הפקודה דורשת אימות/הרשמה
+   */
   isAuthRequired(commandType: EmailCommandType): boolean {
     const requiresAuth = [
+      // עדכון והסרה
       EmailCommandType.UPDATE_AD,
       EmailCommandType.REMOVE_AD,
+      // כל פעולות הפרסום
+      EmailCommandType.PUBLISH_SALE,
+      EmailCommandType.PUBLISH_RENT,
+      EmailCommandType.PUBLISH_HOUSING_UNIT,
+      EmailCommandType.PUBLISH_SHABBAT,
+      EmailCommandType.PUBLISH_COMMERCIAL,
+      EmailCommandType.PUBLISH_SHARED_OWNERSHIP,
+      // כל פעולות הדרושים
+      EmailCommandType.WANTED_BUY,
+      EmailCommandType.WANTED_RENT,
+      EmailCommandType.WANTED_SHABBAT,
+      EmailCommandType.WANTED_COMMERCIAL,
+      EmailCommandType.WANTED_SHARED_OWNERSHIP,
     ];
     return requiresAuth.includes(commandType);
   }

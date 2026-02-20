@@ -57,8 +57,22 @@ export class EmailAuthVerifier {
 
     // פעולות שדורשות משתמש רשום
     const requiresRegistration = [
+      // עדכון והסרה
       EmailCommandType.UPDATE_AD,
       EmailCommandType.REMOVE_AD,
+      // כל פעולות הפרסום
+      EmailCommandType.PUBLISH_SALE,
+      EmailCommandType.PUBLISH_RENT,
+      EmailCommandType.PUBLISH_HOUSING_UNIT,
+      EmailCommandType.PUBLISH_SHABBAT,
+      EmailCommandType.PUBLISH_COMMERCIAL,
+      EmailCommandType.PUBLISH_SHARED_OWNERSHIP,
+      // כל פעולות הדרושים
+      EmailCommandType.WANTED_BUY,
+      EmailCommandType.WANTED_RENT,
+      EmailCommandType.WANTED_SHABBAT,
+      EmailCommandType.WANTED_COMMERCIAL,
+      EmailCommandType.WANTED_SHARED_OWNERSHIP,
     ];
 
     if (requiresRegistration.includes(commandType)) {
@@ -73,8 +87,13 @@ export class EmailAuthVerifier {
         };
       }
 
-      // חובה שהמשתמש יהיה פעיל
-      if (user.status !== 'ACTIVE') {
+      // חובה שהמשתמש יהיה פעיל (רק לעדכון/הסרה, לא לפרסום חדש)
+      const requiresActiveStatus = [
+        EmailCommandType.UPDATE_AD,
+        EmailCommandType.REMOVE_AD,
+      ];
+
+      if (requiresActiveStatus.includes(commandType) && user.status !== 'ACTIVE') {
         console.log('❌ [EMAIL AUTH] User not active, status:', user.status);
         return {
           authorized: false,
