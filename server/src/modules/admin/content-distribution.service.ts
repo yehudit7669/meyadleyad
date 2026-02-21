@@ -157,10 +157,9 @@ export class ContentDistributionService {
         where: {
           UserPreference: {
             weeklyDigest: true,
-            OR: [
-              { weeklyDigestBlocked: false },
-              { weeklyDigestBlocked: null }
-            ]
+            NOT: {
+              weeklyDigestBlocked: true
+            }
           }
         },
         select: { email: true },
