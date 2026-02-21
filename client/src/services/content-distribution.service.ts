@@ -147,6 +147,19 @@ class ContentDistributionService {
     return response.data;
   }
 
+  async getWeeklyDigestSubscribers(): Promise<MailingSubscriber[]> {
+    const response = await api.get<MailingSubscriber[]>('/admin/content-distribution/weekly-digest-subscribers');
+    return response.data;
+  }
+
+  async blockWeeklyDigestUser(userId: string): Promise<void> {
+    await api.post(`/admin/content-distribution/weekly-digest-subscribers/${userId}/block`);
+  }
+
+  async unblockWeeklyDigestUser(userId: string): Promise<void> {
+    await api.post(`/admin/content-distribution/weekly-digest-subscribers/${userId}/unblock`);
+  }
+
   async addSubscriber(data: AddSubscriberDto): Promise<MailingSubscriber> {
     const response = await api.post<MailingSubscriber>('/admin/content-distribution/mailing-list', data);
     return response.data;

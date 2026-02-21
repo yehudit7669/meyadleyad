@@ -623,6 +623,107 @@ export class ContentDistributionService {
   }
 
   /**
+   * Get users subscribed to weekly digest
+   */
+  async getWeeklyDigestSubscribers() {
+    const users = await prisma.user.findMany({
+      where: {
+        UserPreference: {
+          weeklyDigest: true,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        UserPreference: {
+          select: {
+            weeklyDigest: true,
+            weeklyDigestBlocked: true,
+            weeklyDigestBlockedAt: true,
+            weeklyDigestBlockedBy: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return users.map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name || undefined,
+      status: user.UserPreference?.weeklyDigestBlocked ? 'BLOCKED' : 'ACTIVE',
+      blockedAt: user.UserPreference?.weeklyDigestBlockedAt?.toISOString(),
+      blockedBy: user.UserPreference?.weeklyDigestBlockedBy,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.UserPreference?.updatedAt?.toISOString(),
+    }));
+  }
+
+  /**
+   * Block user from weekly digest
+   */
+  async blockWeeklyDigestUser(userId: string, adminId: string) {
+    // Ensure user preference exists
+    await prisma.userPreference.upsert({
+      where: { userId },
+      update: {
+        weeklyDigestBlocked: true,
+        weeklyDigestBlockedAt: new Date(),
+        weeklyDigestBlockedBy: adminId,
+      },
+      create: {
+        userId,
+        weeklyDigest: false,
+        weeklyDigestBlocked: true,
+        weeklyDigestBlockedAt: new Date(),
+        weeklyDigestBlockedBy: adminId,
+      },
+    });
+
+    // Audit log
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    await AdminAuditService.log({
+      adminId,
+      action: 'BLOCK_WEEKLY_DIGEST_USER',
+      targetId: userId,
+      entityType: 'User',
+      meta: { email: user?.email },
+    });
+
+    return { success: true };
+  }
+
+  /**
+   * Unblock user from weekly digest
+   */
+  async unblockWeeklyDigestUser(userId: string, adminId: string) {
+    await prisma.userPreference.update({
+      where: { userId },
+      data: {
+        weeklyDigestBlocked: false,
+        weeklyDigestBlockedAt: null,
+        weeklyDigestBlockedBy: null,
+      },
+    });
+
+    // Audit log
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    await AdminAuditService.log({
+      adminId,
+      action: 'UNBLOCK_WEEKLY_DIGEST_USER',
+      targetId: userId,
+      entityType: 'User',
+      meta: { email: user?.email },
+    });
+
+    return { success: true };
+  }
+
+  /**
    * Generate unsubscribe token
    */
   private generateUnsubscribeToken(): string {

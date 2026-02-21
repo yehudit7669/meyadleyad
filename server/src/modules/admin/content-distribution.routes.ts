@@ -129,6 +129,54 @@ router.get('/mailing-list', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// Get weekly digest subscribers (from UserPreference)
+router.get('/weekly-digest-subscribers', async (req: AuthRequest, res: Response) => {
+  try {
+    const userRole = req.user?.role;
+    if (!['ADMIN', 'SUPER_ADMIN', 'MODERATOR'].includes(userRole || '')) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    const subscribers = await contentDistributionService.getWeeklyDigestSubscribers();
+    res.json(subscribers);
+  } catch (error: any) {
+    console.error('Error fetching weekly digest subscribers:', error);
+    res.status(500).json({ error: 'Failed to fetch weekly digest subscribers' });
+  }
+});
+
+// Block user from weekly digest
+router.post('/weekly-digest-subscribers/:userId/block', async (req: AuthRequest, res: Response) => {
+  try {
+    const userRole = req.user?.role;
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole || '')) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    await contentDistributionService.blockWeeklyDigestUser(req.params.userId, req.user!.id);
+    res.json({ success: true, message: 'User blocked from weekly digest' });
+  } catch (error: any) {
+    console.error('Error blocking user from weekly digest:', error);
+    res.status(500).json({ error: 'Failed to block user' });
+  }
+});
+
+// Unblock user from weekly digest
+router.post('/weekly-digest-subscribers/:userId/unblock', async (req: AuthRequest, res: Response) => {
+  try {
+    const userRole = req.user?.role;
+    if (!['ADMIN', 'SUPER_ADMIN'].includes(userRole || '')) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    await contentDistributionService.unblockWeeklyDigestUser(req.params.userId, req.user!.id);
+    res.json({ success: true, message: 'User unblocked from weekly digest' });
+  } catch (error: any) {
+    console.error('Error unblocking user from weekly digest:', error);
+    res.status(500).json({ error: 'Failed to unblock user' });
+  }
+});
+
 // Add subscriber
 router.post('/mailing-list', validateRequest({ body: addSubscriberSchema }), async (req: AuthRequest, res: Response) => {
   try {
