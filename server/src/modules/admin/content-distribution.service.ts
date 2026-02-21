@@ -152,11 +152,24 @@ export class ContentDistributionService {
     if (data.recipientEmails && data.recipientEmails.length > 0) {
       recipientEmails = data.recipientEmails;
     } else {
-      const subscribers = await prisma.mailingListSubscriber.findMany({
-        where: { status: MailingListStatus.ACTIVE },
+      // Get all users subscribed to weekly digest who are not blocked
+      const subscribers = await prisma.user.findMany({
+        where: {
+          UserPreference: {
+            weeklyDigest: true,
+            OR: [
+              { weeklyDigestBlocked: false },
+              { weeklyDigestBlocked: null }
+            ]
+          }
+        },
         select: { email: true },
       });
       recipientEmails = subscribers.map(s => s.email);
+      console.log(`📧 Found ${recipientEmails.length} weekly digest subscribers for content distribution`);
+      if (recipientEmails.length === 0) {
+        console.warn('⚠️  No weekly digest subscribers found! Content will not be distributed.');
+      }
     }
 
     // Create distribution record
@@ -173,6 +186,8 @@ export class ContentDistributionService {
 
     let successCount = 0;
     let failedCount = 0;
+
+    console.log(`📨 Starting to send content to ${recipientEmails.length} recipients...`);
 
     // Send emails
     for (const email of recipientEmails) {
@@ -191,7 +206,10 @@ export class ContentDistributionService {
         });
 
         successCount++;
+        console.log(`  ✅ Sent to ${email} (${successCount}/${recipientEmails.length})`);
       } catch (error: any) {
+        console.error(`  ❌ Failed to send to ${email}:`, error.message);
+        
         // Log failed dispatch
         await prisma.contentDispatchLog.create({
           data: {
@@ -207,6 +225,8 @@ export class ContentDistributionService {
         failedCount++;
       }
     }
+
+    console.log(`📊 Distribution complete: ${successCount} succeeded, ${failedCount} failed out of ${recipientEmails.length} total`);
 
     // Update distribution counts
     await prisma.contentDistribution.update({
