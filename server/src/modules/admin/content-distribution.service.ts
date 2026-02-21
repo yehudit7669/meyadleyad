@@ -624,6 +624,7 @@ export class ContentDistributionService {
 
   /**
    * Get users subscribed to weekly digest
+   * All users (regular, brokers, service providers) now use UserPreference.weeklyDigest
    */
   async getWeeklyDigestSubscribers() {
     const users = await prisma.user.findMany({
@@ -636,6 +637,7 @@ export class ContentDistributionService {
         id: true,
         email: true,
         name: true,
+        userType: true,
         createdAt: true,
         UserPreference: {
           select: {
@@ -655,6 +657,7 @@ export class ContentDistributionService {
       id: user.id,
       email: user.email,
       name: user.name || undefined,
+      userType: user.userType,
       status: user.UserPreference?.weeklyDigestBlocked ? 'BLOCKED' : 'ACTIVE',
       blockedAt: user.UserPreference?.weeklyDigestBlockedAt?.toISOString(),
       blockedBy: user.UserPreference?.weeklyDigestBlockedBy,

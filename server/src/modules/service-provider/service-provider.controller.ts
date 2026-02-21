@@ -44,8 +44,14 @@ export class ServiceProviderController {
           aboutBusinessStatus: true,
           publishOfficeAddress: true,
           businessHours: true,
-          weeklyDigestSubscribed: true,
+          weeklyDigestSubscribed: true, // Keep for backwards compatibility
           createdAt: true,
+          UserPreference: {
+            select: {
+              weeklyDigest: true,
+              weeklyDigestBlocked: true,
+            },
+          },
         },
       });
 
@@ -56,9 +62,15 @@ export class ServiceProviderController {
         });
       }
 
+      // Ensure weeklyDigestSubscribed reflects UserPreference value if it exists
+      const userWithCompat = user as any;
+      if (user.UserPreference) {
+        userWithCompat.weeklyDigestSubscribed = user.UserPreference.weeklyDigest && !user.UserPreference.weeklyDigestBlocked;
+      }
+
       res.json({
         success: true,
-        data: user,
+        data: userWithCompat,
       });
     } catch (error) {
       next(error);
@@ -79,7 +91,19 @@ export class ServiceProviderController {
       if (input.phoneBusinessOffice !== undefined) updateData.phoneBusinessOffice = input.phoneBusinessOffice;
       if (input.publishOfficeAddress !== undefined) updateData.publishOfficeAddress = input.publishOfficeAddress;
       if (input.businessHours !== undefined) updateData.businessHours = input.businessHours;
-      if (input.weeklyDigestSubscribed !== undefined) updateData.weeklyDigestSubscribed = input.weeklyDigestSubscribed;
+      
+      // Update weeklyDigest in UserPreference instead of User.weeklyDigestSubscribed
+      if (input.weeklyDigestSubscribed !== undefined) {
+        await prisma.userPreference.upsert({
+          where: { userId },
+          update: { weeklyDigest: input.weeklyDigestSubscribed },
+          create: {
+            userId,
+            weeklyDigest: input.weeklyDigestSubscribed,
+            notifyNewMatches: false,
+          },
+        });
+      }
 
       // Get current user data for comparison
       const currentUser = await prisma.user.findUnique({

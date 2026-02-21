@@ -97,13 +97,24 @@ export class BrokerRepository {
         lastName: true,
         phonePersonal: true,
         businessPhone: true,
-        weeklyDigestOptIn: true,
+        weeklyDigestOptIn: true, // Keep for backwards compatibility
         pendingEmail: true,
         role: true,
         userType: true,
         serviceProviderType: true,
+        UserPreference: {
+          select: {
+            weeklyDigest: true,
+            weeklyDigestBlocked: true,
+          },
+        },
       },
     });
+
+    // Ensure weeklyDigestOptIn reflects UserPreference value if it exists
+    if (user && user.UserPreference) {
+      (user as any).weeklyDigestOptIn = user.UserPreference.weeklyDigest && !user.UserPreference.weeklyDigestBlocked;
+    }
 
     let office = await prisma.brokerOffice.findUnique({
       where: { brokerOwnerUserId: userId },
@@ -400,9 +411,20 @@ export class BrokerRepository {
 
   // Update communication preferences
   async updateCommunication(userId: string, weeklyDigestOptIn: boolean) {
-    return prisma.user.update({
+    // Update or create UserPreference instead of User.weeklyDigestOptIn
+    await prisma.userPreference.upsert({
+      where: { userId },
+      update: { weeklyDigest: weeklyDigestOptIn },
+      create: {
+        userId,
+        weeklyDigest: weeklyDigestOptIn,
+        notifyNewMatches: false,
+      },
+    });
+
+    return prisma.user.findUnique({
       where: { id: userId },
-      data: { weeklyDigestOptIn },
+      include: { UserPreference: true },
     });
   }
 
