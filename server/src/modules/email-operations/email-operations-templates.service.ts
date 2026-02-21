@@ -45,11 +45,11 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #2563eb; text-align: center;">🔐 נדרשת הרשמה למערכת „המקום"</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               קיבלנו את פנייתך למערכת „המקום".
             </p>
-            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 15px; font-weight: bold; color: #92400e;">📝 לפרסום מודעות נדרשת הרשמה</p>
               <p style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.6; color: #92400e;">
                 כדי שנוכל לפרסם מודעות, לאפשר עדכון והסרה בעתיד, ולנהל את הפניות שלך בצורה מסודרת – יש להשלים הרשמה קצרה למערכת.
@@ -61,18 +61,18 @@ export class EmailOperationsTemplatesService {
                 📋 לחץ להרשמה
               </a>
             </div>
-            <div style="background-color: #e0f2fe; padding: 15px; border-right: 4px solid #0284c7; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #e0f2fe; padding: 15px; border-right: 4px solid #0284c7; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 15px; font-weight: bold; color: #0c4a6e;">⏭️ מה קורה לאחר ההרשמה?</p>
-              <ol style="margin: 10px 0 0 20px; font-size: 14px; line-height: 1.8; color: #0c4a6e;">
+              <ol style="margin: 10px 0 0 20px; font-size: 14px; line-height: 1.8; color: #0c4a6e; text-align: right;">
                 <li>תקבל מייל אישור הרשמה</li>
                 <li>במייל האישור תמצא את רשימת כל הפקודות הזמינות</li>
                 <li>תוכל לשלוח שוב את המייל שרצית (עם הנושא המתאים)</li>
               </ol>
             </div>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               <strong>יתרונות ההרשמה:</strong>
             </p>
-            <ul style="font-size: 16px; line-height: 1.8;">
+            <ul style="font-size: 16px; line-height: 1.8; text-align: right;">
               <li>✅ פרסום מודעות ובקשות דרך מייל</li>
               <li>✅ עדכון והסרת פרסומים קיימים</li>
               <li>✅ אישורי מערכת מסודרים במייל</li>
@@ -110,15 +110,15 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #10b981; text-align: center;">✅ ההרשמה הושלמה בהצלחה!</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום${userName ? ` ${userName}` : ''},</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום${userName ? ` ${userName}` : ''},</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               🎉 ההרשמה שלך למערכת „המקום" הושלמה בהצלחה!<br>
               כעת תוכל לפרסם, לעדכן ולנהל מודעות דרך מייל.
             </p>
             
-            <div style="background-color: #dbeafe; padding: 15px; border-right: 4px solid #2563eb; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #dbeafe; padding: 15px; border-right: 4px solid #2563eb; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 15px; font-weight: bold; color: #1e40af;">📧 כיצד לפרסם דרך אימייל?</p>
-              <ul style="margin: 10px 0 0 20px; font-size: 14px; line-height: 1.8; color: #1e3a8a;">
+              <ul style="margin: 10px 0 0 20px; font-size: 14px; line-height: 1.8; color: #1e3a8a; text-align: right;">
                 <li><strong>כתוב את הפקודה בשורת הנושא בלבד</strong> (לא בגוף המייל)</li>
                 <li><strong>שלח אימייל אחד לכל פעולה</strong></li>
                 <li><strong>אל תוסיף מילים נוספות</strong> לשורת הנושא</li>
@@ -126,10 +126,10 @@ export class EmailOperationsTemplatesService {
               </ul>
             </div>
 
-            <h3 style="color: #2563eb; margin-top: 30px;">📋 פקודות פרסום זמינות:</h3>
-            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <h3 style="color: #2563eb; margin-top: 30px; text-align: right;">📋 פקודות פרסום זמינות:</h3>
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0; text-align: right;">
               <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">🏠 דירות:</p>
-              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0;">
+              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0; text-align: right;">
                 <li>• פרסום דירה למכירה</li>
                 <li>• פרסום דירה להשכרה</li>
                 <li>• פרסום דירה לשבת</li>
@@ -138,16 +138,16 @@ export class EmailOperationsTemplatesService {
               </ul>
             </div>
 
-            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0; text-align: right;">
               <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">🏢 נדל״ן מסחרי:</p>
-              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0;">
+              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0; text-align: right;">
                 <li>• פרסום נדל"ן מסחרי</li>
               </ul>
             </div>
 
-            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <div style="background-color: #f9fafb; padding: 15px; border-radius: 5px; margin: 10px 0; text-align: right;">
               <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">🔍 דרושים:</p>
-              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0;">
+              <ul style="margin: 0; font-size: 15px; line-height: 1.8; list-style: none; padding-right: 0; text-align: right;">
                 <li>• דרושה דירה לקנייה</li>
                 <li>• דרושה דירה להשכרה</li>
                 <li>• דרושה דירה לשבת</li>
@@ -156,8 +156,8 @@ export class EmailOperationsTemplatesService {
               </ul>
             </div>
 
-            <h3 style="color: #2563eb; margin-top: 30px;">✏️ עדכון והסרת מודעות:</h3>
-            <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; margin: 10px 0;">
+            <h3 style="color: #2563eb; margin-top: 30px; text-align: right;">✏️ עדכון והסרת מודעות:</h3>
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; margin: 10px 0; text-align: right;">
               <p style="margin: 0; font-size: 15px; line-height: 1.8;">
                 <strong>לעדכון:</strong> עדכון#&lt;מספר_מודעה&gt;<br>
                 <strong>להסרה:</strong> הסרה#&lt;מספר_מודעה&gt;
@@ -167,7 +167,7 @@ export class EmailOperationsTemplatesService {
               </p>
             </div>
 
-            <div style="background-color: #dcfce7; padding: 15px; border-right: 4px solid #10b981; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #dcfce7; padding: 15px; border-right: 4px solid #10b981; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 15px; font-weight: bold; color: #065f46;">🚀 התחל עכשיו!</p>
               <p style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.6; color: #065f46;">
                 שלח מייל ל-<strong>publish@amakom.co.il</strong> עם אחת הפקודות לעיל בנושא, ותקבל טופס למילוי פרטי המודעה.
@@ -271,8 +271,8 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #2563eb; text-align: center;">${template.subject}</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">,שלום</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               ${template.body}
             </p>
             <div style="text-align: center; margin: 30px 0;">
@@ -281,7 +281,7 @@ export class EmailOperationsTemplatesService {
                 מלא את הטופס
               </a>
             </div>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               ${
                 commandType.startsWith('PUBLISH_')
                   ? 'לאחר שליחת הטופס תקבל אישור פרסום עם מספר מודעה סידורי.'
@@ -319,42 +319,42 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #10b981; text-align: center;">המודעה פורסמה – מספר המודעה שלך: ${adNumber}</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">,שלום</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               המודעה שלך "${adTitle}" פורסמה בהצלחה באתר „המקום."
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               <strong>מספר המודעה שלך הוא: ${adNumber}</strong>
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               זהו מספר הזיהוי של המודעה שלך במערכת, והוא משמש לכל פעולה עתידית.
             </p>
-            <h3 style="color: #2563eb;">ניהול המודעה:</h3>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <h3 style="color: #2563eb; text-align: right;">ניהול המודעה:</h3>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               כדי לעדכן או להסיר את המודעה שלך, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> וכתוב בשורת הנושא בלבד את המילה המתאימה בצירוף מספר המודעה שלך.
             </p>
-            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: right;">
               <p style="margin: 5px 0; font-size: 15px;"><strong>לעדכון המודעה שלך:</strong></p>
               <p style="margin: 5px 0; font-size: 16px; color: #2563eb;">עדכון#${adNumber}</p>
               <p style="margin: 15px 0 5px 0; font-size: 15px;"><strong>להסרת המודעה שלך:</strong></p>
               <p style="margin: 5px 0; font-size: 16px; color: #ef4444;">הסרה#${adNumber}</p>
             </div>
-            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 14px; font-weight: bold;">חשוב לדעת:</p>
-              <ul style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.8;">
+              <ul style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.8; text-align: right;">
                 <li><strong>שלח מייל חדש (לא תשובה)</strong></li>
                 <li><strong>כתוב רק את הפקודה בשורת הנושא</strong></li>
                 <li><strong>אין להוסיף מילים נוספות בשורת הנושא</strong></li>
               </ul>
             </div>
-            <h3 style="color: #2563eb;">קובץ הדירות השבועי:</h3>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <h3 style="color: #2563eb; text-align: right;">קובץ הדירות השבועי:</h3>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               אם תרצה לקבל את קובץ הדירות השבועי של „המקום" למייל, שלח אימייל עם:
             </p>
-            <p style="font-size: 16px; color: #2563eb; margin: 10px 0;">
+            <p style="font-size: 16px; color: #2563eb; margin: 10px 0; text-align: right;">
               <strong>שורת נושא: הצטרפות</strong>
             </p>
-            <p style="font-size: 14px; color: #666; line-height: 1.6;">
+            <p style="font-size: 14px; color: #666; line-height: 1.6; text-align: right;">
               להסרה מהתפוצה, שלח אימייל עם שורת נושא: <strong>הסרה-תפוצה</strong>
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -391,17 +391,17 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #10b981; text-align: center;">הבקשה פורסמה – מספר הבקשה שלך: ${requestNumber}</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               הבקשה שלך "${requestTitle}" פורסמה בהצלחה באתר „המקום."
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               <strong>מספר הבקשה שלך הוא: ${requestNumber}</strong>
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               להסרת הבקשה, שלח אימייל עם שורת נושא:
             </p>
-            <p style="font-size: 18px; color: #ef4444; margin: 10px 0;">
+            <p style="font-size: 18px; color: #ef4444; margin: 10px 0; text-align: right;">
               <strong>הסרה#${requestNumber}</strong>
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -434,21 +434,21 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #2563eb; text-align: center;">פנייתך התקבלה – בקשת עדכון מודעה</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
-              קיבלנו את פנייתך בנושא עדכון מודעה ב„המקום."
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
+              קיבלנו את פנייתך בנושא עדכון מודעה ב„המקום.“
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               כדי לעדכן מודעה קיימת, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם שורת הנושא:
             </p>
             <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
               <p style="margin: 5px 0; font-size: 18px; color: #2563eb; font-weight: bold;">עדכון#[מספר_המודעה]</p>
               <p style="margin: 5px 0; font-size: 14px; color: #666;">לדוגמה: עדכון#30</p>
             </div>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               לאחר שליחת הפקודה הנכונה, תקבל מייל עם קישור לטופס עדכון המודעה.
             </p>
-            <p style="font-size: 14px; color: #999; line-height: 1.6;">
+            <p style="font-size: 14px; color: #999; line-height: 1.6; text-align: right;">
               פניות שאינן נשלחות בפורמט זה לא יטופלו אוטומטית.
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -478,18 +478,18 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #2563eb; text-align: center;">פנייתך התקבלה – בקשת הסרת מודעה</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
-              קיבלנו את פנייתך בנושא הסרת מודעה ב„המקום."
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
+              קיבלנו את פנייתך בנושא הסרת מודעה ב„המקום.“
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               כדי להסיר מודעה קיימת, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם שורת הנושא:
             </p>
             <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
               <p style="margin: 5px 0; font-size: 18px; color: #dc2626; font-weight: bold;">הסרה#[מספר_המודעה]</p>
               <p style="margin: 5px 0; font-size: 14px; color: #666;">לדוגמה: הסרה#30</p>
             </div>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               לאחר שליחת הפקודה הנכונה, המודעה שלך תוסר מהמערכת.
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -525,14 +525,14 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #10b981; text-align: center;">המודעה עודכנה בהצלחה – מספר המודעה שלך: ${adNumber}</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
-              המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר „המקום."
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
+              המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר „המקום.“
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               להמשך עדכון או הסרה, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם מספר המודעה:
             </p>
-            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: right;">
               <p style="margin: 5px 0; font-size: 16px; color: #2563eb;">
                 <strong>עדכון#${adNumber}</strong>
               </p>
@@ -540,7 +540,7 @@ export class EmailOperationsTemplatesService {
                 <strong>הסרה#${adNumber}</strong>
               </p>
             </div>
-            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 14px;">
                 <strong>אין לכתוב בגוף האימייל</strong>
               </p>
@@ -578,11 +578,11 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #ef4444; text-align: center;">המודעה הוסרה – מספר המודעה שלך: ${adNumber}</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               המודעה שלך מספר ${adNumber} הוסרה מהאתר ואינה מוצגת עוד לציבור.
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               תודה שהשתמשת בשירותי „המקום."
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -615,17 +615,17 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #10b981; text-align: center;">הצטרפת בהצלחה לרשימת התפוצה</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
-              הצטרפת בהצלחה לרשימת התפוצה של „המקום."
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
+              הצטרפת בהצלחה לרשימת התפוצה של „המקום.“
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               תקבל את קובץ הדירות השבועי למייל שלך.
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               להסרה מהתפוצה בכל עת, שלח אימייל עם שורת נושא:
             </p>
-            <p style="font-size: 18px; color: #ef4444; margin: 10px 0;">
+            <p style="font-size: 18px; color: #ef4444; margin: 10px 0; text-align: right;">
               <strong>הסרה-תפוצה</strong>
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -658,17 +658,17 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #ef4444; text-align: center;">הוסרת מרשימת התפוצה</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
-              הוסרת בהצלחה מרשימת התפוצה של „המקום."
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
+              הוסרת בהצלחה מרשימת התפוצה של „המקום.“
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               לא תקבל עוד את קובץ הדירות השבועי.
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               להצטרפות מחדש בכל עת, שלח אימייל עם שורת נושא:
             </p>
-            <p style="font-size: 18px; color: #10b981; margin: 10px 0;">
+            <p style="font-size: 18px; color: #10b981; margin: 10px 0; text-align: right;">
               <strong>הצטרפות</strong>
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -701,23 +701,23 @@ export class EmailOperationsTemplatesService {
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <h2 style="color: #ef4444; text-align: center;">הבקשה לא זוהתה</h2>
-            <p style="font-size: 16px; line-height: 1.6;">שלום,</p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               קיבלנו את הודעתך אך לא הצלחנו לזהות את הבקשה.
             </p>
-            <p style="font-size: 16px; line-height: 1.6;">
+            <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               <strong>המערכת מזהה פעולות לפי שורת הנושא בלבד.</strong>
             </p>
-            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0;">
+            <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 14px; font-weight: bold;">חשוב לדעת:</p>
-              <ul style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.8;">
+              <ul style="margin: 10px 0 0 0; font-size: 14px; line-height: 1.8; text-align: right;">
                 <li><strong>אין לכתוב את הבקשה בגוף האימייל</strong></li>
                 <li><strong>אין להוסיף מילים נוספות בשורת הנושא</strong></li>
                 <li><strong>מספר המודעה הוא המספר ממייל אישור הפרסום</strong></li>
               </ul>
             </div>
-            <h4 style="color: #2563eb;">פקודות זמינות:</h4>
-            <ul style="font-size: 15px; line-height: 2;">
+            <h4 style="color: #2563eb; text-align: right;">פקודות זמינות:</h4>
+            <ul style="font-size: 15px; line-height: 2; text-align: right;">
               <li>פרסום דירה למכירה</li>
               <li>פרסום דירה להשכרה</li>
               <li>פרסום דירה לשבת</li>
