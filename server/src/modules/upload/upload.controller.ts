@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { config } from '../../config';
 
 /**
  * Upload Controller
@@ -69,7 +70,7 @@ export class UploadController {
       }
 
       // החזרת URL של הקובץ
-      const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      const fileUrl = `${config.appUrl}/uploads/${req.file.filename}`;
       
       res.json({
         url: fileUrl,

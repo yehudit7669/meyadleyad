@@ -275,10 +275,19 @@ export class ContentDistributionService {
   private async sendContentEmail(recipientEmail: string, contentItem: any) {
     const subject = `תוכן חדש: ${contentItem.title}`;
     
-    // Build full URL for content - if it's a relative path, add backend URL
+    // Build full URL for content
     let contentUrl = contentItem.url;
-    if (contentUrl && (contentUrl.startsWith('/') || !contentUrl.startsWith('http'))) {
-      contentUrl = config.appUrl + (contentUrl.startsWith('/') ? contentUrl : '/' + contentUrl);
+    
+    // Fix relative URLs or localhost URLs
+    if (contentUrl) {
+      // If it's a relative URL (starts with /)
+      if (contentUrl.startsWith('/')) {
+        contentUrl = config.appUrl + contentUrl;
+      }
+      // If it contains localhost, replace with production URL
+      else if (contentUrl.includes('localhost')) {
+        contentUrl = contentUrl.replace(/http:\/\/localhost:\d+/, config.appUrl);
+      }
     }
     
     const html = `
