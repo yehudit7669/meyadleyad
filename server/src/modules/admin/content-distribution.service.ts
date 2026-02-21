@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 import { AdminAuditService } from './admin-audit.service';
 import { EmailService } from '../email/email.service';
+import { config } from '../../config';
 import ExcelJS from 'exceljs';
 
 const emailService = new EmailService();
@@ -274,6 +275,12 @@ export class ContentDistributionService {
   private async sendContentEmail(recipientEmail: string, contentItem: any) {
     const subject = `תוכן חדש: ${contentItem.title}`;
     
+    // Build full URL for content - if it's a relative path, add backend URL
+    let contentUrl = contentItem.url;
+    if (contentUrl && (contentUrl.startsWith('/') || !contentUrl.startsWith('http'))) {
+      contentUrl = config.appUrl + (contentUrl.startsWith('/') ? contentUrl : '/' + contentUrl);
+    }
+    
     const html = `
       <!DOCTYPE html>
       <html dir="rtl">
@@ -292,7 +299,7 @@ export class ContentDistributionService {
               ${contentItem.type === 'PDF' ? 'לצפייה או הורדה של המסמך' : 'לצפייה בתוכן'}, לחץ על הכפתור הבא:
             </p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${contentItem.url}" 
+              <a href="${contentUrl}" 
                  style="display: inline-block; padding: 15px 40px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
                 ${contentItem.type === 'PDF' ? 'פתח PDF' : 'פתח קישור'}
               </a>
