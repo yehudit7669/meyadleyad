@@ -298,13 +298,17 @@ export class ContentDistributionService {
           console.log(`📎 Step 2: After URL parse (pathname): ${filePath}`);
         }
         
+        // Remove /api prefix if exists (since files are in /app/uploads not /app/api/uploads)
+        filePath = filePath.replace(/^\/api\//, '/');
+        console.log(`📎 Step 3: After removing /api prefix: ${filePath}`);
+        
         // Remove leading slash and get full path
         filePath = filePath.replace(/^\//, '');
-        console.log(`📎 Step 3: After removing leading slash: ${filePath}`);
+        console.log(`📎 Step 4: After removing leading slash: ${filePath}`);
         
         const fullPath = path.join(process.cwd(), filePath);
-        console.log(`📎 Step 4: Full path to check: ${fullPath}`);
-        console.log(`📎 Step 5: Current working directory: ${process.cwd()}`);
+        console.log(`📎 Step 5: Full path to check: ${fullPath}`);
+        console.log(`📎 Step 6: Current working directory: ${process.cwd()}`);
         
         // Check if file exists
         if (fs.existsSync(fullPath)) {
