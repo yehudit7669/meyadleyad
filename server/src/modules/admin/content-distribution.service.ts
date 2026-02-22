@@ -278,6 +278,8 @@ export class ContentDistributionService {
     // Build full URL for content
     let contentUrl = contentItem.url;
     
+    console.log(`📧 Original contentItem.url: ${contentUrl}`);
+    
     // Fix relative URLs or localhost URLs
     if (contentUrl) {
       // If it's a relative URL (starts with /)
@@ -289,6 +291,9 @@ export class ContentDistributionService {
         contentUrl = contentUrl.replace(/http:\/\/localhost:\d+/, config.appUrl);
       }
     }
+    
+    console.log(`📧 Final contentUrl in email: ${contentUrl}`);
+    console.log(`📧 Content type: ${contentItem.type}`);
     
     const html = `
       <!DOCTYPE html>
