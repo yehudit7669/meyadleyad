@@ -148,7 +148,9 @@ app.use((req, res, next) => {
 // Use process.cwd() instead of __dirname to work correctly in production
 const uploadsPath = path.resolve(process.cwd(), 'uploads');
 app.use('/api/uploads', express.static(uploadsPath));
+app.use('/uploads', express.static(uploadsPath)); // Also serve directly under /uploads for compatibility
 console.log('📁 Serving static files from:', uploadsPath);
+console.log('📁 Available at: /api/uploads and /uploads');
 
 // Create uploads directory if it doesn't exist
 if (!fs.existsSync(uploadsPath)) {
