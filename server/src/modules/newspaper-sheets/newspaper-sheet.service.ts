@@ -83,6 +83,7 @@ export class NewspaperSheetService {
               select: {
                 id: true,
                 title: true,
+                description: true,
                 address: true,
                 price: true,
                 customFields: true,
@@ -224,6 +225,7 @@ export class NewspaperSheetService {
           select: {
             id: true,
             title: true,
+            description: true,
             address: true
           }
         }
@@ -367,6 +369,7 @@ export class NewspaperSheetService {
               select: {
                 id: true,
                 title: true,
+                description: true,
                 address: true,
                 price: true,
                 customFields: true,

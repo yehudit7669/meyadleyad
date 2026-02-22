@@ -52,6 +52,7 @@ interface Listing {
   listing: {
     id: string;
     title: string;
+    description: string;
     address: string;
     price: number;
     customFields?: any;
@@ -117,7 +118,7 @@ function SortablePropertyCard({ listing, onRemove }: { listing: Listing; onRemov
   const rooms = customFields.rooms || '';
   const size = customFields.size || '';
   const floor = customFields.floor || '';
-  const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
+  const isBrokerage = customFields.hasBroker === true || customFields.isBrokerage === true || customFields.brokerage === true;
 
   // Features
   const features: string[] = [];
@@ -203,7 +204,7 @@ function SortablePropertyCard({ listing, onRemove }: { listing: Listing; onRemov
 
         {/* Description */}
         <div className="property-description">
-          {listing.listing.title}
+          {listing.listing.description}
         </div>
 
         {/* Features */}
@@ -234,7 +235,7 @@ function PropertyCardOverlay({ listing }: { listing: Listing }) {
   const rooms = customFields.rooms || '';
   const size = customFields.size || '';
   const floor = customFields.floor || '';
-  const isBrokerage = customFields.isBrokerage === true || customFields.brokerage === true;
+  const isBrokerage = customFields.hasBroker === true || customFields.isBrokerage === true || customFields.brokerage === true;
 
   const features: string[] = [];
   const featuresObj = customFields.features || {};
@@ -297,7 +298,7 @@ function PropertyCardOverlay({ listing }: { listing: Listing }) {
         </div>
 
         <div className="property-description">
-          {listing.listing.title}
+          {listing.listing.description}
         </div>
 
         {features.length > 0 && (
