@@ -109,8 +109,8 @@ export class BrandingService {
       throw new ValidationError('לא ניתן לקרוא את מימדי התמונה');
     }
 
-    if (metadata.width > 1000 || metadata.height > 300) {
-      throw new ValidationError('הלוגו לא יכול לעלות על 1000x300 פיקסלים');
+    if (metadata.width > 2500 || metadata.height > 2500) {
+      throw new ValidationError('הלוגו לא יכול לעלות על 2500x2500 פיקסלים');
     }
 
     if (!metadata.hasAlpha) {

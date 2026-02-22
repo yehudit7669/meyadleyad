@@ -94,8 +94,8 @@ const BrandingLogoSettings: React.FC = () => {
 
     img.onload = async () => {
       // בדיקת רזולוציה
-      if (img.width > 1000 || img.height > 300) {
-        setError('הלוגו לא יכול לעלות על 1000x300 פיקסלים');
+      if (img.width > 2500 || img.height > 2500) {
+        setError('הלוגו לא יכול לעלות על 2500x2500 פיקסלים');
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
