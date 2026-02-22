@@ -280,28 +280,41 @@ export class ContentDistributionService {
     let attachments: any[] = [];
     let isPDFAttached = false;
     
+    console.log(`📧 Preparing email for ${recipientEmail}`);
+    console.log(`📧 Content type: ${contentItem.type}, URL: ${contentItem.url}`);
+    
     // If it's a PDF, try to attach it
     if (contentItem.type === 'PDF') {
       try {
         // Extract filename from URL
         let filePath = contentItem.url;
         
+        console.log(`📎 Step 1: Original URL: ${filePath}`);
+        
         // Remove domain if exists
         if (filePath.includes('http')) {
           const urlObj = new URL(filePath);
           filePath = urlObj.pathname;
+          console.log(`📎 Step 2: After URL parse (pathname): ${filePath}`);
         }
         
         // Remove leading slash and get full path
         filePath = filePath.replace(/^\//, '');
-        const fullPath = path.join(process.cwd(), filePath);
+        console.log(`📎 Step 3: After removing leading slash: ${filePath}`);
         
-        console.log(`📎 Trying to attach PDF from: ${fullPath}`);
+        const fullPath = path.join(process.cwd(), filePath);
+        console.log(`📎 Step 4: Full path to check: ${fullPath}`);
+        console.log(`📎 Step 5: Current working directory: ${process.cwd()}`);
         
         // Check if file exists
         if (fs.existsSync(fullPath)) {
+          console.log(`✅ File exists! Reading file...`);
           const fileContent = fs.readFileSync(fullPath);
           const fileName = path.basename(filePath);
+          
+          console.log(`📎 File size: ${fileContent.length} bytes`);
+          console.log(`📎 Original filename: ${fileName}`);
+          console.log(`📎 Attachment filename: ${contentItem.title}.pdf`);
           
           attachments.push({
             content: fileContent.toString('base64'),
@@ -311,12 +324,23 @@ export class ContentDistributionService {
           });
           
           isPDFAttached = true;
-          console.log(`✅ PDF attached successfully: ${fileName}`);
+          console.log(`✅ PDF attached successfully to email!`);
         } else {
-          console.warn(`⚠️  PDF file not found: ${fullPath}`);
+          console.error(`❌ PDF file NOT FOUND at: ${fullPath}`);
+          
+          // Try to list directory contents
+          const dirPath = path.dirname(fullPath);
+          console.log(`📁 Checking directory: ${dirPath}`);
+          if (fs.existsSync(dirPath)) {
+            const files = fs.readdirSync(dirPath);
+            console.log(`📁 Files in directory (${files.length}):`, files.slice(0, 10));
+          } else {
+            console.error(`❌ Directory does not exist: ${dirPath}`);
+          }
         }
       } catch (error: any) {
         console.error(`❌ Failed to attach PDF:`, error.message);
+        console.error(`❌ Error stack:`, error.stack);
       }
     }
     
@@ -362,7 +386,20 @@ export class ContentDistributionService {
       </html>
     `;
 
+    console.log(`📨 About to send email to ${recipientEmail}`);
+    console.log(`📨 Has attachments: ${attachments.length > 0 ? 'YES' : 'NO'}`);
+    console.log(`📨 Number of attachments: ${attachments.length}`);
+    if (attachments.length > 0) {
+      console.log(`📨 Attachment info:`, attachments.map(a => ({ 
+        filename: a.filename, 
+        type: a.type, 
+        size: a.content?.length || 0 
+      })));
+    }
+
     await emailService.sendEmail(recipientEmail, subject, html, attachments.length > 0 ? attachments : undefined);
+    
+    console.log(`✅ Email sent successfully to ${recipientEmail}`);
   }
 
   /**

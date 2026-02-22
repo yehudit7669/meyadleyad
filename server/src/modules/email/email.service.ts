@@ -36,6 +36,11 @@ export class EmailService {
       return;
     }
     
+    console.log(`📮 EmailService.sendEmail called`);
+    console.log(`📮 To: ${to}`);
+    console.log(`📮 Subject: ${subject}`);
+    console.log(`📮 Attachments received: ${attachments ? attachments.length : 0}`);
+    
     try {
       const msg: sgMail.MailDataRequired = {
         to,
@@ -49,12 +54,15 @@ export class EmailService {
 
       // Add attachments if provided
       if (attachments && attachments.length > 0) {
+        console.log(`📎 Processing ${attachments.length} attachment(s)...`);
         msg.attachments = attachments.map((att: any) => {
           if (att.content && att.filename) {
             // If content is Buffer, convert to base64 string
             const contentBase64 = Buffer.isBuffer(att.content) 
               ? att.content.toString('base64')
               : att.content;
+            
+            console.log(`📎 Attachment: ${att.filename}, type: ${att.type}, size: ${contentBase64.length}`);
             
             return {
               content: contentBase64,
@@ -65,6 +73,9 @@ export class EmailService {
           }
           return att;
         });
+        console.log(`✅ Attachments processed, sending to SendGrid...`);
+      } else {
+        console.log(`ℹ️  No attachments to add`);
       }
 
       await sgMail.send(msg);
