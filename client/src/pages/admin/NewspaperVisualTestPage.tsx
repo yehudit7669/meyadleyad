@@ -305,6 +305,11 @@ function PropertyCard({ listing }: { listing: typeof DEMO_DATA.listings[0] }) {
   if ('sukkaBalcony' in listing.features && listing.features.sukkaBalcony) features.push('מרפסת סוכה');
   if ('view' in listing.features && listing.features.view) features.push('נוף');
   if ('yard' in listing.features && listing.features.yard) features.push('חצר');
+  if ('garden' in listing.features && listing.features.garden) features.push('גינה');
+  if ('frontFacing' in listing.features && listing.features.frontFacing) features.push('חזית');
+  if ('upgradedKitchen' in listing.features && listing.features.upgradedKitchen) features.push('מטבח משודרג');
+  if ('accessibleForDisabled' in listing.features && listing.features.accessibleForDisabled) features.push('נגיש לנכים');
+  if ('pool' in listing.features && listing.features.pool) features.push('בריכה');
 
   // Extract street and house number only (remove city)
   const formatAddress = (fullAddress: string) => {

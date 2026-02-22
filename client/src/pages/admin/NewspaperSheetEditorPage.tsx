@@ -135,7 +135,12 @@ function SortablePropertyCard({ listing, onRemove }: { listing: Listing; onRemov
   if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
   if (featuresObj.view) features.push('נוף');
   if (featuresObj.yard) features.push('חצר');
+  if (featuresObj.garden) features.push('גינה');
   if (featuresObj.housingUnit) features.push('יח׳ דיור');
+  if (featuresObj.frontFacing) features.push('חזית');
+  if (featuresObj.upgradedKitchen) features.push('מטבח משודרג');
+  if (featuresObj.accessibleForDisabled) features.push('נגיש לנכים');
+  if (featuresObj.pool) features.push('בריכה');
 
   const contactName = customFields.contactName || 'פרטים נוספים';
   const contactPhone = customFields.contactPhone || (listing.listing as any).User?.phone || '050-000-0000';
@@ -251,7 +256,12 @@ function PropertyCardOverlay({ listing }: { listing: Listing }) {
   if (featuresObj.sukkaBalcony) features.push('מרפסת סוכה');
   if (featuresObj.view) features.push('נוף');
   if (featuresObj.yard) features.push('חצר');
+  if (featuresObj.garden) features.push('גינה');
   if (featuresObj.housingUnit) features.push('יח׳ דיור');
+  if (featuresObj.frontFacing) features.push('חזית');
+  if (featuresObj.upgradedKitchen) features.push('מטבח משודרג');
+  if (featuresObj.accessibleForDisabled) features.push('נגיש לנכים');
+  if (featuresObj.pool) features.push('בריכה');
 
   const contactName = customFields.contactName || 'פרטים נוספים';
   const contactPhone = customFields.contactPhone || (listing.listing as any).User?.phone || '050-000-0000';
