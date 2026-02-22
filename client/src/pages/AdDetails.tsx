@@ -7,6 +7,7 @@ import SEO from '../components/SEO';
 import AdMap from '../components/AdMap';
 import AppointmentCard from '../components/appointments/AppointmentCard';
 import { PROPERTY_TYPE_OPTIONS } from '../constants/adTypes';
+import { getImageUrl } from '../utils/imageUrl';
 
 export default function AdDetails() {
   const { id } = useParams<{ id: string }>();
@@ -165,7 +166,7 @@ export default function AdDetails() {
                         }`}
                       >
                         <img
-                          src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${image.url}`}
+                          src={getImageUrl(image.url)}
                           alt={`תמונה ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -179,10 +180,10 @@ export default function AdDetails() {
                   <div className="w-full max-w-xl aspect-[16/9] bg-white rounded-2xl overflow-hidden shadow-md">
                     {ad.images && ad.images.length > 0 ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[currentImageIndex].url}`}
+                        src={getImageUrl(ad.images[currentImageIndex].url)}
                         alt={ad.title}
                         className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition"
-                        onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[currentImageIndex].url}`, '_blank')}
+                        onClick={() => window.open(getImageUrl(ad.images[currentImageIndex].url), '_blank')}
                       />
                     ) : (
                       <img

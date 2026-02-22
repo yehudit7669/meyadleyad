@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../../utils/imageUrl';
 
 interface AdCardCompactProps {
   ad: {
@@ -29,7 +30,7 @@ export default function AdCardCompact({ ad, showCategory = false }: AdCardCompac
       <div className="relative overflow-hidden rounded-lg">
         <img
           src={ad.images && ad.images[0] 
-            ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${ad.images[0].url}`
+            ? getImageUrl(ad.images[0].url)
             : '/images/default-property.jpg'
           }
           alt={ad.title}

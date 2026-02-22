@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../services/api';
 import { AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUrl';
 
 interface PendingChanges {
   title?: string;
@@ -388,12 +389,7 @@ export default function PendingChangesPage() {
                         
                         // Helper להמרת URL יחסי ל-מלא
                         const getFullImageUrl = (url: string) => {
-                          if (!url) return '';
-                          if (url.startsWith('data:')) return url; // base64
-                          if (url.startsWith('http')) return url; // URL מלא
-                          // URL יחסי
-                          const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-                          return `${baseUrl}${url}`;
+                          return getImageUrl(url);
                         };
                         
                         // השוואה - בדוק אם יש שינוי במספר התמונות או ב-URLs

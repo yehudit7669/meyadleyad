@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../services/api';
 import { Link } from 'react-router-dom';
+import { getImageUrl } from '../utils/imageUrl';
 
 // מיפוי סטטוסים לתצוגה
 const getStatusLabel = (status: string): string => {
@@ -353,10 +354,10 @@ export default function PendingAds() {
                               {images.length > 0 ? (
                                 <div className="relative group">
                                   <img
-                                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`}
+                                    src={getImageUrl(images[currentImageIndex]?.url)}
                                     alt="תמונת נכס"
                                     className="w-32 h-32 object-cover rounded-lg cursor-pointer"
-                                    onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`, '_blank')}
+                                    onClick={() => window.open(getImageUrl(images[currentImageIndex]?.url), '_blank')}
                                   />
                                   {images.length > 1 && (
                                     <>
@@ -539,10 +540,10 @@ export default function PendingAds() {
                           {images.length > 0 ? (
                             <div className="relative group w-full">
                               <img
-                                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`}
+                                src={getImageUrl(images[currentImageIndex]?.url)}
                                 alt="תמונת נכס"
                                 className="w-full h-48 object-cover rounded-lg cursor-pointer"
-                                onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${images[currentImageIndex]?.url}`, '_blank')}
+                                onClick={() => window.open(getImageUrl(images[currentImageIndex]?.url), '_blank')}
                               />
                               {images.length > 1 && (
                                 <>
@@ -684,10 +685,10 @@ export default function PendingAds() {
                         {/* תמונה ראשית גדולה */}
                         <div className="mb-4 relative bg-gray-100 rounded-lg overflow-hidden">
                           <img
-                            src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${previewAd.AdImage.sort((a: any, b: any) => a.order - b.order)[selectedImageIndex]?.url}`}
+                            src={getImageUrl(previewAd.AdImage.sort((a: any, b: any) => a.order - b.order)[selectedImageIndex]?.url)}
                             alt={`תמונה ${selectedImageIndex + 1}`}
                             className="w-full h-96 object-contain cursor-pointer"
-                            onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${previewAd.AdImage[selectedImageIndex]?.url}`, '_blank')}
+                            onClick={() => window.open(getImageUrl(previewAd.AdImage[selectedImageIndex]?.url), '_blank')}
                           />
                           
                           {/* כפתורי ניווט */}
@@ -732,7 +733,7 @@ export default function PendingAds() {
                               } transition`}
                             >
                               <img
-                                src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${img.url}`}
+                                src={getImageUrl(img.url)}
                                 alt={`תמונה ממוזערת ${idx + 1}`}
                                 className="w-full h-20 object-cover"
                               />
