@@ -49,6 +49,8 @@ services:
       - backend
     networks:
       - app-network
+    volumes:
+      - ./data/uploads:/usr/share/nginx/html/uploads
 
 volumes:
   postgres_data:
