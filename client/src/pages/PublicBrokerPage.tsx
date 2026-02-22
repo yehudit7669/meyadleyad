@@ -113,8 +113,8 @@ const PublicBrokerPage: React.FC = () => {
               {broker.businessPhone && (
                 <a 
                   href={`tel:${broker.businessPhone}`} 
-                  className="text-white px-6 py-3 rounded-lg text-xl font-semibold inline-block"
-                  style={{ backgroundColor: '#c89b4c' }}
+                  className="text-white px-6 py-1.5 text-xl font-bold inline-block"
+                  style={{ backgroundColor: '#c89b4c', boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15)' }}
                 >
                   {broker.businessPhone}
                 </a>

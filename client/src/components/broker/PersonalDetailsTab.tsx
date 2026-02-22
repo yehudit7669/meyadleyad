@@ -10,6 +10,8 @@ interface Props {
 
 const PersonalDetailsTab: React.FC<Props> = ({ profile }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [addressErrorMessage, setAddressErrorMessage] = useState<string>('');
   const [formData, setFormData] = useState({
     fullName: profile.user.name || '',
     phonePersonal: profile.user.phonePersonal || '',
@@ -110,40 +112,81 @@ const PersonalDetailsTab: React.FC<Props> = ({ profile }) => {
       </div>
 
       {isEditing && (
-        <div className="flex gap-4">
-          <button
-            onClick={async () => {
-              try {
-                await updatePersonal.mutateAsync({
-                  fullName: formData.fullName,
-                  phonePersonal: formData.phonePersonal,
-                  businessPhone: formData.businessPhone,
-                });
+        <>
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-red-600 mt-0.5 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-800 mb-1">שגיאה בשמירת הנתונים:</h3>
+                  <p className="text-sm text-red-700 whitespace-pre-line">{errorMessage}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex gap-4">
+            <button
+              onClick={async () => {
+                try {
+                  setErrorMessage('');
+                  await updatePersonal.mutateAsync({
+                    fullName: formData.fullName,
+                    phonePersonal: formData.phonePersonal,
+                    businessPhone: formData.businessPhone,
+                  });
+                  setIsEditing(false);
+                } catch (error: any) {
+                  console.error('Error updating details:', error);
+                  
+                  // Parse error message
+                  let errorMsg = 'אירעה שגיאה בשמירת הפרטים';
+                  
+                  if (error.response?.data?.message) {
+                    try {
+                      // Try to parse as JSON array of validation errors
+                      const validationErrors = JSON.parse(error.response.data.message);
+                      if (Array.isArray(validationErrors)) {
+                        errorMsg = validationErrors
+                          .map((err: any) => err.message)
+                          .join('\n');
+                      } else {
+                        errorMsg = error.response.data.message;
+                      }
+                    } catch {
+                      // If not JSON, use as is
+                      errorMsg = error.response.data.message;
+                    }
+                  } else if (error.message) {
+                    errorMsg = error.message;
+                  }
+                  
+                  setErrorMessage(errorMsg);
+                }
+              }}
+              disabled={updatePersonal.isPending}
+              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+            >
+              {updatePersonal.isPending ? 'שומר...' : 'שמור שינויים'}
+            </button>
+            <button
+              onClick={() => {
                 setIsEditing(false);
-              } catch (error) {
-                console.error('Error updating details:', error);
-              }
-            }}
-            disabled={updatePersonal.isPending}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50"
-          >
-            {updatePersonal.isPending ? 'שומר...' : 'שמור שינויים'}
-          </button>
-          <button
-            onClick={() => {
-              setIsEditing(false);
-              setFormData({
-                fullName: profile.user.name || '',
-                phonePersonal: profile.user.phonePersonal || '',
-                businessPhone: profile.user.businessPhone || '',
-                businessAddressPending: profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '',
-              });
-            }}
-            className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
-          >
-            ביטול
-          </button>
-        </div>
+                setErrorMessage('');
+                setFormData({
+                  fullName: profile.user.name || '',
+                  phonePersonal: profile.user.phonePersonal || '',
+                  businessPhone: profile.user.businessPhone || '',
+                  businessAddressPending: profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '',
+                });
+              }}
+              className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+            >
+              ביטול
+            </button>
+          </div>
+        </>
       )}
 
       {/* Office Address Section */}
@@ -189,6 +232,19 @@ const PersonalDetailsTab: React.FC<Props> = ({ profile }) => {
           <p className="text-xs text-gray-500 mb-2">
             שינוי כתובת המשרד דורש אישור מנהל. הכתובת תעודכן רק לאחר אישור.
           </p>
+          {addressErrorMessage && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-red-600 mt-0.5 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-800 mb-1">שגיאה בשליחת הבקשה:</h3>
+                  <p className="text-sm text-red-700 whitespace-pre-line">{addressErrorMessage}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex gap-4">
             <input
               type="text"
@@ -202,11 +258,36 @@ const PersonalDetailsTab: React.FC<Props> = ({ profile }) => {
                 const currentOfficeAddress = profile.office?.businessAddressPending || profile.office?.businessAddressApproved || '';
                 if (formData.businessAddressPending && formData.businessAddressPending !== currentOfficeAddress) {
                   try {
+                    setAddressErrorMessage('');
                     await updateOffice.mutateAsync({
                       businessAddressPending: formData.businessAddressPending,
                     });
-                  } catch (error) {
+                  } catch (error: any) {
                     console.error('Error updating office address:', error);
+                    
+                    // Parse error message
+                    let errorMsg = 'אירעה שגיאה בשליחת הבקשה';
+                    
+                    if (error.response?.data?.message) {
+                      try {
+                        // Try to parse as JSON array of validation errors
+                        const validationErrors = JSON.parse(error.response.data.message);
+                        if (Array.isArray(validationErrors)) {
+                          errorMsg = validationErrors
+                            .map((err: any) => err.message)
+                            .join('\n');
+                        } else {
+                          errorMsg = error.response.data.message;
+                        }
+                      } catch {
+                        // If not JSON, use as is
+                        errorMsg = error.response.data.message;
+                      }
+                    } else if (error.message) {
+                      errorMsg = error.message;
+                    }
+                    
+                    setAddressErrorMessage(errorMsg);
                   }
                 }
               }}
