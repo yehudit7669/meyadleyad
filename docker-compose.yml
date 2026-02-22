@@ -26,8 +26,11 @@ services:
       JWT_SECRET: 86a8e36f0244448bf7c844f96319d5ac8abc3abba9117831936fd4728dcb2785
       JWT_REFRESH_SECRET: feb2bcdecb403a7d313ef20ec4a4d303d31b768c59714e2768fdd18a33171ce1a02c694fef4262613d39c7ddbeba9dd00ecbf0f4041c8658c330c6101a13e584
       SMTP_ENABLED: "false"
+      APP_URL: https://amakom.co.il/api
     env_file: 
       - .env
+    volumes:
+      - ./data/uploads:/app/uploads
     ports:
       - "3000:3000"
     networks:
