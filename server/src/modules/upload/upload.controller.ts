@@ -18,7 +18,7 @@ export class UploadController {
       }
 
       // החזרת URL של התמונה
-      const imageUrl = `/uploads/${req.file.filename}`;
+      const imageUrl = `/api/uploads/${req.file.filename}`;
       
       res.json({
         url: imageUrl,
@@ -43,7 +43,7 @@ export class UploadController {
       }
 
       const uploadedImages = (req.files as Express.Multer.File[]).map(file => ({
-        url: `/uploads/${file.filename}`,
+        url: `/api/uploads/${file.filename}`,
         filename: file.filename,
         size: file.size,
         mimetype: file.mimetype
@@ -70,7 +70,7 @@ export class UploadController {
       }
 
       // החזרת URL של הקובץ
-      const fileUrl = `${config.appUrl}/uploads/${req.file.filename}`;
+      const fileUrl = `${config.appUrl}/api/uploads/${req.file.filename}`;
       
       res.json({
         url: fileUrl,

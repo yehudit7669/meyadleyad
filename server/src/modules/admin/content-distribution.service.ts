@@ -10,6 +10,8 @@ import { AdminAuditService } from './admin-audit.service';
 import { EmailService } from '../email/email.service';
 import { config } from '../../config';
 import ExcelJS from 'exceljs';
+import fs from 'fs';
+import path from 'path';
 
 const emailService = new EmailService();
 
@@ -275,26 +277,50 @@ export class ContentDistributionService {
   private async sendContentEmail(recipientEmail: string, contentItem: any) {
     const subject = `תוכן חדש: ${contentItem.title}`;
     
-    // Build full URL for content
-    let contentUrl = contentItem.url;
+    let attachments: any[] = [];
+    let isPDFAttached = false;
     
-    console.log(`📧 Original contentItem.url: ${contentUrl}`);
-    
-    // Fix relative URLs or localhost URLs
-    if (contentUrl) {
-      // If it's a relative URL (starts with /)
-      if (contentUrl.startsWith('/')) {
-        contentUrl = config.appUrl + contentUrl;
-      }
-      // If it contains localhost, replace with production URL
-      else if (contentUrl.includes('localhost')) {
-        contentUrl = contentUrl.replace(/http:\/\/localhost:\d+/, config.appUrl);
+    // If it's a PDF, try to attach it
+    if (contentItem.type === 'PDF') {
+      try {
+        // Extract filename from URL
+        let filePath = contentItem.url;
+        
+        // Remove domain if exists
+        if (filePath.includes('http')) {
+          const urlObj = new URL(filePath);
+          filePath = urlObj.pathname;
+        }
+        
+        // Remove leading slash and get full path
+        filePath = filePath.replace(/^\//, '');
+        const fullPath = path.join(process.cwd(), filePath);
+        
+        console.log(`📎 Trying to attach PDF from: ${fullPath}`);
+        
+        // Check if file exists
+        if (fs.existsSync(fullPath)) {
+          const fileContent = fs.readFileSync(fullPath);
+          const fileName = path.basename(filePath);
+          
+          attachments.push({
+            content: fileContent.toString('base64'),
+            filename: `${contentItem.title}.pdf`,
+            type: 'application/pdf',
+            disposition: 'attachment'
+          });
+          
+          isPDFAttached = true;
+          console.log(`✅ PDF attached successfully: ${fileName}`);
+        } else {
+          console.warn(`⚠️  PDF file not found: ${fullPath}`);
+        }
+      } catch (error: any) {
+        console.error(`❌ Failed to attach PDF:`, error.message);
       }
     }
     
-    console.log(`📧 Final contentUrl in email: ${contentUrl}`);
-    console.log(`📧 Content type: ${contentItem.type}`);
-    
+    // Build HTML content
     const html = `
       <!DOCTYPE html>
       <html dir="rtl">
@@ -310,19 +336,23 @@ export class ContentDistributionService {
               </div>
             ` : ''}
             <p style="font-size: 16px; line-height: 1.6; text-align: center;">
-              ${contentItem.type === 'PDF' ? 'לצפייה או הורדה של המסמך' : 'לצפייה בתוכן'}, לחץ על הכפתור הבא:
+              ${isPDFAttached 
+                ? '📎 המסמך מצורף למייל זה. ניתן לפתוח אותו ישירות מהמצורפים.' 
+                : contentItem.type === 'PDF' ? 'לצפייה או הורדה של המסמך, לחץ על הכפתור למטה.' : 'לצפייה בתוכן, לחץ על הכפתור למטה.'}
             </p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${contentUrl}" 
-                 style="display: inline-block; padding: 15px 40px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
-                ${contentItem.type === 'PDF' ? 'פתח PDF' : 'פתח קישור'}
-              </a>
-            </div>
+            ${!isPDFAttached ? `
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${contentItem.url}" 
+                   style="display: inline-block; padding: 15px 40px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+                  ${contentItem.type === 'PDF' ? 'פתח PDF' : 'פתח קישור'}
+                </a>
+              </div>
+            ` : ''}
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
               קיבלת מייל זה כי אתה רשום לרשימת התפוצה שלנו.
               <br/>
-              <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/unsubscribe?email=${encodeURIComponent(recipientEmail)}" 
+              <a href="${config.frontendUrl}/unsubscribe?email=${encodeURIComponent(recipientEmail)}" 
                  style="color: #2563eb; text-decoration: none;">
                 ביטול הרשמה
               </a>
@@ -332,7 +362,7 @@ export class ContentDistributionService {
       </html>
     `;
 
-    await emailService.sendEmail(recipientEmail, subject, html);
+    await emailService.sendEmail(recipientEmail, subject, html, attachments.length > 0 ? attachments : undefined);
   }
 
   /**

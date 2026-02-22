@@ -147,7 +147,7 @@ app.use((req, res, next) => {
 // Static files - serve uploads from server/uploads
 // Use process.cwd() instead of __dirname to work correctly in production
 const uploadsPath = path.resolve(process.cwd(), 'uploads');
-app.use('/uploads', express.static(uploadsPath));
+app.use('/api/uploads', express.static(uploadsPath));
 console.log('📁 Serving static files from:', uploadsPath);
 
 // Create uploads directory if it doesn't exist
