@@ -57,7 +57,12 @@ const Header: React.FC = () => {
             aria-label="המקום - חזרה לדף הבית"
             className="flex items-center space-x-2 space-x-reverse"
           >
-            <span className="text-2xl font-bold text-[#E6D3A3]">המקום</span>
+            <img 
+              src="/images/amakom.jpg" 
+              alt="המקום" 
+              style={{ height: '130px' }}
+              className="w-auto object-contain"
+            />
           </Link>
 
           {/* Center - Navigation Categories */}
