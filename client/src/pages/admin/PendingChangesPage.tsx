@@ -57,11 +57,15 @@ export default function PendingChangesPage() {
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [imageGallery, setImageGallery] = useState<{ images: any[], type: 'current' | 'pending', title: string } | null>(null);
 
   // Fetch ads with pending changes
   const { data, isLoading } = useQuery({
     queryKey: ['admin-pending-changes'],
     queryFn: () => adminService.getAdsWithPendingChanges(),
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const ads = data?.ads || [];
@@ -290,9 +294,7 @@ export default function PendingChangesPage() {
                           </div>
                         );
                       }
-                      console.log('🔍 Pending changes data:', changes);
-                      console.log('🔍 Images in pendingChanges:', changes.images);
-                      console.log('🔍 Current AdImage:', selectedAd.AdImage);
+                      
                       const changedFields = [];
 
                       // כותרת
@@ -389,6 +391,10 @@ export default function PendingChangesPage() {
                         
                         // Helper להמרת URL יחסי ל-מלא
                         const getFullImageUrl = (url: string) => {
+                          // אם זה base64 data URL, השאר אותו כמו שהוא
+                          if (url?.startsWith('data:')) {
+                            return url;
+                          }
                           return getImageUrl(url);
                         };
                         
@@ -405,24 +411,57 @@ export default function PendingChangesPage() {
                               <div className="grid grid-cols-2 gap-4">
                                 {/* תמונות נוכחיות */}
                                 <div>
-                                  <div className="text-sm text-gray-600 mb-2 line-through text-red-600">
+                                  <div className="text-sm mb-2 line-through text-red-600">
                                     נוכחי: {currentImageCount} {currentImageCount === 0 ? 'ללא תמונות' : 'תמונות'}
                                   </div>
                                   {currentImageCount > 0 ? (
-                                    <div className="grid grid-cols-3 gap-1">
-                                      {currentImages.slice(0, 6).map((img: any, idx: number) => (
-                                        <img
-                                          key={idx}
-                                          src={getFullImageUrl(img.url)}
-                                          alt={`תמונה ${idx + 1}`}
-                                          className="w-full h-16 object-cover rounded border opacity-50"
-                                        />
-                                      ))}
-                                      {currentImageCount > 6 && (
-                                        <div className="w-full h-16 flex items-center justify-center bg-gray-200 rounded text-xs opacity-50">
-                                          +{currentImageCount - 6}
-                                        </div>
-                                      )}
+                                    <div>
+                                      <div className="grid grid-cols-3 gap-1">
+                                        {currentImages.slice(0, 6).map((img: any) => (
+                                          <div key={img.url || img.id} className="relative">
+                                            <img
+                                              src={getFullImageUrl(img.url)}
+                                              alt="תמונה נוכחית"
+                                              className="w-full h-16 object-cover rounded border opacity-50 cursor-pointer hover:opacity-70 transition"
+                                              onClick={() => setImageGallery({ 
+                                                images: currentImages, 
+                                                type: 'current',
+                                                title: `תמונות נוכחיות (${currentImageCount})`
+                                              })}
+                                              onError={(e) => {
+                                                const target = e.currentTarget;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                  parent.innerHTML = '<div class="w-full h-16 flex items-center justify-center bg-gray-200 rounded border text-xs text-gray-500 opacity-50">תמונה לא זמינה</div>';
+                                                }
+                                              }}
+                                            />
+                                          </div>
+                                        ))}
+                                        {currentImageCount > 6 && (
+                                          <div 
+                                            className="w-full h-16 flex items-center justify-center bg-gray-200 rounded text-xs opacity-50 cursor-pointer hover:opacity-70"
+                                            onClick={() => setImageGallery({ 
+                                              images: currentImages, 
+                                              type: 'current',
+                                              title: `תמונות נוכחיות (${currentImageCount})`
+                                            })}
+                                          >
+                                            +{currentImageCount - 6}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => setImageGallery({ 
+                                          images: currentImages, 
+                                          type: 'current',
+                                          title: `תמונות נוכחיות (${currentImageCount})`
+                                        })}
+                                        className="mt-2 text-xs text-blue-600 hover:underline"
+                                      >
+                                        לחץ לצפייה בכל התמונות ({currentImageCount})
+                                      </button>
                                     </div>
                                   ) : (
                                     <div className="text-gray-400 italic text-sm">אין תמונות</div>
@@ -435,24 +474,53 @@ export default function PendingChangesPage() {
                                     חדש: {pendingImageCount} {pendingImageCount === 0 ? 'ללא תמונות' : 'תמונות'}
                                   </div>
                                   {pendingImageCount > 0 ? (
-                                    <div className="grid grid-cols-3 gap-1">
-                                      {pendingImages.slice(0, 6).map((img: any, idx: number) => (
-                                        <img
-                                          key={idx}
-                                          src={getFullImageUrl(img.url)}
-                                          alt={`תמונה חדשה ${idx + 1}`}
-                                          className="w-full h-16 object-cover rounded border-2 border-green-500"
-                                          onError={(e) => {
-                                            console.error('Image load error:', img.url);
-                                            e.currentTarget.style.display = 'none';
-                                          }}
-                                        />
-                                      ))}
-                                      {pendingImageCount > 6 && (
-                                        <div className="w-full h-16 flex items-center justify-center bg-green-100 rounded text-xs">
-                                          +{pendingImageCount - 6}
-                                        </div>
-                                      )}
+                                    <div>
+                                      <div className="grid grid-cols-3 gap-1">
+                                        {pendingImages.slice(0, 6).map((img: any) => (
+                                          <div key={img.url || img.id} className="relative">
+                                            <img
+                                              src={getFullImageUrl(img.url)}
+                                              alt="תמונה חדשה"
+                                              className="w-full h-16 object-cover rounded border-2 border-green-500 cursor-pointer hover:opacity-80 transition"
+                                              onClick={() => setImageGallery({ 
+                                                images: pendingImages, 
+                                                type: 'pending',
+                                                title: `תמונות חדשות (${pendingImageCount})`
+                                              })}
+                                              onError={(e) => {
+                                                const target = e.currentTarget;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                  parent.innerHTML = '<div class="w-full h-16 flex items-center justify-center bg-red-100 rounded border-2 border-red-300 text-xs text-red-600">❌ תמונה לא זמינה</div>';
+                                                }
+                                              }}
+                                            />
+                                          </div>
+                                        ))}
+                                        {pendingImageCount > 6 && (
+                                          <div 
+                                            className="w-full h-16 flex items-center justify-center bg-green-100 rounded text-xs cursor-pointer hover:bg-green-200"
+                                            onClick={() => setImageGallery({ 
+                                              images: pendingImages, 
+                                              type: 'pending',
+                                              title: `תמונות חדשות (${pendingImageCount})`
+                                            })}
+                                          >
+                                            +{pendingImageCount - 6}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => setImageGallery({ 
+                                          images: pendingImages, 
+                                          type: 'pending',
+                                          title: `תמונות חדשות (${pendingImageCount})`
+                                        })}
+                                        className="mt-2 text-xs text-blue-600 hover:underline"
+                                      >
+                                        לחץ לצפייה בכל התמונות ({pendingImageCount})
+                                      </button>
                                     </div>
                                   ) : (
                                     <div className="text-gray-400 italic text-sm">אין תמונות</div>
@@ -772,6 +840,65 @@ export default function PendingChangesPage() {
                   >
                     ביטול
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Gallery modal */}
+        {imageGallery && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[60] p-4"
+            onClick={() => setImageGallery(null)}
+          >
+            <div 
+              className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+                <h3 className="text-xl font-semibold">{imageGallery.title}</h3>
+                <button
+                  onClick={() => setImageGallery(null)}
+                  className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              
+              {/* Image Grid */}
+              <div className="p-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {imageGallery.images.map((img: any, idx: number) => {
+                    // זיהוי base64 data URLs
+                    const imgSrc = img.url?.startsWith('data:') ? img.url : getImageUrl(img.url);
+                    
+                    return (
+                      <div key={img.url || img.id || idx} className="relative group">
+                        <img
+                          src={imgSrc}
+                          alt={`תמונה ${idx + 1}`}
+                          className={`w-full h-48 object-cover rounded-lg ${
+                            imageGallery.type === 'pending' ? 'border-2 border-green-500' : 'border border-gray-300'
+                          }`}
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `<div class="w-full h-48 flex flex-col items-center justify-center ${
+                                imageGallery.type === 'pending' ? 'bg-red-50 border-2 border-red-300' : 'bg-gray-100 border border-gray-300'
+                              } rounded-lg"><div class="text-4xl mb-2">❌</div><div class="text-sm text-gray-600">תמונה לא זמינה</div><div class="text-xs text-gray-400 mt-1 px-2 text-center break-all">${img.url?.substring(0, 50) || ''}</div></div>`;
+                            }
+                          }}
+                        />
+                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                          {idx + 1} / {imageGallery.images.length}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
