@@ -4,6 +4,7 @@ import { useCategories } from '../hooks/useCategories';
 import HomeHero from '../components/home/HomeHero';
 import CategorySlider from '../components/home/CategorySlider';
 import WantedSlider from '../components/home/WantedSlider';
+import WhatsAppSection from '../components/home/WhatsAppSection';
 
 const Home: React.FC = () => {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
@@ -45,6 +46,9 @@ const Home: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* WhatsApp Community Section */}
+      <WhatsAppSection />
     </div>
   );
 };
