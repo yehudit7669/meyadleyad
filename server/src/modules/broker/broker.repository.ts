@@ -55,6 +55,8 @@ export class BrokerRepository {
         adNumber: true,
         isWanted: true,
         requestedLocationText: true,
+        address: true,
+        customFields: true,
         Category: {
           select: { nameHe: true },
         },
