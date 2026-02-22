@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '../services/api';
-import { useAuth } from '../hooks/useAuth';
+import { AuthContext } from '../hooks/useAuth';
 
 export interface SupportNotification {
   id: string;
@@ -27,7 +27,10 @@ export function UserNotificationsProvider({ children }: { children: ReactNode })
   const [notifications, setNotifications] = useState<SupportNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  
+  // Use AuthContext directly to avoid hook order issues
+  const auth = useContext(AuthContext);
+  const user = auth?.user || null;
 
   const fetchUnreadCount = async () => {
     // Check if user is logged in by checking for access token

@@ -9,5 +9,7 @@ router.get('/profile', authenticate, usersController.getProfile);
 router.put('/profile', authenticate, usersController.updateProfile);
 router.get('/my-ads', authenticate, usersController.getMyAds);
 router.get('/broker/:id', usersController.getBrokerProfile);
+router.get('/brokers', usersController.getBrokers);
+router.get('/service-providers', usersController.getServiceProviders);
 
 export default router;

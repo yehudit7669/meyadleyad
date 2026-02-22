@@ -83,10 +83,12 @@ const Header: React.FC = () => {
               categorySlug="commercial-real-estate"
               categoryName='נדל״ן מסחרי'
             />
-            <CategoryWithCities 
-              categorySlug="service-providers"
-              categoryName="נותני שירות"
-            />
+            <Link
+              to="/service-providers"
+              className="text-[#3f504f] hover:text-[#2f403f] transition font-bold"
+            >
+              נותני שירות
+            </Link>
             <CategoryWithCities 
               categorySlug="housing-units"
               categoryName="יחידות דיור"
@@ -272,13 +274,13 @@ const Header: React.FC = () => {
                     isMobile={true}
                   />
                 </div>
-                <div onClick={closeMobileMenu}>
-                  <CategoryWithCities 
-                    categorySlug="service-providers"
-                    categoryName="🔧 נותני שירות"
-                    isMobile={true}
-                  />
-                </div>
+                <Link
+                  to="/service-providers"
+                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  onClick={closeMobileMenu}
+                >
+                  🔧 נותני שירות
+                </Link>
                 <div onClick={closeMobileMenu}>
                   <CategoryWithCities 
                     categorySlug="housing-units"

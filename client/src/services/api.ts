@@ -403,6 +403,18 @@ export const usersService = {
     const response = await api.get('/users/my-ads');
     return (response.data as any).data || [];
   },
+
+  getBrokers: async (cityId?: string) => {
+    const params = cityId ? { cityId } : {};
+    const response = await api.get('/users/brokers', { params });
+    return (response.data as any).data || [];
+  },
+
+  getServiceProviders: async (cityId?: string) => {
+    const params = cityId ? { cityId } : {};
+    const response = await api.get('/users/service-providers', { params });
+    return (response.data as any).data || [];
+  },
 };
 
 // =============== ADMIN SERVICES ===============

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '../services/api';
-import { useAuth } from '../hooks/useAuth';
+import { AuthContext } from '../hooks/useAuth';
 
 interface AdminNotificationsContextType {
   unreadCount: number;
@@ -11,7 +11,10 @@ const AdminNotificationsContext = createContext<AdminNotificationsContextType | 
 
 export function AdminNotificationsProvider({ children }: { children: ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth();
+  
+  // Use AuthContext directly to avoid hook order issues
+  const auth = useContext(AuthContext);
+  const user = auth?.user || null;
 
   const fetchUnreadCount = async () => {
     try {

@@ -55,4 +55,30 @@ export class UsersController {
       next(error);
     }
   }
+
+  async getBrokers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const cityId = req.query.cityId as string | undefined;
+      const brokers = await usersService.getBrokers(cityId);
+      res.json({
+        status: 'success',
+        data: brokers,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getServiceProviders(req: Request, res: Response, next: NextFunction) {
+    try {
+      const cityId = req.query.cityId as string | undefined;
+      const providers = await usersService.getServiceProviders(cityId);
+      res.json({
+        status: 'success',
+        data: providers,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

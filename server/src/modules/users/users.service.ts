@@ -157,4 +157,102 @@ export class UsersService {
       ads,
     };
   }
+
+  /**
+   * Get all brokers
+   */
+  async getBrokers(cityId?: string) {
+    const where: any = {
+      role: 'BROKER',
+    };
+
+    if (cityId) {
+      where.brokerCityId = cityId;
+    }
+
+    const brokers = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        BrokerCity: {
+          select: {
+            nameHe: true,
+          },
+        },
+        brokerCityId: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Get BrokerOffice info for each broker
+    const brokersWithOffice = await Promise.all(
+      brokers.map(async (broker) => {
+        const office = await prisma.brokerOffice.findUnique({
+          where: { brokerOwnerUserId: broker.id },
+          select: {
+            businessName: true,
+            logoUrlApproved: true,
+            businessAddressApproved: true,
+            publishOfficeAddress: true,
+          },
+        });
+
+        return {
+          id: broker.id,
+          name: broker.name,
+          businessName: office?.businessName || broker.name,
+          logo: office?.logoUrlApproved || null,
+          city: broker.BrokerCity?.nameHe || null,
+          cityId: broker.brokerCityId,
+          officeAddress: office?.publishOfficeAddress ? office.businessAddressApproved : null,
+        };
+      })
+    );
+
+    return brokersWithOffice;
+  }
+
+  /**
+   * Get all service providers
+   */
+  async getServiceProviders(cityId?: string) {
+    const where: any = {
+      role: 'SERVICE_PROVIDER',  // Fixed: should be role, not userType
+    };
+
+    if (cityId) {
+      where.brokerCityId = cityId;
+    }
+
+    const providers = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        businessName: true,
+        logoUrlPending: true,
+        BrokerCity: {
+          select: {
+            nameHe: true,
+          },
+        },
+        brokerCityId: true,
+        userType: true,
+        serviceProviderType: true,
+        role: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return providers.map((provider) => ({
+      id: provider.id,
+      name: provider.name,
+      businessName: provider.businessName || provider.name,
+      logo: provider.logoUrlPending || null,
+      city: provider.BrokerCity?.nameHe || null,
+      cityId: provider.brokerCityId,
+    }));
+  }
 }
+
