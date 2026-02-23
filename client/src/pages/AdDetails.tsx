@@ -8,6 +8,7 @@ import AdMap from '../components/AdMap';
 import AppointmentCard from '../components/appointments/AppointmentCard';
 import { PROPERTY_TYPE_OPTIONS, CONDITION_OPTIONS, FURNITURE_OPTIONS } from '../constants/adTypes';
 import { getImageUrl } from '../utils/imageUrl';
+import ImageLightbox from '../components/ImageLightbox';
 
 export default function AdDetails() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ export default function AdDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { trackAdView, trackContactClick } = useAnalytics();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   // Helper function to get property type label in Hebrew
   const getPropertyTypeLabel = (propertyType: string): string => {
@@ -195,7 +197,7 @@ export default function AdDetails() {
                         src={getImageUrl(ad.images[currentImageIndex].url)}
                         alt={ad.title}
                         className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition"
-                        onClick={() => window.open(getImageUrl(ad.images[currentImageIndex].url), '_blank')}
+                        onClick={() => setIsLightboxOpen(true)}
                       />
                     ) : (
                       <img
@@ -522,6 +524,16 @@ export default function AdDetails() {
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      {isLightboxOpen && ad.images && ad.images.length > 0 && (
+        <ImageLightbox
+          images={ad.images}
+          currentIndex={currentImageIndex}
+          onClose={() => setIsLightboxOpen(false)}
+          onNavigate={(index) => setCurrentImageIndex(index)}
+        />
+      )}
     </>
   );
 }
