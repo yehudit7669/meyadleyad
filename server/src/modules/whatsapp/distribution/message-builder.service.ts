@@ -202,9 +202,8 @@ export class WhatsAppMessageBuilderService {
    * בניית URL קנוני למודעה
    */
   private buildListingUrl(ad: AdWithRelations): string {
-    // Format: /listing/:id/:slug
-    const slug = this.slugify(ad.title);
-    return `${this.BASE_URL}/listing/${ad.id}/${slug}`;
+    // Format: /ads/:id
+    return `${this.BASE_URL}/ads/${ad.id}`;
   }
 
   /**

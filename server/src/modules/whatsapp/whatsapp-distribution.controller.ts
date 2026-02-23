@@ -363,10 +363,15 @@ export class WhatsAppDistributionController {
       
       // Add all image URLs first
       const item = await distributionService.getItemWithAd(itemId);
+      const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://amakom.co.il';
       if (item?.Ad?.AdImage && item.Ad.AdImage.length > 0) {
         const sortedImages = [...item.Ad.AdImage].sort((a, b) => a.order - b.order);
         sortedImages.forEach((img) => {
-          const imageUrl = img.brandedUrl || img.url;
+          let imageUrl = img.brandedUrl || img.url;
+          // Add base URL if it's a relative path
+          if (imageUrl.startsWith('/')) {
+            imageUrl = `${baseUrl}${imageUrl}`;
+          }
           clipboardText += `${imageUrl}\n`;
         });
         clipboardText += '\n'; // Empty line after images
@@ -472,10 +477,15 @@ export class WhatsAppDistributionController {
       
       // Add all image URLs first
       const itemWithAd = await distributionService.getItemWithAd(itemId);
+      const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://amakom.co.il';
       if (itemWithAd?.Ad?.AdImage && itemWithAd.Ad.AdImage.length > 0) {
         const sortedImages = [...itemWithAd.Ad.AdImage].sort((a, b) => a.order - b.order);
         sortedImages.forEach((img) => {
-          const imageUrl = img.brandedUrl || img.url;
+          let imageUrl = img.brandedUrl || img.url;
+          // Add base URL if it's a relative path
+          if (imageUrl.startsWith('/')) {
+            imageUrl = `${baseUrl}${imageUrl}`;
+          }
           clipboardText += `${imageUrl}\n`;
         });
         clipboardText += '\n'; // Empty line after images
@@ -600,10 +610,15 @@ export class WhatsAppDistributionController {
       let clipboardText = '';
       
       // Add all image URLs first
+      const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://amakom.co.il';
       if (item.Ad?.AdImage && item.Ad.AdImage.length > 0) {
         const sortedImages = [...item.Ad.AdImage].sort((a, b) => a.order - b.order);
         sortedImages.forEach((img) => {
-          const imageUrl = img.brandedUrl || img.url;
+          let imageUrl = img.brandedUrl || img.url;
+          // Add base URL if it's a relative path
+          if (imageUrl.startsWith('/')) {
+            imageUrl = `${baseUrl}${imageUrl}`;
+          }
           clipboardText += `${imageUrl}\n`;
         });
         clipboardText += '\n'; // Empty line after images
