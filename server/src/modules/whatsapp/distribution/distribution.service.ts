@@ -203,12 +203,7 @@ export class WhatsAppDistributionService {
       },
     });
 
-    // Return payload (or rebuild)
-    if (item.payloadSnapshot) {
-      return item.payloadSnapshot as any as WhatsAppMessagePayload;
-    }
-
-    // Fallback: rebuild
+    // Always rebuild to ensure latest format (don't use stale payloadSnapshot)
     return messageBuilder.buildAdMessage(item.Ad);
   }
 

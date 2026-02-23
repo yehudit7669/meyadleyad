@@ -95,13 +95,37 @@ export class WhatsAppMessageBuilderService {
     const icon = this.getCategoryIcon(ad.Category?.slug);
     message += `${icon} *${this.sanitizeText(ad.title)}*\n\n`;
 
-    // פרטים בסיסיים
-    const details: string[] = [];
-
+    // סוג הנכס (קטגוריה בעברית)
     if (ad.Category?.nameHe) {
-      details.push(`📂 ${ad.Category.nameHe}`);
+      message += `📂 ${ad.Category.nameHe}\n`;
     }
 
+    // חדרים | קומה | מ"ר (במרכז בשורה נפרדת)
+    const propertyDetails: string[] = [];
+    if (ad.customFields && typeof ad.customFields === 'object') {
+      const custom = ad.customFields as any;
+      
+      if (custom.rooms) {
+        propertyDetails.push(`${custom.rooms} חדרים`);
+      }
+      
+      if (custom.floor !== undefined && custom.floor !== null) {
+        propertyDetails.push(`קומה ${custom.floor}`);
+      }
+      
+      if (custom.squareMeters || custom.size) {
+        const size = custom.squareMeters || custom.size;
+        propertyDetails.push(`${size} מ\"ר`);
+      }
+    }
+    
+    if (propertyDetails.length > 0) {
+      message += propertyDetails.join(' | ') + '\n';
+    }
+
+    // מיקום ומחיר
+    const locationPrice: string[] = [];
+    
     if (ad.City?.nameHe) {
       let location = `📍 ${ad.City.nameHe}`;
       if (ad.Street?.name) {
@@ -109,32 +133,18 @@ export class WhatsAppMessageBuilderService {
       } else if (ad.neighborhood) {
         location += `, ${ad.neighborhood}`;
       }
-      details.push(location);
+      locationPrice.push(location);
     }
 
     if (ad.price && ad.price > 0) {
-      details.push(`💰 ${this.formatPrice(ad.price)}`);
+      locationPrice.push(`💰 ${this.formatPrice(ad.price)}`);
     }
 
-    // Custom fields (חדרים, מ"ר, וכו')
-    if (ad.customFields && typeof ad.customFields === 'object') {
-      const custom = ad.customFields as any;
-      
-      if (custom.rooms) {
-        details.push(`🛏️ ${custom.rooms} חדרים`);
-      }
-      
-      if (custom.squareMeters || custom.size) {
-        const size = custom.squareMeters || custom.size;
-        details.push(`📐 ${size} מ"ר`);
-      }
-      
-      if (custom.floor !== undefined && custom.floor !== null) {
-        details.push(`🏢 קומה ${custom.floor}`);
-      }
+    if (locationPrice.length > 0) {
+      message += locationPrice.join(' | ') + '\n';
     }
-
-    message += details.join(' | ') + '\n\n';
+    
+    message += '\n';
 
     // תיאור (קצר)
     if (ad.description) {

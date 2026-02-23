@@ -624,13 +624,9 @@ export class WhatsAppDistributionController {
         clipboardText += '\n'; // Empty line after images
       }
       
-      // Add the message text from payloadSnapshot or build new
+      // Add the message text - always rebuild for latest format
       let messageText = '';
-      if (item.payloadSnapshot && typeof item.payloadSnapshot === 'object') {
-        messageText = (item.payloadSnapshot as any).messageText || '';
-      }
-      
-      if (!messageText && item.Ad) {
+      if (item.Ad) {
         const payload = messageBuilder.buildAdMessage(item.Ad);
         messageText = payload.messageText;
       }
