@@ -217,7 +217,7 @@ const WantedSharedOwnershipStep3: React.FC<WizardStepProps> = ({ data, onNext, o
                 key={option.value}
                 type="button"
                 onClick={() =>
-                  handleChange('condition', option.value as PropertyCondition)
+                  handleChange('condition', formData.condition === option.value ? undefined : option.value as PropertyCondition)
                 }
                 className={`p-4 rounded-lg border-2 transition-all text-center text-sm ${
                   formData.condition === option.value
@@ -371,7 +371,7 @@ const WantedSharedOwnershipStep3: React.FC<WizardStepProps> = ({ data, onNext, o
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => handleChange('entryDate', 'גמיש')}
+                onClick={() => handleChange('entryDate', formData.entryDate === 'גמיש' ? undefined : 'גמיש')}
                 className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                   formData.entryDate === 'גמיש'
                     ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'
@@ -382,7 +382,7 @@ const WantedSharedOwnershipStep3: React.FC<WizardStepProps> = ({ data, onNext, o
               </button>
               <button
                 type="button"
-                onClick={() => handleChange('entryDate', 'מיידי')}
+                onClick={() => handleChange('entryDate', formData.entryDate === 'מיידי' ? undefined : 'מיידי')}
                 className={`flex-1 p-3 rounded-lg border-2 transition-all ${
                   formData.entryDate === 'מיידי'
                     ? 'border-[#C9A24D] bg-[#C9A24D] bg-opacity-10 text-[#1F3F3A] font-bold'

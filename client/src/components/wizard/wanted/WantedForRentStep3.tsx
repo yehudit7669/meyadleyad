@@ -202,7 +202,7 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
             <button
               key={option.value}
               type="button"
-              onClick={() => handleChange('condition', option.value as PropertyCondition)}
+              onClick={() => handleChange('condition', formData.condition === option.value ? undefined : option.value as PropertyCondition)}
               className={`p-3 rounded-lg border-2 transition-all text-black ${
                 formData.condition === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10'
@@ -223,7 +223,7 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
             <button
               key={option.value}
               type="button"
-              onClick={() => handleChange('furniture', option.value as FurnitureStatus)}
+              onClick={() => handleChange('furniture', formData.furniture === option.value ? undefined : option.value as FurnitureStatus)}
               className={`p-3 rounded-lg border-2 transition-all text-black ${
                 formData.furniture === option.value
                   ? 'border-[#C9A24D] bg-[#C9A24D]/10'
@@ -322,7 +322,7 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
         <div className="grid grid-cols-3 gap-3 mb-3">
           <button
             type="button"
-            onClick={() => handleChange('entryDate', 'גמיש')}
+            onClick={() => handleChange('entryDate', formData.entryDate === 'גמיש' ? undefined : 'גמיש')}
             className={`p-3 rounded-lg border-2 transition-all text-black ${
               formData.entryDate === 'גמיש'
                 ? 'border-[#C9A24D] bg-[#C9A24D]/10'
@@ -333,7 +333,7 @@ const WantedForRentStep3: React.FC<Props> = ({ data, onNext, onPrev }) => {
           </button>
           <button
             type="button"
-            onClick={() => handleChange('entryDate', 'מיידי')}
+            onClick={() => handleChange('entryDate', formData.entryDate === 'מיידי' ? undefined : 'מיידי')}
             className={`p-3 rounded-lg border-2 transition-all text-black ${
               formData.entryDate === 'מיידי'
                 ? 'border-[#C9A24D] bg-[#C9A24D]/10'
