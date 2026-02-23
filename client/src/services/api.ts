@@ -1045,6 +1045,11 @@ export const whatsappService = {
     return (response.data as any).data;
   },
 
+  getClipboardText: async (itemId: string) => {
+    const response = await api.get(`/admin/whatsapp/queue/${itemId}/clipboard-text`);
+    return (response.data as any).data;
+  },
+
   // Get message text for an ad
   getAdMessageText: async (adId: string) => {
     const response = await api.get(`/admin/whatsapp/listings/${adId}/message-text`);

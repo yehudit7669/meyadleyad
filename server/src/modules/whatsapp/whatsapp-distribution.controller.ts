@@ -358,6 +358,23 @@ export class WhatsAppDistributionController {
 
       const payload = await distributionService.markInProgress(itemId, userId);
 
+      // Build clipboard text with images
+      let clipboardText = '';
+      
+      // Add all image URLs first
+      const item = await distributionService.getItemWithAd(itemId);
+      if (item?.Ad?.AdImage && item.Ad.AdImage.length > 0) {
+        const sortedImages = [...item.Ad.AdImage].sort((a, b) => a.order - b.order);
+        sortedImages.forEach((img) => {
+          const imageUrl = img.brandedUrl || img.url;
+          clipboardText += `${imageUrl}\n`;
+        });
+        clipboardText += '\n'; // Empty line after images
+      }
+      
+      // Add the message text
+      clipboardText += payload.messageText;
+
       // Build WhatsApp links
       const webLink = messageBuilder.buildWhatsAppWebLink(payload.messageText);
       const appLink = messageBuilder.buildWhatsAppAppLink(payload.messageText);
@@ -370,7 +387,11 @@ export class WhatsAppDistributionController {
           payload,
           whatsappWebLink: webLink,
           whatsappAppLink: appLink,
-          clipboardText: payload.messageText,
+          clipboardText,
+          images: item?.Ad?.AdImage?.map(img => ({
+            url: img.brandedUrl || img.url,
+            order: img.order
+          })) || [],
         },
       });
     } catch (error) {
@@ -443,30 +464,37 @@ export class WhatsAppDistributionController {
         });
       }
 
-      // Update status to IN_PROGRESS
-      const updatedItem = await prisma.distributionItem.update({
-        where: { id: itemId },
-        data: {
-          status: DistributionItemStatus.IN_PROGRESS,
-        },
-      });
+      // Update status to IN_PROGRESS and get payload
+      const payload = await distributionService.markInProgress(itemId, userId);
 
-      // Audit
-      await auditService.log({
-        action: 'mark_in_progress',
-        actorUserId: userId,
-        entityType: 'distribution_item',
-        entityId: itemId,
-        payload: {
-          adId: item.adId,
-          groupId: item.groupId,
-        },
-      });
+      // Build clipboard text with images
+      let clipboardText = '';
+      
+      // Add all image URLs first
+      const itemWithAd = await distributionService.getItemWithAd(itemId);
+      if (itemWithAd?.Ad?.AdImage && itemWithAd.Ad.AdImage.length > 0) {
+        const sortedImages = [...itemWithAd.Ad.AdImage].sort((a, b) => a.order - b.order);
+        sortedImages.forEach((img) => {
+          const imageUrl = img.brandedUrl || img.url;
+          clipboardText += `${imageUrl}\n`;
+        });
+        clipboardText += '\n'; // Empty line after images
+      }
+      
+      // Add the message text
+      clipboardText += payload.messageText;
 
       res.status(200).json({
         status: 'success',
         message: 'הפריט סומן כבתהליך',
-        data: updatedItem,
+        data: {
+          payload,
+          clipboardText,
+          images: itemWithAd?.Ad?.AdImage?.map(img => ({
+            url: img.brandedUrl || img.url,
+            order: img.order
+          })) || [],
+        },
       });
     } catch (error) {
       console.error('❌ Error in markItemAsInProgress:', error);
@@ -546,6 +574,69 @@ export class WhatsAppDistributionController {
       res.status(500).json({
         status: 'error',
         message: error instanceof Error ? error.message : 'שגיאה בביטול תהליך',
+      });
+    }
+  }
+
+  /**
+   * קבלת clipboard text להעתקה (בלי לשנות סטטוס)
+   * GET /api/admin/whatsapp/queue/:itemId/clipboard-text
+   */
+  async getClipboardText(req: WhatsAppAuthRequest, res: Response) {
+    try {
+      const { itemId } = req.params;
+
+      // Get item with full ad details
+      const item = await distributionService.getItemWithAd(itemId);
+
+      if (!item) {
+        return res.status(404).json({
+          status: 'error',
+          message: 'פריט לא נמצא',
+        });
+      }
+
+      // Build clipboard text with images
+      let clipboardText = '';
+      
+      // Add all image URLs first
+      if (item.Ad?.AdImage && item.Ad.AdImage.length > 0) {
+        const sortedImages = [...item.Ad.AdImage].sort((a, b) => a.order - b.order);
+        sortedImages.forEach((img) => {
+          const imageUrl = img.brandedUrl || img.url;
+          clipboardText += `${imageUrl}\n`;
+        });
+        clipboardText += '\n'; // Empty line after images
+      }
+      
+      // Add the message text from payloadSnapshot or build new
+      let messageText = '';
+      if (item.payloadSnapshot && typeof item.payloadSnapshot === 'object') {
+        messageText = (item.payloadSnapshot as any).messageText || '';
+      }
+      
+      if (!messageText && item.Ad) {
+        const payload = messageBuilder.buildAdMessage(item.Ad);
+        messageText = payload.messageText;
+      }
+      
+      clipboardText += messageText;
+
+      res.status(200).json({
+        status: 'success',
+        data: {
+          clipboardText,
+          images: item.Ad?.AdImage?.map(img => ({
+            url: img.brandedUrl || img.url,
+            order: img.order
+          })) || [],
+        },
+      });
+    } catch (error) {
+      console.error('❌ Error in getClipboardText:', error);
+      res.status(500).json({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'שגיאה בקבלת טקסט',
       });
     }
   }

@@ -54,12 +54,13 @@ export default function WhatsAppQueue() {
         throw new Error('לא נמצא לינק לקבוצה');
       }
       
-      // Mark as in progress (this will also check if group is active)
-      await whatsappService.markItemAsInProgress(item.id);
+      // Mark as in progress and get clipboard text with images
+      const response = await whatsappService.markItemAsInProgress(item.id);
+      const clipboardText = response.clipboardText || item.message;
       
-      // Copy message to clipboard
-      if (item.message) {
-        await navigator.clipboard.writeText(item.message);
+      // Copy message to clipboard (including images)
+      if (clipboardText) {
+        await navigator.clipboard.writeText(clipboardText);
       }
       
       // Open WhatsApp group
@@ -84,9 +85,13 @@ export default function WhatsAppQueue() {
         throw new Error('לא קיימת קבוצה למודעה זו');
       }
       
-      // Copy message to clipboard
-      if (item.message) {
-        await navigator.clipboard.writeText(item.message);
+      // Get clipboard text without changing status
+      const response = await whatsappService.getClipboardText(item.id);
+      const clipboardText = response.clipboardText || item.message;
+      
+      // Copy message to clipboard (including images)
+      if (clipboardText) {
+        await navigator.clipboard.writeText(clipboardText);
       }
       
       // Open WhatsApp group using invite link

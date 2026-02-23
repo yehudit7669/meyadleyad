@@ -101,6 +101,16 @@ router.post(
 );
 
 /**
+ * קבלת clipboard text להעתקה (בלי לשנות סטטוס)
+ * GET /api/admin/whatsapp/queue/:itemId/clipboard-text
+ */
+router.get(
+  '/queue/:itemId/clipboard-text',
+  requireWhatsAppContentManager,
+  whatsappDistributionController.getClipboardText.bind(whatsappDistributionController)
+);
+
+/**
  * סימון כנשלח
  * POST /api/admin/whatsapp/queue/:itemId/mark-sent
  */

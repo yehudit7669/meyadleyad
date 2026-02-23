@@ -213,6 +213,28 @@ export class WhatsAppDistributionService {
   }
 
   /**
+   * קבלת פריט עם פרטי המודעה המלאים (כולל תמונות)
+   */
+  async getItemWithAd(itemId: string) {
+    return prisma.distributionItem.findUnique({
+      where: { id: itemId },
+      include: {
+        Ad: {
+          include: {
+            Category: true,
+            City: true,
+            Street: true,
+            AdImage: {
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
+        Group: true,
+      },
+    });
+  }
+
+  /**
    * סימון פריט כנשלח (לאחר שהמנהל אישר)
    */
   async markSent(itemId: string, userId: string): Promise<void> {
