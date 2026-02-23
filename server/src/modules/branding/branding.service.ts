@@ -9,7 +9,7 @@ import { AdminAuditService } from '../admin/admin-audit.service';
 const prisma = new PrismaClient();
 
 export interface BrandingConfigInput {
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'center-top' | 'center-bottom';
   opacity?: number;
   sizePct?: number;
 }
@@ -54,7 +54,7 @@ export class BrandingService {
 
     if (
       data.position &&
-      !['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(data.position)
+      !['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'center-top', 'center-bottom'].includes(data.position)
     ) {
       throw new ValidationError('מיקום לא חוקי');
     }

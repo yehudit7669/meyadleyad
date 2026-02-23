@@ -5,7 +5,7 @@ import fs from 'fs/promises';
 import { brandingService } from '../branding/branding.service';
 
 export interface WatermarkOptions {
-  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'center-top' | 'center-bottom';
   opacity: number; // 0-100
   sizePct: number; // 5-30
 }
@@ -87,6 +87,18 @@ export class WatermarkService {
           break;
         case 'bottom-right':
           left = metadata.width - finalLogoWidth - margin;
+          top = metadata.height - finalLogoHeight - margin;
+          break;
+        case 'center':
+          left = (metadata.width - finalLogoWidth) / 2;
+          top = (metadata.height - finalLogoHeight) / 2;
+          break;
+        case 'center-top':
+          left = (metadata.width - finalLogoWidth) / 2;
+          top = margin;
+          break;
+        case 'center-bottom':
+          left = (metadata.width - finalLogoWidth) / 2;
           top = metadata.height - finalLogoHeight - margin;
           break;
       }
@@ -172,6 +184,18 @@ export class WatermarkService {
             break;
           case 'bottom-right':
             x = pageWidth - finalLogoWidth - margin;
+            y = margin;
+            break;
+          case 'center':
+            x = (pageWidth - finalLogoWidth) / 2;
+            y = (pageHeight - finalLogoHeight) / 2;
+            break;
+          case 'center-top':
+            x = (pageWidth - finalLogoWidth) / 2;
+            y = pageHeight - finalLogoHeight - margin;
+            break;
+          case 'center-bottom':
+            x = (pageWidth - finalLogoWidth) / 2;
             y = margin;
             break;
         }
@@ -356,6 +380,18 @@ export class WatermarkService {
           break;
         case 'bottom-right':
           left = metadata.width - finalLogoWidth - margin;
+          top = metadata.height - finalLogoHeight - margin;
+          break;
+        case 'center':
+          left = (metadata.width - finalLogoWidth) / 2;
+          top = (metadata.height - finalLogoHeight) / 2;
+          break;
+        case 'center-top':
+          left = (metadata.width - finalLogoWidth) / 2;
+          top = margin;
+          break;
+        case 'center-bottom':
+          left = (metadata.width - finalLogoWidth) / 2;
           top = metadata.height - finalLogoHeight - margin;
           break;
       }

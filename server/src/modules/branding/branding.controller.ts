@@ -10,7 +10,7 @@ import { AdminAuditService } from '../admin/admin-audit.service';
 
 // Zod schemas
 const brandingUpdateSchema = z.object({
-  position: z.enum(['top-left', 'top-right', 'bottom-left', 'bottom-right']).optional(),
+  position: z.enum(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center', 'center-top', 'center-bottom']).optional(),
   opacity: z.number().min(0).max(100).optional(),
   sizePct: z.number().min(5).max(30).optional(),
 });

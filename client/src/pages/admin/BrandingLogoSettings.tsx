@@ -7,7 +7,7 @@ import { getImageUrl } from '../../utils/imageUrl';
 interface BrandingConfig {
   id: string;
   logoUrl: string;
-  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center' | 'center-top' | 'center-bottom';
   opacity: number;
   sizePct: number;
 }
@@ -21,6 +21,9 @@ const POSITION_OPTIONS = [
   { value: 'top-right', label: 'שמאל עליון', labelHe: 'שמאל עליון' },
   { value: 'bottom-left', label: 'ימין תחתון', labelHe: 'ימין תחתון' },
   { value: 'bottom-right', label: 'שמאל תחתון', labelHe: 'שמאל תחתון' },
+  { value: 'center', label: 'מרכז התמונה', labelHe: 'מרכז התמונה' },
+  { value: 'center-top', label: 'מרכז למעלה', labelHe: 'מרכז למעלה' },
+  { value: 'center-bottom', label: 'מרכז למטה', labelHe: 'מרכז למטה' },
 ];
 
 const BrandingLogoSettings: React.FC = () => {
