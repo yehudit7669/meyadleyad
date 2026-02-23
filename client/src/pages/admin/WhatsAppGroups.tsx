@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { whatsappService } from '../../services/api';
 import { Link } from 'react-router-dom';
@@ -191,6 +191,42 @@ export default function WhatsAppGroups() {
   const categories = categoriesData || [];
   const cities = citiesData || [];
 
+  // יצירת רשימת קטגוריות מורחבת שכוללת גם "דרושים"
+  const expandedCategories = useMemo(() => {
+    const result: any[] = [];
+    
+    categories.forEach((cat: any) => {
+      // הוספת הקטגוריה הרגילה
+      result.push(cat);
+      
+      // הוספת גרסת "דרושים" עבור קטגוריות רלוונטיות
+      if (cat.slug === 'apartments-for-sale') {
+        result.push({
+          id: `wanted:${cat.id}`,
+          nameHe: 'דרושים - דירות למכירה',
+          slug: 'wanted-apartments-for-sale',
+          icon: '🔍'
+        });
+      } else if (cat.slug === 'apartments-for-rent') {
+        result.push({
+          id: `wanted:${cat.id}`,
+          nameHe: 'דרושים - דירות להשכרה',
+          slug: 'wanted-apartments-for-rent',
+          icon: '🔍'
+        });
+      } else if (cat.slug === 'shabbat-apartments') {
+        result.push({
+          id: `wanted:${cat.id}`,
+          nameHe: 'דרושים - דירות לשבת',
+          slug: 'wanted-shabbat-apartments',
+          icon: '🔍'
+        });
+      }
+    });
+    
+    return result;
+  }, [categories]);
+
   const toggleCategory = (categoryId: string) => {
     setFormData(prev => ({
       ...prev,
@@ -316,7 +352,7 @@ export default function WhatsAppGroups() {
                     <p className="text-sm text-gray-500">לא נמצאו קטגוריות</p>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {categories.map((category: any) => (
+                      {expandedCategories.map((category: any) => (
                         <label key={category.id} className="flex items-center space-x-2 space-x-reverse cursor-pointer hover:bg-gray-50 p-2 rounded">
                           <input
                             type="checkbox"
@@ -324,7 +360,10 @@ export default function WhatsAppGroups() {
                             onChange={() => toggleCategory(category.id)}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
-                          <span className="text-sm text-gray-700">{category.nameHe}</span>
+                          <span className="text-sm text-gray-700">
+                            {category.icon && <span className="ml-1">{category.icon}</span>}
+                            {category.nameHe}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -507,10 +546,10 @@ export default function WhatsAppGroups() {
                         <div className="mb-1">
                           <span className="font-semibold">קטגוריות: </span>
                           {Array.isArray(group.categoryScopes) && group.categoryScopes.length > 0
-                            ? categories
-                                .filter((c: any) => group.categoryScopes?.includes(c.id))
-                                .map((c: any) => c.nameHe)
-                                .join(', ')
+                            ? group.categoryScopes.map((scopeId: string) => {
+                                const cat = expandedCategories.find((c: any) => c.id === scopeId);
+                                return cat?.nameHe || scopeId;
+                              }).join(', ')
                             : 'כל הקטגוריות'}
                         </div>
                         <div>

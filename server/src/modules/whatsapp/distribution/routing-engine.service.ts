@@ -116,11 +116,33 @@ export class RoutingEngineService {
         : (group.categoryScopes as any);
       
       if (Array.isArray(categoryScopes) && categoryScopes.length > 0) {
-        if (!categoryScopes.includes(ad.categoryId)) {
+        let categoryMatch = false;
+        
+        for (const scope of categoryScopes) {
+          // בדיקה אם זה scope רגיל של קטגוריה
+          if (scope === ad.categoryId && !ad.isWanted) {
+            categoryMatch = true;
+            break;
+          }
+          
+          // בדיקה אם זה scope של "דרושים" (wanted:category-id)
+          if (scope.startsWith('wanted:')) {
+            const wantedCategoryId = scope.replace('wanted:', '');
+            if (wantedCategoryId === ad.categoryId && ad.isWanted) {
+              categoryMatch = true;
+              reasons.push('wanted category match');
+              break;
+            }
+          }
+        }
+        
+        if (!categoryMatch) {
           return null; // Category mismatch
         }
         priority += 10;
-        reasons.push('category match');
+        if (!reasons.includes('wanted category match')) {
+          reasons.push('category match');
+        }
       }
     }
 
