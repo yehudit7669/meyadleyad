@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { PROPERTY_TYPE_OPTIONS } from '../../constants/adTypes';
 
 interface Appointment {
   id: string;
@@ -47,6 +48,12 @@ interface Appointment {
 export default function AppointmentsAdminPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  
+  // Helper function to get property type label in Hebrew
+  const getPropertyTypeLabel = (propertyType: string): string => {
+    const option = PROPERTY_TYPE_OPTIONS.find(opt => opt.value === propertyType);
+    return option ? option.label : propertyType;
+  };
   
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
@@ -408,7 +415,7 @@ export default function AppointmentsAdminPage() {
                         `${(detailsData as any).ad.Street?.name || ''}, ${(detailsData as any).ad.City?.name || ''}`.trim()}
                     </p>
                     {(detailsData as any).ad.customFields?.propertyType && (
-                      <p className="text-sm text-black">סוג: {(detailsData as any).ad.customFields.propertyType}</p>
+                      <p className="text-sm text-black">סוג: {getPropertyTypeLabel((detailsData as any).ad.customFields.propertyType)}</p>
                     )}  
                     {(detailsData as any).ad.price && (
                       <p className="text-sm text-black">מחיר: ₪{(detailsData as any).ad.price.toLocaleString()}</p>

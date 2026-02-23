@@ -6,7 +6,7 @@ import { useAnalytics } from '../utils/analytics';
 import SEO from '../components/SEO';
 import AdMap from '../components/AdMap';
 import AppointmentCard from '../components/appointments/AppointmentCard';
-import { PROPERTY_TYPE_OPTIONS } from '../constants/adTypes';
+import { PROPERTY_TYPE_OPTIONS, CONDITION_OPTIONS, FURNITURE_OPTIONS } from '../constants/adTypes';
 import { getImageUrl } from '../utils/imageUrl';
 
 export default function AdDetails() {
@@ -20,6 +20,18 @@ export default function AdDetails() {
   const getPropertyTypeLabel = (propertyType: string): string => {
     const option = PROPERTY_TYPE_OPTIONS.find(opt => opt.value === propertyType);
     return option ? option.label : propertyType;
+  };
+
+  // Helper function to get condition label in Hebrew
+  const getConditionLabel = (condition: string): string => {
+    const option = CONDITION_OPTIONS.find(opt => opt.value === condition);
+    return option ? option.label : condition;
+  };
+
+  // Helper function to get furniture label in Hebrew
+  const getFurnitureLabel = (furniture: string): string => {
+    const option = FURNITURE_OPTIONS.find(opt => opt.value === furniture);
+    return option ? option.label : furniture;
   };
 
   // Helper function to build address dynamically
@@ -241,7 +253,13 @@ export default function AdDetails() {
                   {ad.customFields?.condition && (
                     <>
                       <span className="text-gray-400">|</span>
-                      <span>{ad.customFields.condition}</span>
+                      <span>{getConditionLabel(ad.customFields.condition)}</span>
+                    </>
+                  )}
+                  {ad.customFields?.furniture && (
+                    <>
+                      <span className="text-gray-400">|</span>
+                      <span>ריהוט {getFurnitureLabel(ad.customFields.furniture)}</span>
                     </>
                   )}
                 </div>
