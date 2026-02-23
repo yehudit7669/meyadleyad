@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SharedOwnershipStep1Data } from '../../../types/wizard';
 import { sharedOwnershipStep1Schema } from '../../../types/wizard';
 import { WizardStepProps } from '../../../types/wizard';
@@ -8,6 +8,7 @@ import { isBroker } from '../../../utils/userHelpers';
 const SharedOwnershipStep1: React.FC<WizardStepProps> = ({ data, onNext }) => {
   const { user } = useAuth();
   const userIsBroker = isBroker(user);
+  const hasAutoAdvanced = useRef(false);
 
   const [formData, setFormData] = useState<SharedOwnershipStep1Data>(
     data || {
@@ -16,9 +17,10 @@ const SharedOwnershipStep1: React.FC<WizardStepProps> = ({ data, onNext }) => {
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // If user is a broker, automatically proceed to next step
+  // If user is a broker, automatically proceed to next step (only once)
   useEffect(() => {
-    if (userIsBroker) {
+    if (userIsBroker && !hasAutoAdvanced.current) {
+      hasAutoAdvanced.current = true;
       onNext({ hasBroker: true });
     }
   }, [userIsBroker, onNext]);

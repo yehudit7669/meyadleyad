@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WizardStepProps } from '../../../types/wizard';
 import { useAuth } from '../../../hooks/useAuth';
 import { isBroker } from '../../../utils/userHelpers';
@@ -12,6 +12,7 @@ export interface CommercialSpaceStep2Data {
 const CommercialSpaceStep2: React.FC<WizardStepProps> = ({ data, onNext }) => {
   const { user } = useAuth();
   const userIsBroker = isBroker(user);
+  const hasAutoAdvanced = useRef(false);
 
   const [formData, setFormData] = useState<CommercialSpaceStep2Data>(
     data || {
@@ -19,9 +20,10 @@ const CommercialSpaceStep2: React.FC<WizardStepProps> = ({ data, onNext }) => {
     }
   );
 
-  // If user is a broker, automatically proceed to next step
+  // If user is a broker, automatically proceed to next step (only once)
   useEffect(() => {
-    if (userIsBroker) {
+    if (userIsBroker && !hasAutoAdvanced.current) {
+      hasAutoAdvanced.current = true;
       onNext({ brokerType: 'WITH_BROKER' });
     }
   }, [userIsBroker, onNext]);
