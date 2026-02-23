@@ -92,13 +92,13 @@ export default function ImageLightbox({ images, currentIndex, onClose, onNavigat
 
       {/* Main image */}
       <div 
-        className="relative max-w-7xl max-h-[90vh] w-full mx-4"
+        className="relative w-full max-w-5xl mx-4 flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
         <img
           src={getImageUrl(images[currentIndex].url)}
           alt={`תמונה ${currentIndex + 1}`}
-          className="w-full h-full object-contain rounded-lg"
+          className="max-w-full max-h-full object-contain rounded-lg"
         />
       </div>
 
