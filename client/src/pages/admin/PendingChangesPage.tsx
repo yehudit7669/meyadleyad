@@ -321,8 +321,8 @@ export default function PendingChangesPage() {
                           <div key="price">
                             {renderFieldComparison(
                               '💰 מחיר',
-                              selectedAd.price ? `₪${selectedAd.price.toLocaleString()}` : 'לא צוין',
-                              changes.price ? `₪${changes.price.toLocaleString()}` : 'לא צוין'
+                              selectedAd.price ? `₪${selectedAd.price.toLocaleString()}` : '',
+                              changes.price ? `₪${changes.price.toLocaleString()}` : ''
                             )}
                           </div>
                         );

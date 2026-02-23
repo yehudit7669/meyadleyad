@@ -157,7 +157,7 @@ const CommercialSpacePreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev,
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">מחיר</div>
                 <div className="text-3xl font-bold text-green-700">
-                  {step4?.price ? `₪${step4.price.toLocaleString('he-IL')}` : 'לא צוין'}
+                  {step4?.price ? `₪${step4.price.toLocaleString('he-IL')}` : ''}
                 </div>
               </div>
             </div>
@@ -165,7 +165,7 @@ const CommercialSpacePreview: React.FC<Props> = ({ wizardData, onSubmit, onPrev,
               <div className="flex justify-between p-3 bg-gray-50 rounded">
                 <span className="text-gray-600">ארנונה:</span>
                 <span className="font-semibold text-gray-900">
-                  {step4?.arnona ? `₪${step4.arnona.toLocaleString('he-IL')}` : 'לא צוין'}
+                  {step4?.arnona ? `₪${step4.arnona.toLocaleString('he-IL')}` : ''}
                 </span>
               </div>
             </div>

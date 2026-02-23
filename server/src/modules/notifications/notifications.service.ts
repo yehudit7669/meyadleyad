@@ -314,7 +314,7 @@ class NotificationsService {
       const adUrl = `${process.env.CLIENT_URL}/ads/${ad.id}`;
       const categoryName = ad.Category.nameHe || ad.Category.name;
       const cityName = ad.City?.nameHe || ad.City?.name || 'לא צוין';
-      const price = ad.price ? `₪${ad.price.toLocaleString()}` : 'לא צוין';
+      const price = ad.price ? `₪${ad.price.toLocaleString()}` : '';
       const imageUrl = ad.AdImage[0]?.url || '';
       const adTypeHebrew = ad.adType ? adTypeToHebrew[ad.adType] || ad.adType : '';
       const propertyType = (ad.customFields as any)?.propertyType;

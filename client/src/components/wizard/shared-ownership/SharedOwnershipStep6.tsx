@@ -141,7 +141,7 @@ const SharedOwnershipStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, i
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">מחיר מבוקש</div>
                 <div className="text-3xl font-bold text-green-700">
-                  ₪{step3?.priceRequested?.toLocaleString('he-IL') || 'לא צוין'}
+                  ₪{step3?.priceRequested?.toLocaleString('he-IL') || ''}
                 </div>
               </div>
             </div>
@@ -156,7 +156,7 @@ const SharedOwnershipStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, i
               </div>
               <div className="flex justify-between p-3 bg-blue-50 rounded">
                 <span className="text-gray-600">הון עצמי דרוש:</span>
-                <span className="font-semibold text-gray-900">₪{step3?.requiredEquity?.toLocaleString('he-IL') || 'לא צוין'}</span>
+                <span className="font-semibold text-gray-900">₪{step3?.requiredEquity?.toLocaleString('he-IL') || ''}</span>
               </div>
               <div className="flex justify-between p-3 bg-blue-50 rounded">
                 <span className="text-gray-600">מספר שותפים:</span>

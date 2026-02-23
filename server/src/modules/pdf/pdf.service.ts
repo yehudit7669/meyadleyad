@@ -390,11 +390,11 @@ export class PDFService {
       entryDate: { label: 'תאריך כניסה' },
       arnona: { 
         label: 'ארנונה (חודשית)',
-        formatter: (val) => val > 0 ? `₪${val}` : 'לא צוין'
+        formatter: (val) => val > 0 ? `₪${val}` : ''
       },
       vaad: { 
         label: 'ועד בית (חודשי)',
-        formatter: (val) => val > 0 ? `₪${val}` : 'לא צוין'
+        formatter: (val) => val > 0 ? `₪${val}` : ''
       },
       houseNumber: { label: 'מספר בית' },
       hasBroker: { 

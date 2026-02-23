@@ -51,8 +51,8 @@ export default function AdCardCompact({ ad, showCategory = false }: AdCardCompac
         )}
 
         {/* מחיר */}
-        <div className="text-lg mb-1" style={{ color: '#C9A24D' }}>
-          {ad.price ? `₪${ad.price.toLocaleString()}` : 'לא צוין'}
+        <div className="text-lg mb-1 min-h-[28px]" style={{ color: '#C9A24D' }}>
+          {ad.price ? `₪${ad.price.toLocaleString()}` : ''}
         </div>
 
         {/* כתובת (רחוב מספר בית, עיר) */}

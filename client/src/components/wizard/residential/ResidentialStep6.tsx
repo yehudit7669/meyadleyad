@@ -168,7 +168,7 @@ const ResidentialStep6: React.FC<Props> = ({ wizardData, onSubmit, onPrev, isLoa
               <div className="text-center">
                 <div className="text-sm text-gray-600 mb-1">מחיר מבוקש</div>
                 <div className="text-3xl font-bold text-green-700">
-                  ₪{step3?.price?.toLocaleString('he-IL') || 'לא צוין'}
+                  ₪{step3?.price?.toLocaleString('he-IL') || ''}
                 </div>
               </div>
             </div>
