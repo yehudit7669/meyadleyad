@@ -1023,7 +1023,8 @@ export class AdsService {
       originalUrl?: string;
       brandedUrl?: string | null;
       order: number;
-    }>
+    }>,
+    userRole?: string
   ) {
     const ad = await prisma.ad.findUnique({
       where: { id: adId },
@@ -1033,7 +1034,8 @@ export class AdsService {
       throw new NotFoundError('Ad not found');
     }
 
-    if (ad.userId !== userId) {
+    // Allow admins to add images to any ad, regular users can only add to their own
+    if (ad.userId !== userId && userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
       throw new ForbiddenError('You do not have permission to add images to this ad');
     }
 

@@ -264,6 +264,11 @@ export const adsService = {
   },
 
   updateAd: async (id: string, data: any) => {
+    // Get current user to check if they're an admin
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const isAdmin = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SUPER_ADMIN');
+    
     // Update the ad basic info first
     const response = await api.put(`/ads/${id}`, {
       title: data.title,
@@ -277,9 +282,10 @@ export const adsService = {
     });
     const ad = (response.data as any).data;
     
-    // רק אם המודעה לא ACTIVE - מעלים תמונות חדשות ישירות
-    // אם המודעה ACTIVE - התמונות נשמרות ב-pendingChanges והמנהל יאשר אותן
-    if (ad.status !== 'ACTIVE' && data.images && data.images.length > 0) {
+    // מעלים תמונות חדשות ישירות אם:
+    // 1. המודעה לא ACTIVE (משתמש רגיל)
+    // 2. המשתמש הוא מנהל (גם אם המודעה ACTIVE)
+    if ((ad.status !== 'ACTIVE' || isAdmin) && data.images && data.images.length > 0) {
       const newImages = data.images.filter((img: any) => img.file);
       
       if (newImages.length > 0) {

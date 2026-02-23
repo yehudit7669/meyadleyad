@@ -150,7 +150,7 @@ export class AdsController {
         })
       );
 
-      const ad = await adsService.addImages(req.params.id, req.user!.id, imagesWithWatermark);
+      const ad = await adsService.addImages(req.params.id, req.user!.id, imagesWithWatermark, req.user!.role);
       res.json({
         status: 'success',
         data: ad,
