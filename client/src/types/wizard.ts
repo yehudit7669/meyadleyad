@@ -533,7 +533,7 @@ export const sharedOwnershipStep2Schema = z.object({
 
 export const sharedOwnershipStep3Schema = z.object({
   propertyType: z.nativeEnum(PropertyType),
-  rooms: z.number().min(0.5, 'מספר חדרים מינימלי הוא 0.5'),
+  rooms: z.number().min(1, 'יש לבחור מספר חדרים'),
   squareMeters: z.number().positive('השטח חייב להיות חיובי').optional(),
   condition: z.nativeEnum(PropertyCondition).optional(),
   floor: z.union([z.number(), z.string()]).optional(),

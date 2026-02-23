@@ -16,7 +16,7 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
   const [formData, setFormData] = useState<ResidentialStep3Data>(
     data || {
       propertyType: PropertyType.APARTMENT,
-      rooms: 3,
+      rooms: 0,
       squareMeters: undefined,
       condition: undefined,
       floor: undefined,
@@ -128,13 +128,13 @@ const ResidentialStep3: React.FC<ResidentialStep3Props> = ({ data, onNext, onPre
             <input
               type="number"
               step="0.5"
-              value={formData.rooms}
+              value={formData.rooms || ''}
               onChange={(e) => handleChange('rooms', e.target.value ? parseFloat(e.target.value) : 0)}
               onWheel={(e) => e.currentTarget.blur()}
               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#C9A24D] focus:border-transparent ${
                 errors.rooms ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="לדוגמה: 3.5"
+              placeholder="יש לבחור מספר חדרים (לדוגמה: 3.5)"
               min="0.5"
             />
             {errors.rooms && <p className="mt-1 text-sm text-red-500">{errors.rooms}</p>}
