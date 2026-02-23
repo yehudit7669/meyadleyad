@@ -467,12 +467,19 @@ export default function AdDetails() {
               </div>
 
               {/* Contact Card */}
-              <div className="bg-[#C9A24D] rounded-lg p-4 shadow-md">
+              <div className="bg-[#C9A24D] rounded-lg p-4 shadow-md relative">
+                {(ad.customFields?.hasBroker === true || ad.customFields?.isBrokerage === true || ad.customFields?.brokerage === true || ad.customFields?.brokerType === 'WITH_BROKER' || ad.user?.role === 'BROKER') && (
+                  <div className="absolute left-4 top-0 transform -translate-y-1/2 bg-[#1F3F3A] text-white px-3 py-1 rounded-full text-sm font-medium shadow-md">
+                    תיווך
+                  </div>
+                )}
                 <div className="space-y-3">
                   <div className="text-[#1F3F3A] text-center">
-                    <div className="font-bold text-lg mb-2">
-                      {ad.customFields?.contactName || (ad.user?.role === 'BROKER' ? `תיווך - ${ad.user?.name || ad.user?.email || 'משתמש'}` : ad.user?.name || ad.user?.email || 'משתמש')}
-                    </div>
+                    {ad.customFields?.contactName && (
+                      <div className="font-bold text-lg mb-2">
+                        {ad.customFields.contactName}
+                      </div>
+                    )}
                     {(ad.customFields?.contactPhone || ad.user.phone) && (
                       <div className="flex items-center justify-center gap-2 text-base">
                         <span>☎️</span>
