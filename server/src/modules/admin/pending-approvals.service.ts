@@ -90,6 +90,14 @@ export class PendingApprovalsService {
     oldData?: any;
     reason?: string;
   }) {
+    console.log('📝 Creating PendingApproval:', {
+      userId: data.userId,
+      type: data.type,
+      requestData: data.requestData,
+      oldData: data.oldData,
+      reason: data.reason,
+    });
+    
     // מחיקת בקשות קודמות מאותו סוג (גם REJECTED וגם APPROVED)
     // כך שההודעות הישנות לא יוצגו יותר כשיש בקשה חדשה
     await prisma.pendingApproval.deleteMany({
@@ -122,6 +130,13 @@ export class PendingApprovalsService {
       },
     });
 
+    console.log('✅ PendingApproval created:', {
+      id: approval.id,
+      type: approval.type,
+      status: approval.status,
+      requestData: approval.requestData,
+    });
+
     return approval;
   }
 
@@ -143,6 +158,14 @@ export class PendingApprovalsService {
     if (approval.status !== ApprovalStatus.PENDING) {
       throw new Error('Approval already processed');
     }
+
+    console.log('✅ Admin approving PendingApproval:', {
+      approvalId,
+      type: approval.type,
+      userId: approval.userId,
+      requestData: approval.requestData,
+      adminId,
+    });
 
     // עדכון הסטטוס של הבקשה
     const updatedApproval = await prisma.pendingApproval.update({
@@ -261,6 +284,13 @@ export class PendingApprovalsService {
           where: { brokerOwnerUserId: userId },
         });
         
+        console.log('🏢 Admin APPROVED: Office Address Update:', {
+          userId,
+          hasBrokerOffice: !!brokerOffice,
+          requestData: requestData,
+          willUpdateAddress: requestData.address || requestData.officeAddress,
+        });
+        
         if (brokerOffice) {
           // מתווך - עדכון ב-BrokerOffice
           await prisma.brokerOffice.update({
@@ -270,15 +300,22 @@ export class PendingApprovalsService {
               businessAddressPending: null,
             },
           });
+          console.log('✅ BrokerOffice updated (Broker)');
         } else {
           // נותן שירות - עדכון ב-User
-          await prisma.user.update({
+          const updatedUserAddress = await prisma.user.update({
             where: { id: userId },
             data: {
               officeAddress: requestData.address || requestData.officeAddress,
               officeAddressStatus: ApprovalStatus.APPROVED,
               officeAddressPending: null,
             },
+          });
+          console.log('✅ User updated (Service Provider):', {
+            userId: updatedUserAddress.id,
+            officeAddress: updatedUserAddress.officeAddress,
+            officeAddressStatus: updatedUserAddress.officeAddressStatus,
+            officeAddressPending: updatedUserAddress.officeAddressPending,
           });
         }
         break;
@@ -330,13 +367,27 @@ export class PendingApprovalsService {
 
       case PendingApprovalType.BUSINESS_DESCRIPTION:
         // תיאור העסק - רק לנותני שירות
-        await prisma.user.update({
+        console.log('✅ Admin APPROVED: Copying aboutBusiness for Service Provider:', {
+          userId,
+          fromRequestData: requestData.aboutBusiness,
+          willSaveToAboutBusiness: true,
+          willClearAboutBusinessPending: true,
+        });
+        
+        const updatedUser = await prisma.user.update({
           where: { id: userId },
           data: {
             aboutBusiness: requestData.aboutBusiness,
             aboutBusinessStatus: ApprovalStatus.APPROVED,
             aboutBusinessPending: null,
           },
+        });
+        
+        console.log('✅ User updated successfully:', {
+          userId: updatedUser.id,
+          aboutBusiness: updatedUser.aboutBusiness,
+          aboutBusinessStatus: updatedUser.aboutBusinessStatus,
+          aboutBusinessPending: updatedUser.aboutBusinessPending,
         });
         break;
 

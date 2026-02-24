@@ -17,5 +17,6 @@ router.get('/audit-log', authenticate, ServiceProviderController.getAuditLog);
 
 // Public routes
 router.get('/:id', ServiceProviderController.getPublicProfile);
+router.post('/contact/:id', ServiceProviderController.sendContactRequest);
 
 export default router;

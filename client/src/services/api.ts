@@ -886,6 +886,12 @@ export const serviceProviderService = {
     return (response.data as any).data;
   },
 
+  // Send contact request (public)
+  sendContactRequest: async (id: string, data: { name: string; phone: string; email: string }) => {
+    const response = await api.post(`/service-providers/contact/${id}`, data);
+    return response.data;
+  },
+
   // Get audit log
   getAuditLog: async (limit?: number) => {
     const response = await api.get('/service-providers/audit-log', { params: { limit } });

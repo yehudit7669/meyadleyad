@@ -33,9 +33,9 @@ const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
   };
 
   const logoRejection = getLatestRejection('LOGO_UPLOAD');
-  const aboutRejection = getLatestRejection('ABOUT_UPDATE');
+  const aboutRejection = getLatestRejection('BUSINESS_DESCRIPTION');
   const logoApproved = myApprovals?.find((a: any) => a.type === 'LOGO_UPLOAD' && a.status === 'APPROVED');
-  const aboutApproved = myApprovals?.find((a: any) => a.type === 'ABOUT_UPDATE' && a.status === 'APPROVED');
+  const aboutApproved = myApprovals?.find((a: any) => a.type === 'BUSINESS_DESCRIPTION' && a.status === 'APPROVED');
 
   const updateMutation = useMutation({
     mutationFn: serviceProviderService.updateProfile,
@@ -113,7 +113,7 @@ const SPBrandingTab: React.FC<Props> = ({ profile, onUpdate }) => {
     
     if (newAbout && newAbout !== currentAbout && newAbout !== pendingAbout) {
       createApprovalMutation.mutate({
-        type: 'ABOUT_UPDATE',
+        type: 'BUSINESS_DESCRIPTION',
         requestData: {
           aboutBusiness: aboutText,
         },

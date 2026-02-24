@@ -48,3 +48,15 @@ export const createHighlightRequestSchema = z.object({
 });
 
 export type CreateHighlightRequestInput = z.infer<typeof createHighlightRequestSchema>;
+
+// Service Provider Contact Request
+export const serviceProviderContactRequestSchema = z.object({
+  name: z.string().min(2, 'שם חייב להכיל לפחות 2 תווים'),
+  phone: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length >= 9 && digits.length <= 10;
+  }, 'מספר טלפון לא תקין (נדרשים 9-10 ספרות)'),
+  email: z.string().email('כתובת מייל לא תקינה'),
+});
+
+export type ServiceProviderContactRequestInput = z.infer<typeof serviceProviderContactRequestSchema>;

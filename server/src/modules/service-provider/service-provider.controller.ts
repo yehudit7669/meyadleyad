@@ -9,6 +9,7 @@ import {
   createDataExportRequestSchema,
   createAccountDeletionRequestSchema,
   createHighlightRequestSchema,
+  serviceProviderContactRequestSchema,
 } from './service-provider.schemas';
 import { nanoid } from 'nanoid';
 
@@ -68,6 +69,16 @@ export class ServiceProviderController {
         userWithCompat.weeklyDigestSubscribed = user.UserPreference.weeklyDigest && !user.UserPreference.weeklyDigestBlocked;
       }
 
+      console.log('📋 Service Provider getProfile response:', {
+        userId: user.id,
+        aboutBusiness: user.aboutBusiness,
+        aboutBusinessPending: user.aboutBusinessPending,
+        aboutBusinessStatus: user.aboutBusinessStatus,
+        officeAddress: user.officeAddress,
+        officeAddressPending: user.officeAddressPending,
+        officeAddressStatus: user.officeAddressStatus,
+      });
+
       res.json({
         success: true,
         data: userWithCompat,
@@ -117,6 +128,13 @@ export class ServiceProviderController {
         input.aboutBusinessPending !== currentUser?.aboutBusiness &&
         input.aboutBusinessPending !== currentUser?.aboutBusinessPending
       ) {
+        console.log('📝 Creating PendingApproval for aboutBusiness:', {
+          userId,
+          newValue: input.aboutBusinessPending,
+          currentAboutBusiness: currentUser?.aboutBusiness,
+          currentAboutBusinessPending: currentUser?.aboutBusinessPending,
+        });
+        
         await pendingApprovalsService.createApproval({
           userId,
           type: PendingApprovalType.BUSINESS_DESCRIPTION,
@@ -126,6 +144,11 @@ export class ServiceProviderController {
         });
         updateData.aboutBusinessPending = input.aboutBusinessPending;
         updateData.aboutBusinessStatus = 'PENDING';
+        
+        console.log('✅ PendingApproval created, updating User with:', {
+          aboutBusinessPending: input.aboutBusinessPending,
+          aboutBusinessStatus: 'PENDING',
+        });
       }
 
       if (
@@ -327,6 +350,7 @@ export class ServiceProviderController {
           logoUrlPending: true,
           logoStatus: true,
           aboutBusiness: true,
+          aboutBusinessPending: true,
           aboutBusinessStatus: true,
           officeAddress: true,
           officeAddressPending: true,
@@ -334,6 +358,7 @@ export class ServiceProviderController {
           publishOfficeAddress: true,
           businessHours: true,
           phoneBusinessOffice: true,
+          phone: true,
           email: true,
           createdAt: true,
         },
@@ -346,13 +371,22 @@ export class ServiceProviderController {
         });
       }
 
-      // Debug log for office address
-      console.log('🔍 Service Provider Office Address Debug:', {
+      // Debug log for data validation
+      console.log('🔍 Service Provider Public Profile Debug:', {
         userId: user.id,
+        name: user.name,
+        businessName: user.businessName,
+        aboutBusiness: user.aboutBusiness,
+        aboutBusinessPending: user.aboutBusinessPending,
+        aboutBusinessStatus: user.aboutBusinessStatus,
         officeAddress: user.officeAddress,
         officeAddressPending: user.officeAddressPending,
         officeAddressStatus: user.officeAddressStatus,
         publishOfficeAddress: user.publishOfficeAddress,
+        logoUrlPending: user.logoUrlPending,
+        logoStatus: user.logoStatus,
+        phoneBusinessOffice: user.phoneBusinessOffice,
+        phone: user.phone,
       });
 
       // Build public data (only approved content)
@@ -361,26 +395,40 @@ export class ServiceProviderController {
         name: user.businessName || user.name,
         serviceProviderType: user.serviceProviderType,
         businessHours: user.businessHours,
-        phoneBusinessOffice: user.phoneBusinessOffice,
+        // Use business phone if exists, otherwise fall back to personal phone
+        businessPhone: user.phoneBusinessOffice || user.phone,
         email: user.email,
         publishOfficeAddress: user.publishOfficeAddress,
         createdAt: user.createdAt,
       };
 
-      // Only show logo if approved
+      // Logo - use logoUrlPending if APPROVED
       if (user.logoStatus === 'APPROVED' && user.logoUrlPending) {
         publicData.logoUrl = user.logoUrlPending;
       }
 
-      // Only show about if approved
-      if (user.aboutBusinessStatus === 'APPROVED' && user.aboutBusiness) {
-        publicData.aboutBusiness = user.aboutBusiness;
+      // About Business - use the approved value or the Pending if status is APPROVED or not set
+      if (!user.aboutBusinessStatus || user.aboutBusinessStatus === 'APPROVED') {
+        // If aboutBusiness exists, use it (was copied from pending)
+        // Otherwise use aboutBusinessPending (for backward compatibility)
+        publicData.aboutBusiness = user.aboutBusiness || user.aboutBusinessPending;
       }
 
-      // Only show office address if published and exists
-      if (user.publishOfficeAddress && user.officeAddress) {
-        publicData.officeAddress = user.officeAddress;
+      // Office Address - only if published AND status is APPROVED or not set
+      if (user.publishOfficeAddress && (!user.officeAddressStatus || user.officeAddressStatus === 'APPROVED')) {
+        // If officeAddress exists, use it (was copied from pending)
+        // Otherwise use officeAddressPending (for backward compatibility)
+        publicData.businessAddress = user.officeAddress || user.officeAddressPending;
       }
+
+      console.log('✅ Service Provider Public Profile Response:', {
+        hasLogoUrl: !!publicData.logoUrl,
+        hasAboutBusiness: !!publicData.aboutBusiness,
+        hasBusinessAddress: !!publicData.businessAddress,
+        aboutBusinessValue: publicData.aboutBusiness,
+        businessAddressValue: publicData.businessAddress,
+        businessPhone: publicData.businessPhone,
+      });
 
       res.json({
         success: true,
@@ -402,6 +450,60 @@ export class ServiceProviderController {
       res.json({
         success: true,
         data: logs,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ============ Send Contact Request (Public) ============
+  static async sendContactRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const providerId = req.params.id;
+      const result = serviceProviderContactRequestSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        res.status(400).json({
+          status: 'error',
+          message: JSON.stringify(result.error.errors),
+        });
+        return;
+      }
+      
+      // Get provider email
+      const provider = await prisma.user.findUnique({
+        where: { id: providerId },
+        select: { 
+          email: true,
+          name: true,
+        },
+      });
+
+      if (!provider) {
+        res.status(404).json({
+          status: 'error',
+          message: 'נותן השירות לא נמצא',
+        });
+        return;
+      }
+
+      // Send email using unified email service
+      const { unifiedEmailService } = require('../email/unified-email-template.service');
+      const { EmailType } = require('../email/email-types.enum');
+      
+      await unifiedEmailService.sendEmail({
+        to: provider.email,
+        type: EmailType.BROKER_CONTACT_REQUEST, // Reusing same email type
+        contactName: result.data.name,
+        ownerPhone: result.data.phone,
+        requesterName: result.data.email,
+      });
+
+      console.log(`✅ Contact request sent to service provider ${providerId} (${provider.email})`);
+      
+      res.json({ 
+        success: true,
+        message: 'הפניה נשלחה בהצלחה' 
       });
     } catch (error) {
       next(error);
