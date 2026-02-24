@@ -18,7 +18,6 @@ interface Property {
 interface PropertiesMapProps {
   properties: Property[];
   onMarkerClick?: (propertyId: string) => void;
-  selectedPropertyId?: string;
   onCityClick?: (cityName: string) => void;
 }
 
@@ -40,7 +39,6 @@ const mapOptions = {
 export default function PropertiesMap({ 
   properties, 
   onMarkerClick,
-  selectedPropertyId,
   onCityClick 
 }: PropertiesMapProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;

@@ -9,7 +9,6 @@ export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const propertyRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   
@@ -87,7 +86,6 @@ export default function CategoryPage() {
 
   // Handle marker click - scroll to property
   const handleMarkerClick = (propertyId: string) => {
-    setSelectedPropertyId(propertyId);
     const element = propertyRefs.current[propertyId];
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -269,7 +267,6 @@ export default function CategoryPage() {
                   <PropertiesMap 
                     properties={currentAds}
                     onMarkerClick={handleMarkerClick}
-                    selectedPropertyId={selectedPropertyId || undefined}
                     onCityClick={handleCityClick}
                   />
                 </div>
