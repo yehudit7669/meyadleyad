@@ -27,6 +27,7 @@ import PublicBrokerPage from './pages/PublicBrokerPage';
 import BrokerImportPropertiesFromFile from './pages/broker/ImportPropertiesFromFile';
 import ServiceProviderProfile from './pages/ServiceProviderProfile';
 import ServiceProvidersPage from './pages/ServiceProvidersPage';
+import BrokersPage from './pages/BrokersPage';
 import ProviderPublicPage from './pages/ProviderPublicPage';
 import UsersManagementPage from './pages/admin/UsersManagementPage';
 import UserProfilePage from './pages/admin/UserProfilePage';
@@ -176,6 +177,9 @@ const App: React.FC = () => {
                   {/* Service Provider Routes */}
                   <Route path="/service-providers" element={<ServiceProvidersPage />} />
                   <Route path="/providers/:id" element={<ProviderPublicPage />} />
+                  
+                  {/* Brokers Listing Route */}
+                  <Route path="/brokers" element={<BrokersPage />} />
                   
                   {/* Admin Routes - wrapped in AdminLayout */}
                   <Route path="/admin" element={<AdminRoute><Navigate to="/admin/dashboard" replace /></AdminRoute>} />

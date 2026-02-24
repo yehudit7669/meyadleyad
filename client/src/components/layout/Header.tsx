@@ -83,12 +83,6 @@ const Header: React.FC = () => {
               categorySlug="commercial-real-estate"
               categoryName='נדל״ן מסחרי'
             />
-            <Link
-              to="/service-providers"
-              className="text-[#3f504f] hover:text-[#2f403f] transition font-bold"
-            >
-              נותני שירות
-            </Link>
             <CategoryWithCities 
               categorySlug="housing-units"
               categoryName="יחידות דיור"
@@ -97,6 +91,20 @@ const Header: React.FC = () => {
               categorySlug="projects"
               categoryName="פרויקטים"
             />
+            <Link
+              to="/service-providers"
+              className="text-[#3f504f] hover:text-[#2f403f] transition font-bold"
+              style={{ fontFamily: 'Assistant, sans-serif' }}
+            >
+              נותני שירות
+            </Link>
+            <Link
+              to="/brokers"
+              className="text-[#3f504f] hover:text-[#2f403f] transition font-bold"
+              style={{ fontFamily: 'Assistant, sans-serif' }}
+            >
+              מתווכים
+            </Link>
             <Link
               to="/wanted"
               className="text-[#3f504f] hover:text-[#2f403f] transition font-bold"
@@ -274,13 +282,6 @@ const Header: React.FC = () => {
                     isMobile={true}
                   />
                 </div>
-                <Link
-                  to="/service-providers"
-                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
-                  onClick={closeMobileMenu}
-                >
-                  🔧 נותני שירות
-                </Link>
                 <div onClick={closeMobileMenu}>
                   <CategoryWithCities 
                     categorySlug="housing-units"
@@ -295,6 +296,20 @@ const Header: React.FC = () => {
                     isMobile={true}
                   />
                 </div>
+                <Link
+                  to="/service-providers"
+                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  onClick={closeMobileMenu}
+                >
+                  🔧 נותני שירות
+                </Link>
+                <Link
+                  to="/brokers"
+                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  onClick={closeMobileMenu}
+                >
+                  👔 מתווכים
+                </Link>
                 <Link
                   to="/wanted"
                   className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"

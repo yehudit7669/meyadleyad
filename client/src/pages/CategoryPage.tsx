@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { categoriesService, adsService } from '../services/api';
 import AdCardCompact from '../components/home/AdCardCompact';
 import PropertiesMap from '../components/PropertiesMap';
+import PropertyFilters, { FilterValues } from '../components/filters/PropertyFilters';
 import { useRef, useState, useEffect } from 'react';
 
 export default function CategoryPage() {
@@ -12,9 +13,11 @@ export default function CategoryPage() {
   const propertyRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   
-  // Get cities from URL params
-  const citiesParam = searchParams.get('cities');
-  const selectedCities = citiesParam ? citiesParam.split(',') : [];
+  // Filter state
+  const [filters, setFilters] = useState<FilterValues>({
+    propertyTypes: [],
+    priceRange: [0, 20000000],
+  });
   
   // Pagination state - 3 cards per row × 15 rows = 45 ads per page
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,24 +30,69 @@ export default function CategoryPage() {
   });
 
   const { data: adsData, isLoading: loadingAds } = useQuery({
-    queryKey: ['category-ads', category?.id, selectedCities],
+    queryKey: ['category-ads', category?.id],
     queryFn: () => {
       const params: any = { categoryId: category!.id };
-      
-      // Add city filter if cities are selected
-      if (selectedCities.length > 0) {
-        params.cities = selectedCities.join(',');
-      }
-      
       return adsService.getAds(params);
     },
     enabled: !!category?.id,
   });
 
-  // Reset to page 1 when category or cities change
+  // Client-side filtering
+  const filteredAds = (adsData?.ads || []).filter((ad: any) => {
+    // City filter
+    if (filters.cityId && ad.cityId !== filters.cityId) {
+      return false;
+    }
+
+    // Address search filter (city, neighborhood, street, address)
+    if (filters.addressSearch) {
+      const searchLower = filters.addressSearch.toLowerCase();
+      const cityName = ad.city?.nameHe?.toLowerCase() || '';
+      const neighborhood = (ad.neighborhood || '').toLowerCase();
+      const street = ad.Street?.name?.toLowerCase() || '';
+      const address = (ad.address || '').toLowerCase();
+      
+      if (!cityName.includes(searchLower) && 
+          !neighborhood.includes(searchLower) && 
+          !street.includes(searchLower) &&
+          !address.includes(searchLower)) {
+        return false;
+      }
+    }
+
+    // Price filter
+    if (ad.price !== null && ad.price !== undefined) {
+      if (ad.price < filters.priceRange[0] || ad.price > filters.priceRange[1]) {
+        return false;
+      }
+    }
+
+    // Property type filter
+    if (filters.propertyTypes.length > 0) {
+      const adPropertyType = ad.customFields?.propertyType;
+      if (!adPropertyType || !filters.propertyTypes.includes(adPropertyType)) {
+        return false;
+      }
+    }
+
+    // Rooms filter
+    if (filters.rooms !== undefined) {
+      const adRooms = ad.customFields?.rooms;
+      if (adRooms !== filters.rooms) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  const ads = filteredAds;
+
+  // Reset to page 1 when category or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [category?.id, selectedCities.join(',')]);
+  }, [category?.id, JSON.stringify(filters)]);
 
   if (loadingCategory) {
     return (
@@ -66,8 +114,6 @@ export default function CategoryPage() {
       </div>
     );
   }
-
-  const ads = adsData?.ads || [];
 
   // Calculate pagination
   const totalPages = Math.ceil(ads.length / adsPerPage);
@@ -97,57 +143,28 @@ export default function CategoryPage() {
     }
   };
 
-  // Handle city click from map - filter by city
-  const handleCityClick = (cityName: string) => {
-    // Navigate with city filter
-    const newCities = selectedCities.includes(cityName)
-      ? selectedCities // Already selected
-      : [...selectedCities, cityName]; // Add to selection
-    
-    const citiesQuery = newCities.join(',');
-    navigate(`/category/${slug}?cities=${encodeURIComponent(citiesQuery)}`);
-  };
-
   return (
     <div className="min-h-screen bg-white py-8" dir="rtl">
       <div className="container mx-auto px-4">
-        {/* כותרת קטגוריה */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <nav className="text-sm text-gray-600 mb-4">
-            <Link to="/" className="hover:text-blue-600">
-              דף הבית
-            </Link>
-            <span className="mx-2">/</span>
-            <span>{category.nameHe}</span>
-          </nav>
-          <div className="flex items-center gap-4">
-            <div className="text-6xl">{category.icon || '📁'}</div>
-            <div>
-              <h1 className="text-4xl font-bold mb-2">{category.nameHe}</h1>
-              {category.descriptionHe && (
-                <p className="text-gray-600 text-lg">{category.descriptionHe}</p>
-              )}
-              <div className="mt-3 text-sm text-gray-500">
-                {ads.length} מודעות בקטגוריה זו
-                {totalPages > 1 && ` (מציג ${startIndex + 1}-${Math.min(endIndex, ads.length)} מתוך ${ads.length})`}
-                {selectedCities.length > 0 && (
-                  <span className="mr-2 text-[#C9A24D] font-semibold">
-                    (מסונן לפי {selectedCities.length} ערים)
-                  </span>
-                )}
-              </div>
-              {selectedCities.length > 0 && (
-                <div className="mt-2">
-                  <Link
-                    to={`/category/${slug}`}
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    הצג את כל הנכסים בקטגוריה ←
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* ניווט breadcrumb קטן */}
+        <nav className="text-sm text-gray-600 mb-4">
+          <Link to="/" className="hover:text-blue-600">
+            דף הבית
+          </Link>
+          <span className="mx-2">/</span>
+          <span>{category.nameHe}</span>
+        </nav>
+
+        {/* סינונים */}
+        <PropertyFilters
+          onFilterChange={(newFilters) => setFilters(newFilters)}
+          initialFilters={filters}
+        />
+
+        {/* מידע על מספר התוצאות */}
+        <div className="mb-4 text-sm text-gray-600">
+          {ads.length} נכסים
+          {totalPages > 1 && ` (מציג ${startIndex + 1}-${Math.min(endIndex, ads.length)} מתוך ${ads.length})`}
         </div>
 
         {/* תוכן */}
@@ -267,7 +284,6 @@ export default function CategoryPage() {
                   <PropertiesMap 
                     properties={currentAds}
                     onMarkerClick={handleMarkerClick}
-                    onCityClick={handleCityClick}
                   />
                 </div>
               </div>

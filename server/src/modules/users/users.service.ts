@@ -232,6 +232,8 @@ export class UsersService {
         name: true,
         businessName: true,
         logoUrlPending: true,
+        logoStatus: true,
+        officeAddress: true,  // כתובת מאושרת
         BrokerCity: {
           select: {
             nameHe: true,
@@ -249,9 +251,11 @@ export class UsersService {
       id: provider.id,
       name: provider.name,
       businessName: provider.businessName || provider.name,
-      logo: provider.logoUrlPending || null,
+      logo: provider.logoStatus === 'APPROVED' ? provider.logoUrlPending : null,
+      officeAddress: provider.officeAddress || null,  // הכתובת המאושרת
       city: provider.BrokerCity?.nameHe || null,
       cityId: provider.brokerCityId,
+      serviceProviderType: provider.serviceProviderType,
     }));
   }
 }

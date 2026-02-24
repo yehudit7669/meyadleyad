@@ -201,6 +201,13 @@ const PublicBrokerPage: React.FC = () => {
                 </a>
               )}
 
+              {/* Office Address */}
+              {broker.businessAddress && (
+                <div className="text-lg font-semibold" style={{ color: '#3f504f' }}>
+                  {broker.businessAddress}
+                </div>
+              )}
+
               {/* Contact Text */}
               <p className="text-lg underline font-bold" style={{ color: '#3f504f' }}>
                 צרו קשר לייעוץ ראשוני

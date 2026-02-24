@@ -104,6 +104,7 @@ export class BrokerRepository {
         role: true,
         userType: true,
         serviceProviderType: true,
+        officeAddressPending: true, // Need this to copy to BrokerOffice if missing
         UserPreference: {
           select: {
             weeklyDigest: true,
@@ -123,12 +124,14 @@ export class BrokerRepository {
     });
 
     // If office doesn't exist, create it with minimal required data
+    // Copy pending address from User if it exists
     if (!office && user) {
       office = await prisma.brokerOffice.create({
         data: {
           brokerOwnerUserId: userId,
           businessName: user.name || 'משרד חדש',
-          businessAddressApproved: 'לא הוגדר',
+          businessAddressPending: user.officeAddressPending || undefined,
+          // Don't set businessAddressApproved - leave null until admin approves
         },
       });
     }

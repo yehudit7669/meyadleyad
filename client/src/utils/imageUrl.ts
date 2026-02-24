@@ -32,8 +32,10 @@ export function getImageUrl(relativePath: string | null | undefined): string {
     return '/images/placeholder.jpg';
   }
   
-  // If it's already a full URL, return as-is
-  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+  // If it's already a full URL or data URL, return as-is
+  if (relativePath.startsWith('http://') || 
+      relativePath.startsWith('https://') || 
+      relativePath.startsWith('data:')) {
     return relativePath;
   }
   

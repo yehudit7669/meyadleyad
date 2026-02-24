@@ -149,6 +149,13 @@ const ProviderPublicPage: React.FC = () => {
                   </a>
                 )}
               </div>
+              
+              {/* Office Address */}
+              {provider.publishOfficeAddress && provider.officeAddress && (
+                <div className="text-lg font-semibold mt-4" style={{ color: '#3f504f' }}>
+                  {provider.officeAddress}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -762,7 +762,7 @@ model BrokerOffice {
   id                      String             @id @default(cuid())
   brokerOwnerUserId       String             @unique
   businessName            String
-  businessAddressApproved String
+  businessAddressApproved String?
   businessAddressPending  String?
   businessPhone           String?
   website                 String?

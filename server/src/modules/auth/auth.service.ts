@@ -5,8 +5,9 @@ import crypto from 'crypto';
 import prisma from '../../config/database';
 import { config } from '../../config';
 import { ConflictError, UnauthorizedError, ValidationError } from '../../utils/errors';
-import { UserRole } from '@prisma/client';
+import { UserRole, PendingApprovalType, ApprovalStatus } from '@prisma/client';
 import { EmailService } from '../email/email.service';
+import { pendingApprovalsService } from '../admin/pending-approvals.service';
 
 const googleClient = new OAuth2Client(config.google.clientId);
 
@@ -150,7 +151,9 @@ export class AuthService {
         serviceProviderType: data.serviceProviderType as any,
         businessName: data.businessName,
         companyName: data.businessName, // גם ב-companyName לתאימות לאחור
-        businessAddress: data.businessAddress,
+        // שמירת הכתובת כ-pending עד לאישור מנהל
+        officeAddressPending: data.businessAddress,
+        officeAddressStatus: ApprovalStatus.PENDING,
         businessPhone: data.businessPhone || undefined,
         website: data.website || undefined,
         brokerLicenseNumber: data.brokerLicenseNumber || undefined,
@@ -179,6 +182,38 @@ export class AuthService {
     });
 
     console.log('Service provider created successfully:', user.id);
+
+    // יצירת pending approval לכתובת המשרד
+    try {
+      await pendingApprovalsService.createApproval({
+        userId: user.id,
+        type: PendingApprovalType.OFFICE_ADDRESS_UPDATE,
+        requestData: { address: data.businessAddress },
+        oldData: null,
+        reason: 'כתובת משרד חדשה מהרשמה',
+      });
+      console.log('✅ Pending approval created for office address');
+    } catch (error) {
+      console.error('❌ Failed to create pending approval:', error);
+    }
+
+    // למתווכים - יצירת BrokerOffice עם כתובת pending
+    if (data.serviceProviderType === 'BROKER') {
+      try {
+        await prisma.brokerOffice.create({
+          data: {
+            brokerOwnerUserId: user.id,
+            businessName: data.businessName,
+            businessAddressPending: data.businessAddress,
+            businessPhone: data.businessPhone || undefined,
+            publishOfficeAddress: false, // כברירת מחדל לא מפרסם עד שמאושר
+          },
+        });
+        console.log('✅ BrokerOffice created for broker');
+      } catch (error) {
+        console.error('❌ Failed to create BrokerOffice:', error);
+      }
+    }
 
     // שליחת מייל אימות
     try {

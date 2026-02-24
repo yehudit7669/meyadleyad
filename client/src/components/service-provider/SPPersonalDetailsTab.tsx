@@ -183,19 +183,36 @@ const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
       <div className="border-t pt-6 mt-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">כתובת משרד</h3>
         
-        {!addressApproved && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-blue-800">
-              <strong>כתובת נוכחית:</strong> {profile.officeAddress || 'לא הוגדרה'}
+        {/* Pending Address - from registration or change request */}
+        {profile.officeAddressPending && profile.officeAddressPending !== profile.officeAddress ? (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-orange-800">
+              <strong>⏳ {profile.officeAddress && profile.officeAddress !== 'לא הוגדר' ? 'בקשת שינוי ממתינה לאישור מנהל' : 'כתובת ממתינה לאישור מנהל (מההרשמה)'}:</strong>
             </p>
-            {profile.officeAddressPending && profile.officeAddressStatus === 'PENDING' && profile.officeAddressPending !== profile.officeAddress && (
-              <p className="text-sm text-orange-600 mt-2">
-                <strong>בקשת שינוי ממתינה:</strong> {profile.officeAddressPending}
+            <p className="text-sm text-orange-700 mt-1">{profile.officeAddressPending}</p>
+            {profile.officeAddress && profile.officeAddress !== 'לא הוגדר' && (
+              <p className="text-xs text-gray-600 mt-2">
+                <strong>כתובת נוכחית:</strong> {profile.officeAddress}
               </p>
             )}
           </div>
+        ) : profile.officeAddress && profile.officeAddress !== 'לא הוגדר' ? (
+          /* Approved Address */
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-green-800">
+              <strong>✅ כתובת מאושרת:</strong> {profile.officeAddress}
+            </p>
+          </div>
+        ) : (
+          /* No Address at all */
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-800">
+              <strong>כתובת משרד:</strong> לא הוגדרה
+            </p>
+          </div>
         )}
 
+        {/* Recently Approved */}
         {addressApproved && profile.officeAddressStatus !== 'PENDING' && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
             <p className="text-sm font-semibold text-green-800 mb-1">✅ עדכון כתובת משרד אושר!</p>
@@ -208,6 +225,7 @@ const SPPersonalDetailsTab: React.FC<Props> = ({ profile, onUpdate }) => {
           </div>
         )}
 
+        {/* Rejected */}
         {addressRejection && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
             <p className="text-sm font-semibold text-red-800 mb-1">❌ הבקשה לעדכון כתובת משרד נדחתה</p>
