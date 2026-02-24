@@ -8,6 +8,7 @@ import { config } from '../../config';
 import { v4 as uuidv4 } from 'uuid';
 import { emailPermissionsService } from '../admin/email-permissions.service';
 import { notificationsService } from '../notifications/notifications.service';
+import { geocodingService } from '../../services/geocoding.service';
 
 export class AdsService {
   private emailService: EmailService;
@@ -273,6 +274,38 @@ export class AdsService {
       shouldAutoApprove
     });
 
+    // Geocode address to get latitude/longitude if not provided
+    let latitude = data.latitude;
+    let longitude = data.longitude;
+    
+    if (!latitude || !longitude) {
+      console.log('🗺️ ADS SERVICE - Starting geocoding for new ad');
+      try {
+        const geocodeResult = await geocodingService.geocodeComponents({
+          street: street?.name,
+          houseNumber: data.houseNumber,
+          city: city.nameHe,
+        });
+        
+        if (geocodeResult) {
+          latitude = geocodeResult.latitude;
+          longitude = geocodeResult.longitude;
+          console.log('✅ ADS SERVICE - Geocoded address:', {
+            address: geocodeResult.formattedAddress,
+            latitude,
+            longitude,
+          });
+        } else {
+          console.warn('⚠️ ADS SERVICE - Geocoding returned no results');
+        }
+      } catch (geocodeError) {
+        console.warn('⚠️ ADS SERVICE - Geocoding failed:', geocodeError);
+        // Continue without coordinates - not a critical error
+      }
+    } else {
+      console.log('🗺️ ADS SERVICE - Using provided coordinates:', { latitude, longitude });
+    }
+
     // Prepare customFields with contact info
     const finalCustomFields = {
       ...data.customFields,
@@ -280,6 +313,19 @@ export class AdsService {
       contactName: data.contactName,
       contactPhone: data.contactPhone,
     };
+
+    console.log('📝 ADS SERVICE - Final data before saving to DB:', {
+      title: data.title,
+      cityId: data.cityId,
+      cityName: city.nameHe,
+      streetId: hasStreet ? data.streetId : null,
+      streetName: street?.name,
+      houseNumber: data.houseNumber,
+      latitude: latitude,
+      longitude: longitude,
+      hasLatitude: latitude !== undefined && latitude !== null,
+      hasLongitude: longitude !== undefined && longitude !== null,
+    });
 
     try {
       const ad = await prisma.ad.create({
@@ -295,8 +341,8 @@ export class AdsService {
           streetId: hasStreet ? data.streetId : null,
           neighborhood: neighborhoodName || null,
           address: data.address,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          latitude: latitude,
+          longitude: longitude,
           customFields: finalCustomFields,
           userId,
           status: adStatus,
@@ -325,10 +371,13 @@ export class AdsService {
         },
       });
       
-      console.log('ADS SERVICE - Ad created successfully', { 
+      console.log('✅ ADS SERVICE - Ad created successfully', { 
         adId: ad.id,
         adNumber: ad.adNumber,
-        neighborhood: ad.neighborhood 
+        neighborhood: ad.neighborhood,
+        latitude: ad.latitude,
+        longitude: ad.longitude,
+        savedWithCoordinates: ad.latitude !== null && ad.longitude !== null,
       });
       
       // If auto-approved, trigger notifications
@@ -632,9 +681,47 @@ export class AdsService {
     // Prepare update data - separate regular fields from relations
     const { categoryId, cityId, streetId, neighborhoodName, images, ...regularFields } = data;
     
+    // Geocode if address components changed and coordinates not provided
+    let latitude = data.latitude;
+    let longitude = data.longitude;
+    
+    const addressChanged = cityId || streetId || data.houseNumber;
+    if (addressChanged && (!latitude || !longitude)) {
+      try {
+        // Fetch city and street details if IDs provided
+        const city = cityId ? await prisma.city.findUnique({ where: { id: cityId } }) : ad.City;
+        const street = streetId ? await prisma.street.findUnique({ where: { id: streetId } }) : ad.Street;
+        
+        // Extract house number from customFields if it's an object
+        const existingHouseNumber = (ad.customFields && typeof ad.customFields === 'object' && !Array.isArray(ad.customFields))
+          ? (ad.customFields as Record<string, any>).houseNumber
+          : undefined;
+        
+        const geocodeResult = await geocodingService.geocodeComponents({
+          street: street?.name,
+          houseNumber: data.houseNumber || existingHouseNumber,
+          city: city?.nameHe,
+        });
+        
+        if (geocodeResult) {
+          latitude = geocodeResult.latitude;
+          longitude = geocodeResult.longitude;
+          console.log('✅ ADS SERVICE - Updated ad geocoded:', {
+            adId,
+            latitude,
+            longitude,
+          });
+        }
+      } catch (geocodeError) {
+        console.warn('⚠️ ADS SERVICE - Geocoding failed during update:', geocodeError);
+      }
+    }
+    
     const updateData: any = {
       ...regularFields,
       neighborhood,
+      ...(latitude && { latitude }),
+      ...(longitude && { longitude }),
     };
 
     // Handle Category relation
