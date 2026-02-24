@@ -1,6 +1,7 @@
-import { useLoadScript, GoogleMap, MarkerF, InfoWindow } from '@react-google-maps/api';
-import { useMemo, useState, useCallback } from 'react';
+import { useLoadScript, GoogleMap, InfoWindow } from '@react-google-maps/api';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { getImageUrl } from '../utils/imageUrl';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 
 interface Property {
   id: string;
@@ -18,6 +19,7 @@ interface PropertiesMapProps {
   properties: Property[];
   onMarkerClick?: (propertyId: string) => void;
   selectedPropertyId?: string;
+  onCityClick?: (cityName: string) => void;
 }
 
 const mapContainerStyle = {
@@ -38,10 +40,14 @@ const mapOptions = {
 export default function PropertiesMap({ 
   properties, 
   onMarkerClick,
-  selectedPropertyId 
+  selectedPropertyId,
+  onCityClick 
 }: PropertiesMapProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
 
   // Load Google Maps script
   const { isLoaded, loadError } = useLoadScript({
@@ -50,37 +56,7 @@ export default function PropertiesMap({
 
   // Filter properties that have coordinates
   const propertiesWithCoords = useMemo(() => {
-    console.log('🗺️ PropertiesMap - Total properties received:', properties.length);
-    
-    if (properties.length > 0) {
-      console.log('🗺️ PropertiesMap - First 3 properties:', properties.slice(0, 3).map(p => ({
-        id: p.id,
-        title: p.title,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        latType: typeof p.latitude,
-        lngType: typeof p.longitude,
-        address: p.address,
-        allKeys: Object.keys(p)
-      })));
-    }
-    
-    const filtered = properties.filter(p => {
-      const hasCoords = p.latitude && p.longitude;
-      if (!hasCoords && properties.length > 0) {
-        console.log('🗺️ Property without coords:', { 
-          id: p.id, 
-          title: p.title,
-          lat: p.latitude,
-          lng: p.longitude 
-        });
-      }
-      return hasCoords;
-    });
-    
-    console.log('🗺️ PropertiesMap - Properties with coords:', filtered.length);
-    
-    return filtered;
+    return properties.filter(p => p.latitude && p.longitude);
   }, [properties]);
 
   // Calculate map center based on properties
@@ -129,6 +105,108 @@ export default function PropertiesMap({
   const handleInfoWindowClose = useCallback(() => {
     setSelectedProperty(null);
   }, []);
+
+  // Handle map click - reverse geocode to get city
+  const handleMapClick = useCallback(async (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng || !onCityClick) return;
+
+    const geocoder = new google.maps.Geocoder();
+    try {
+      const result = await geocoder.geocode({ location: e.latLng });
+      
+      if (result.results[0]) {
+        // Find city in the address components
+        const addressComponents = result.results[0].address_components;
+        const cityComponent = addressComponents.find(
+          component => component.types.includes('locality')
+        );
+        
+        if (cityComponent) {
+          onCityClick(cityComponent.long_name);
+        }
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+    }
+  }, [onCityClick]);
+
+  // Create marker clusterer when map loads
+  useEffect(() => {
+    if (!map || !window.google) return;
+
+    // Clear existing markers and clusterer
+    if (clustererRef.current) {
+      clustererRef.current.clearMarkers();
+    }
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+
+    // Create new markers
+    const newMarkers = propertiesWithCoords.map(property => {
+      const marker = new google.maps.Marker({
+        position: { lat: property.latitude!, lng: property.longitude! },
+        map: null, // Don't add to map yet, clusterer will do it
+        title: property.title,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#DC2626',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 3,
+        },
+      });
+
+      // Add click listener
+      marker.addListener('click', () => {
+        handleMarkerClick(property);
+      });
+
+      return marker;
+    });
+
+    markersRef.current = newMarkers;
+
+    // Create clusterer with custom styling
+    if (newMarkers.length > 0) {
+      clustererRef.current = new MarkerClusterer({
+        map,
+        markers: newMarkers,
+        renderer: {
+          render: ({ count, position }) => {
+            // Custom cluster marker
+            return new google.maps.Marker({
+              position,
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 15 + (count / 2), // Size grows with count
+                fillColor: '#DC2626',
+                fillOpacity: 0.8,
+                strokeColor: '#ffffff',
+                strokeWeight: 3,
+              },
+              label: {
+                text: String(count),
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: 'bold',
+              },
+              zIndex: 1000 + count,
+            });
+          },
+        },
+      });
+    }
+
+    // Cleanup
+    return () => {
+      if (clustererRef.current) {
+        clustererRef.current.clearMarkers();
+      }
+      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current = [];
+    };
+  }, [map, propertiesWithCoords, handleMarkerClick]);
 
   // Show loading state
   if (!isLoaded) {
@@ -190,87 +268,67 @@ export default function PropertiesMap({
 
   // Render the map with markers
   return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      center={center}
-      zoom={zoom}
-      options={mapOptions}
-      onLoad={() => {
-        console.log('🗺️ Map loaded! Center:', center, 'Zoom:', zoom);
-        console.log('🗺️ Will render', propertiesWithCoords.length, 'markers');
-        console.log('🗺️ Properties for markers:', propertiesWithCoords.map(p => ({
-          id: p.id,
-          title: p.title,
-          lat: p.latitude,
-          lng: p.longitude
-        })));
-      }}
-    >
-      {propertiesWithCoords.length > 0 && propertiesWithCoords.map((property) => {
-        const position = { lat: property.latitude!, lng: property.longitude! };
-        console.log('🎯 Creating MarkerF component for:', property.title, 'at position:', position);
-        
-        return (
-          <MarkerF
-            key={property.id}
-            position={position}
-            onClick={() => {
-              console.log('🎯 Marker clicked:', property.title);
-              handleMarkerClick(property);
+    <div className="relative w-full h-full">
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        zoom={zoom}
+        options={mapOptions}
+        onLoad={(mapInstance) => {
+          setMap(mapInstance);
+        }}
+        onClick={handleMapClick}
+      >
+        {/* Markers are now created directly via DOM for clustering */}
+        {/* InfoWindow still uses React */}
+        {selectedProperty && (
+          <InfoWindow
+            position={{ 
+              lat: selectedProperty.latitude!, 
+              lng: selectedProperty.longitude! 
             }}
-            title={property.title}
-            icon={{
-              path: window.google?.maps?.SymbolPath?.CIRCLE || 0,
-              scale: 8,
-              fillColor: '#DC2626',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 3,
-            }}
-          />
-        );
-      })}
-
-      {selectedProperty && (
-        <InfoWindow
-          position={{ 
-            lat: selectedProperty.latitude!, 
-            lng: selectedProperty.longitude! 
-          }}
-          onCloseClick={handleInfoWindowClose}
-        >
-          <div className="p-2 max-w-[200px]" dir="rtl">
-            {selectedProperty.images && selectedProperty.images[0] && (
-              <img
-                src={getImageUrl(selectedProperty.images[0].url)}
-                alt={selectedProperty.title}
-                className="w-full h-24 object-cover rounded mb-2"
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  e.currentTarget.src = '/images/default-property.jpg';
-                }}
-              />
-            )}
-            <div className="text-sm font-bold mb-1" style={{ color: '#C9A24D' }}>
-              {selectedProperty.price ? `₪${selectedProperty.price.toLocaleString()}` : 'ללא מחיר'}
-            </div>
-            <div className="text-xs text-gray-700 font-semibold mb-1">
-              {selectedProperty.address && selectedProperty.city?.nameHe
-                ? `${selectedProperty.address}, ${selectedProperty.city.nameHe}`
-                : selectedProperty.address || selectedProperty.city?.nameHe || selectedProperty.title}
-            </div>
-            {selectedProperty.customFields && (
-              <div className="text-xs text-gray-600">
-                {selectedProperty.customFields.rooms && (
-                  <span>{selectedProperty.customFields.rooms} חד׳ </span>
-                )}
-                {selectedProperty.customFields.squareMeters && (
-                  <span>· {selectedProperty.customFields.squareMeters} מ״ר</span>
-                )}
+            onCloseClick={handleInfoWindowClose}
+          >
+            <div className="p-2 max-w-[200px]" dir="rtl">
+              {selectedProperty.images && selectedProperty.images[0] && (
+                <img
+                  src={getImageUrl(selectedProperty.images[0].url)}
+                  alt={selectedProperty.title}
+                  className="w-full h-24 object-cover rounded mb-2"
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    e.currentTarget.src = '/images/default-property.jpg';
+                  }}
+                />
+              )}
+              <div className="text-sm font-bold mb-1" style={{ color: '#C9A24D' }}>
+                {selectedProperty.price ? `₪${selectedProperty.price.toLocaleString()}` : 'ללא מחיר'}
               </div>
-            )}
-          </div>
-        </InfoWindow>
+              <div className="text-xs text-gray-700 font-semibold mb-1">
+                {selectedProperty.address && selectedProperty.city?.nameHe
+                  ? `${selectedProperty.address}, ${selectedProperty.city.nameHe}`
+                  : selectedProperty.address || selectedProperty.city?.nameHe || selectedProperty.title}
+              </div>
+              {selectedProperty.customFields && (
+                <div className="text-xs text-gray-600">
+                  {selectedProperty.customFields.rooms && (
+                    <span>{selectedProperty.customFields.rooms} חד׳ </span>
+                  )}
+                  {selectedProperty.customFields.squareMeters && (
+                    <span>· {selectedProperty.customFields.squareMeters} מ״ר</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </InfoWindow>
+        )}
+      </GoogleMap>
+      
+      {/* Hint about clicking map to filter by city */}
+      {onCityClick && (
+        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-md px-3 py-2 text-xs text-gray-600 pointer-events-none" dir="rtl">
+          💡 לחץ על המפה לסינון לפי עיר
+        </div>
       )}
-    </GoogleMap>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesService, adsService } from '../services/api';
 import AdCardCompact from '../components/home/AdCardCompact';
@@ -8,6 +8,7 @@ import { useRef, useState, useEffect } from 'react';
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const propertyRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -96,6 +97,17 @@ export default function CategoryPage() {
         element.classList.remove('ring-2', 'ring-[#C9A24D]');
       }, 2000);
     }
+  };
+
+  // Handle city click from map - filter by city
+  const handleCityClick = (cityName: string) => {
+    // Navigate with city filter
+    const newCities = selectedCities.includes(cityName)
+      ? selectedCities // Already selected
+      : [...selectedCities, cityName]; // Add to selection
+    
+    const citiesQuery = newCities.join(',');
+    navigate(`/category/${slug}?cities=${encodeURIComponent(citiesQuery)}`);
   };
 
   return (
@@ -258,6 +270,7 @@ export default function CategoryPage() {
                     properties={currentAds}
                     onMarkerClick={handleMarkerClick}
                     selectedPropertyId={selectedPropertyId || undefined}
+                    onCityClick={handleCityClick}
                   />
                 </div>
               </div>
