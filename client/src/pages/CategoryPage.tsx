@@ -1,4 +1,4 @@
-import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { categoriesService, adsService } from '../services/api';
 import AdCardCompact from '../components/home/AdCardCompact';
@@ -8,8 +8,6 @@ import { useRef, useState, useEffect } from 'react';
 
 export default function CategoryPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const propertyRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   
