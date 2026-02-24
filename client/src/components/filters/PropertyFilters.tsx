@@ -8,6 +8,8 @@ interface PropertyFiltersProps {
   showCategoryFilter?: boolean;
   onCategoryChange?: (categoryId?: string) => void;
   currentCategoryId?: string;
+  availableCategories?: any[]; // רשימת קטגוריות זמינות (אופציונלי)
+  wantedCategoriesOnly?: boolean; // הצג רק קטגוריות דרושים
 }
 
 export interface FilterValues {
@@ -39,7 +41,9 @@ export default function PropertyFilters({
   initialFilters,
   showCategoryFilter = false,
   onCategoryChange,
-  currentCategoryId 
+  currentCategoryId,
+  availableCategories,
+  wantedCategoriesOnly = false
 }: PropertyFiltersProps) {
   const [cityId, setCityId] = useState<string>(initialFilters?.cityId || '');
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>(
@@ -62,13 +66,34 @@ export default function PropertyFilters({
     staleTime: 1000 * 60 * 10,
   });
 
-  // Fetch categories (only if showCategoryFilter is true)
-  const { data: categories } = useQuery({
+  // Fetch categories (only if showCategoryFilter is true AND availableCategories not provided)
+  const { data: fetchedCategories } = useQuery({
     queryKey: ['categories'],
     queryFn: categoriesService.getCategories,
     staleTime: 1000 * 60 * 10,
-    enabled: showCategoryFilter,
+    enabled: showCategoryFilter && !availableCategories,
   });
+
+  // Use provided categories or fetched ones
+  let categories = availableCategories || fetchedCategories;
+
+  // אם wantedCategoriesOnly, סנן רק קטגוריות דרושים
+  if (wantedCategoriesOnly && categories) {
+    const wantedCategorySlugs = [
+      'apartments-for-sale',      // דירה למכירה
+      'apartments-for-rent',      // דירה להשכרה
+      'shabbat-apartments',       // דירות לשבת
+      'wanted-commercial',        // דרושים - נדל"ן מסחרי
+      'wanted-shared-ownership'   // דרושים - טאבו משותף
+    ];
+    categories = categories.filter((cat: any) => wantedCategorySlugs.includes(cat.slug));
+    
+    // הסר "דרושים - " מהתצוגה בסינון
+    categories = categories.map((cat: any) => ({
+      ...cat,
+      nameHe: cat.nameHe.replace('דרושים - ', '')
+    }));
+  }
 
   // טווח מחירים
   const maxPrice = 20000000;

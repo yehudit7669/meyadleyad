@@ -95,6 +95,7 @@ export default function WantedAdsPage() {
           showCategoryFilter={true}
           onCategoryChange={(categoryId) => setFilters({ ...filters, categoryId })}
           currentCategoryId={filters.categoryId}
+          wantedCategoriesOnly={true}
         />
 
         {/* מידע על מספר התוצאות */}
