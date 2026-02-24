@@ -13,6 +13,7 @@ import {
   respondToAppointmentSchema,
   createAvailabilitySlotSchema,
   createAccountDeletionRequestSchema,
+  brokerContactRequestSchema,
 } from './broker.validation';
 
 export class BrokerController {
@@ -22,6 +23,27 @@ export class BrokerController {
       const brokerId = req.params.id;
       const profile = await brokerService.getPublicProfile(brokerId);
       res.json(profile);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // POST /api/broker/contact/:id - Public endpoint (no auth required)
+  async sendContactRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const brokerId = req.params.id;
+      const result = brokerContactRequestSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        res.status(400).json({
+          status: 'error',
+          message: JSON.stringify(result.error.errors),
+        });
+        return;
+      }
+      
+      await brokerService.sendContactRequest(brokerId, result.data);
+      res.json({ message: 'הפניה נשלחה בהצלחה' });
     } catch (error) {
       next(error);
     }

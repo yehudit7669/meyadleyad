@@ -140,6 +140,10 @@ export class UnifiedEmailTemplateService {
       case EmailType.APPOINTMENT_RESCHEDULE:
         return this.getAppointmentRescheduleTemplate(params);
       
+      // Broker Contact
+      case EmailType.BROKER_CONTACT_REQUEST:
+        return this.getBrokerContactRequestTemplate(params);
+      
       // Mailing List
       case EmailType.MAILING_LIST_SUBSCRIBED:
         return this.getMailingListSubscribedTemplate(params);
@@ -623,6 +627,33 @@ export class UnifiedEmailTemplateService {
             <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px;">
               <p><strong>מועד מקורי:</strong> ${originalDateStr}</p>
               <p style="color: #10b981;"><strong>מועד חדש:</strong> ${newDateStr}</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+  
+  private getBrokerContactRequestTemplate(params: EmailTemplateParams): string {
+    const { contactName, ownerPhone, requesterName } = params;
+    
+    return `
+      <!DOCTYPE html>
+      <html dir="rtl">
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; direction: rtl;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; direction: rtl;">
+            <h2 style="color: #c89b4c; text-align: center;">📧 פניה חדשה ממשתמש</h2>
+            <p style="font-size: 16px; text-align: right;">שלום,</p>
+            <p style="font-size: 16px; text-align: right;">קיבלת פניה חדשה דרך האתר:</p>
+            <div style="background-color: #fff7ed; padding: 20px; border-radius: 8px; border-right: 4px solid #c89b4c; direction: rtl;">
+              <p style="margin: 5px 0; text-align: right;"><strong>שם:</strong> ${contactName || 'לא צוין'}</p>
+              <p style="margin: 5px 0; text-align: right;"><strong>טלפון:</strong> <a href="tel:${ownerPhone}" style="color: #c89b4c;">${ownerPhone || 'לא צוין'}</a></p>
+              <p style="margin: 5px 0; text-align: right;"><strong>כתובת מייל:</strong> <a href="mailto:${requesterName}" style="color: #c89b4c;">${requesterName || 'לא צוין'}</a></p>
+            </div>
+            <p style="font-size: 14px; color: #666; margin-top: 20px; text-align: right;">מומלץ ליצור קשר עם המשתמש בהקדם האפשרי.</p>
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="font-size: 12px; color: #999;">מודעת המקום - מערכת ניהול מודעות נדל"ן</p>
             </div>
           </div>
         </body>

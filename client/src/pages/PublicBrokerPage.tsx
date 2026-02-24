@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import AdCardCompact from '../components/home/AdCardCompact';
+import { toast } from 'react-hot-toast';
 
 interface PublicBrokerData {
   broker: {
@@ -44,6 +45,8 @@ const PublicBrokerPage: React.FC = () => {
     phone: '',
     email: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; phone?: string; email?: string }>({});
 
   const { data, isLoading, error } = useQuery<PublicBrokerData>({
     queryKey: ['public-broker', id],
@@ -54,10 +57,88 @@ const PublicBrokerPage: React.FC = () => {
     enabled: !!id,
   });
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: { name?: string; phone?: string; email?: string } = {};
+    
+    // Name validation
+    if (!contactForm.name.trim()) {
+      newErrors.name = 'שם חובה';
+    } else if (contactForm.name.trim().length < 2) {
+      newErrors.name = 'שם חייב להכיל לפחות 2 תווים';
+    }
+    
+    // Phone validation
+    if (!contactForm.phone.trim()) {
+      newErrors.phone = 'טלפון חובה';
+    } else {
+      const phoneDigits = contactForm.phone.replace(/\D/g, '');
+      if (phoneDigits.length < 9 || phoneDigits.length > 10) {
+        newErrors.phone = 'מספר טלפון לא תקין (נדרשים 9-10 ספרות)';
+      }
+    }
+    
+    // Email validation
+    if (!contactForm.email.trim()) {
+      newErrors.email = 'כתובת מייל חובה';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) {
+      newErrors.email = 'כתובת מייל לא תקינה';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // כאן ניתן להוסיף לוגיקה לשליחת הטופס
-    console.log('Contact form submitted:', contactForm);
+    
+    if (isSubmitting) return;
+    
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await api.post(`/broker/contact/${id}`, contactForm);
+      toast.success('הפניה נשלחה בהצלחה! המתווך יצור איתך קשר בהקדם');
+      // Clear form and errors
+      setContactForm({
+        name: '',
+        phone: '',
+        email: '',
+      });
+      setErrors({});
+    } catch (error: any) {
+      console.error('Error sending contact request:', error);
+      
+      // Handle validation errors from server
+      if (error.response?.status === 400 && error.response?.data?.message) {
+        try {
+          const serverErrors = JSON.parse(error.response.data.message);
+          const newErrors: { name?: string; phone?: string; email?: string } = {};
+          
+          serverErrors.forEach((err: any) => {
+            if (err.path && err.path.length > 0) {
+              const field = err.path[0];
+              newErrors[field as keyof typeof newErrors] = err.message;
+            }
+          });
+          
+          if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+          }
+        } catch (e) {
+          // Not a JSON validation error
+        }
+      }
+      
+      toast.error(error.response?.data?.message || 'שגיאה בשליחת הפניה. אנא נסה שוב');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -153,10 +234,19 @@ const PublicBrokerPage: React.FC = () => {
                         type="text"
                         placeholder="שם מלא"
                         value={contactForm.name}
-                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c89b4c] focus:border-transparent text-right"
+                        onChange={(e) => {
+                          setContactForm({ ...contactForm, name: e.target.value });
+                          if (errors.name) setErrors({ ...errors, name: undefined });
+                        }}
+                        className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c89b4c] focus:border-transparent text-right placeholder:text-gray-400 ${
+                          errors.name ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        style={{ color: '#223d3c' }}
                         required
                       />
+                      {errors.name && (
+                        <p className="text-red-500 text-sm mt-1 text-right">{errors.name}</p>
+                      )}
                     </div>
 
                     {/* Phone Field */}
@@ -165,11 +255,20 @@ const PublicBrokerPage: React.FC = () => {
                         type="tel"
                         placeholder="טלפון"
                         value={contactForm.phone}
-                        onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c89b4c] focus:border-transparent text-right"
+                        onChange={(e) => {
+                          setContactForm({ ...contactForm, phone: e.target.value });
+                          if (errors.phone) setErrors({ ...errors, phone: undefined });
+                        }}
+                        className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c89b4c] focus:border-transparent text-right placeholder:text-gray-400 ${
+                          errors.phone ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        style={{ color: '#223d3c' }}
                         dir="rtl"
                         required
                       />
+                      {errors.phone && (
+                        <p className="text-red-500 text-sm mt-1 text-right">{errors.phone}</p>
+                      )}
                     </div>
 
                     {/* Email Field */}
@@ -178,10 +277,19 @@ const PublicBrokerPage: React.FC = () => {
                         type="email"
                         placeholder="כתובת מייל"
                         value={contactForm.email}
-                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c89b4c] focus:border-transparent text-right"
+                        onChange={(e) => {
+                          setContactForm({ ...contactForm, email: e.target.value });
+                          if (errors.email) setErrors({ ...errors, email: undefined });
+                        }}
+                        className={`w-full px-4 py-3 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c89b4c] focus:border-transparent text-right placeholder:text-gray-400 ${
+                          errors.email ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        style={{ color: '#223d3c' }}
                         required
                       />
+                      {errors.email && (
+                        <p className="text-red-500 text-sm mt-1 text-right">{errors.email}</p>
+                      )}
                     </div>
                   </form>
                 </div>
@@ -191,10 +299,11 @@ const PublicBrokerPage: React.FC = () => {
                   <button
                     type="submit"
                     onClick={handleContactSubmit}
-                    className="relative -mt-6 px-16 py-2 rounded-full text-2xl font-bold hover:opacity-90 transition-opacity border-2 border-black"
+                    disabled={isSubmitting}
+                    className="relative -mt-6 px-16 py-2 rounded-full text-2xl font-bold hover:opacity-90 transition-opacity border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#c89b4c', color: '#223d3c' }}
                   >
-                    צרו קשר
+                    {isSubmitting ? 'שולח...' : 'צרו קשר'}
                   </button>
                 </div>
               </div>

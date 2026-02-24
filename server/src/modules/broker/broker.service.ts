@@ -16,12 +16,44 @@ import type {
   RespondToAppointmentInput,
   CreateAvailabilitySlotInput,
   CreateAccountDeletionRequestInput,
+  BrokerContactRequestInput,
 } from './broker.validation';
 
 export class BrokerService {
   // Get public broker profile (no auth required)
   async getPublicProfile(brokerId: string) {
     return brokerRepository.getPublicBrokerProfile(brokerId);
+  }
+
+  // Send contact request to broker (no auth required)
+  async sendContactRequest(brokerId: string, data: BrokerContactRequestInput) {
+    // Get broker email
+    const broker = await prisma.user.findUnique({
+      where: { id: brokerId },
+      select: { 
+        email: true,
+        name: true,
+        businessName: true,
+      },
+    });
+
+    if (!broker) {
+      throw new Error('BROKER_NOT_FOUND');
+    }
+
+    // Send email using unified email service
+    const { unifiedEmailService } = require('../email/unified-email-template.service');
+    const { EmailType } = require('../email/email-types.enum');
+    
+    await unifiedEmailService.sendEmail({
+      to: broker.email,
+      type: EmailType.BROKER_CONTACT_REQUEST,
+      contactName: data.name,
+      ownerPhone: data.phone,
+      requesterName: data.email,
+    });
+
+    console.log(`✅ Contact request sent to broker ${brokerId} (${broker.email})`);
   }
 
   // Get complete broker profile

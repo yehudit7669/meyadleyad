@@ -67,6 +67,16 @@ export const createAccountDeletionRequestSchema = z.object({
   reason: z.string().max(500, 'סיבה לא יכולה להכיל יותר מ-500 תווים').optional(),
 });
 
+// Broker contact request
+export const brokerContactRequestSchema = z.object({
+  name: z.string().min(2, 'שם חייב להכיל לפחות 2 תווים'),
+  phone: z.string().refine((val) => {
+    const digits = val.replace(/\D/g, '');
+    return digits.length >= 9 && digits.length <= 10;
+  }, 'מספר טלפון לא תקין (נדרשים 9-10 ספרות)'),
+  email: z.string().email('כתובת מייל לא תקינה'),
+});
+
 export type UpdatePersonalDetailsInput = z.infer<typeof updatePersonalDetailsSchema>;
 export type UpdateOfficeDetailsInput = z.infer<typeof updateOfficeDetailsSchema>;
 export type CreateTeamMemberInput = z.infer<typeof createTeamMemberSchema>;
@@ -77,3 +87,4 @@ export type CreateFeaturedRequestInput = z.infer<typeof createFeaturedRequestSch
 export type RespondToAppointmentInput = z.infer<typeof respondToAppointmentSchema>;
 export type CreateAvailabilitySlotInput = z.infer<typeof createAvailabilitySlotSchema>;
 export type CreateAccountDeletionRequestInput = z.infer<typeof createAccountDeletionRequestSchema>;
+export type BrokerContactRequestInput = z.infer<typeof brokerContactRequestSchema>;

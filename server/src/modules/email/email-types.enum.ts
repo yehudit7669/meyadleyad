@@ -35,6 +35,9 @@ export enum EmailType {
   APPOINTMENT_REJECTED = 'APPOINTMENT_REJECTED',
   APPOINTMENT_RESCHEDULE = 'APPOINTMENT_RESCHEDULE',
 
+  // ✅ Broker Contact
+  BROKER_CONTACT_REQUEST = 'BROKER_CONTACT_REQUEST',
+
   // ✅ Email Operations - Mailing List
   MAILING_LIST_SUBSCRIBED = 'MAILING_LIST_SUBSCRIBED',
   MAILING_LIST_UNSUBSCRIBED = 'MAILING_LIST_UNSUBSCRIBED',
@@ -210,6 +213,15 @@ export const EMAIL_TYPE_METADATA: Record<EmailType, EmailTypeMetadata> = {
     subject: 'הצעה למועד פגישה חלופי - המקום',
     description: 'הצעת מועד חלופי לפגישה',
     requiresAuth: true,
+    category: 'appointments',
+  },
+
+  // Broker Contact
+  [EmailType.BROKER_CONTACT_REQUEST]: {
+    type: EmailType.BROKER_CONTACT_REQUEST,
+    subject: 'פניה חדשה ממשתמש - המקום',
+    description: 'התראה למתווך על פניה חדשה',
+    requiresAuth: false,
     category: 'appointments',
   },
 

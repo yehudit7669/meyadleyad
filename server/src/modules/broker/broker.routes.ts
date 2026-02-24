@@ -17,6 +17,9 @@ const router = Router();
 // Public route - must be BEFORE authenticate middleware
 router.get('/public/:id', brokerController.getPublicBrokerProfile.bind(brokerController));
 
+// Public contact route - no authentication required
+router.post('/contact/:id', brokerController.sendContactRequest.bind(brokerController));
+
 // All broker routes require authentication and BROKER role
 router.use(authenticate);
 router.use(authorize('BROKER', 'SERVICE_PROVIDER')); // Support both BROKER and SERVICE_PROVIDER roles
