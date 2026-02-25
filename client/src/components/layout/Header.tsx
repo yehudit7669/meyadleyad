@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useUserNotifications } from '../../contexts/UserNotificationsContext';
 import { useAdminNotifications } from '../../contexts/AdminNotificationsContext';
+import { useDropdownA11y } from '../../hooks/useDropdownA11y';
 import CategoryWithCities from './CategoryWithCities';
 import ContactModal from '../ContactModal';
 import { MessageCircle, Bell } from 'lucide-react';
@@ -16,6 +17,23 @@ const Header: React.FC = () => {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Profile menu dropdown accessibility
+  const profileMenuItems = user ? (
+    user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR' ? 3 : 2
+  ) : 0;
+
+  const { 
+    triggerRef: profileTriggerRef, 
+    menuRef: profileMenuDropdownRef, 
+    handleTriggerKeyDown: handleProfileTriggerKeyDown, 
+    handleMenuKeyDown: handleProfileMenuKeyDown 
+  } = useDropdownA11y({
+    isOpen: profileMenuOpen,
+    onToggle: setProfileMenuOpen,
+    itemCount: profileMenuItems,
+    closeOnSelect: true,
+  });
 
   // Use admin count for admins, user count for regular users
   const unreadCount = user?.isAdmin ? adminUnreadCount : userUnreadCount;
@@ -152,10 +170,13 @@ const Header: React.FC = () => {
                 </Link>
                 <div className="relative" ref={profileMenuRef}>
                   <button 
+                    ref={profileTriggerRef as React.RefObject<HTMLButtonElement>}
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    onKeyDown={handleProfileTriggerKeyDown}
                     aria-label="תפריט משתמש"
-                    aria-haspopup="true"
+                    aria-haspopup="menu"
                     aria-expanded={profileMenuOpen}
+                    aria-controls="profile-menu"
                     className="flex items-center space-x-2 space-x-reverse text-[#E6D3A3] hover:text-[#C9A24D] transition focus-visible:ring-2 focus-visible:ring-[#C9A24D] rounded-full"
                   >
                     {user.avatar ? (
@@ -167,9 +188,16 @@ const Header: React.FC = () => {
                     )}
                   </button>
                   {profileMenuOpen && (
-                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                    <div 
+                      id="profile-menu"
+                      ref={profileMenuDropdownRef as React.RefObject<HTMLDivElement>}
+                      role="menu"
+                      onKeyDown={handleProfileMenuKeyDown}
+                      className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
+                    >
                       <Link
                         to={user.role === 'BROKER' ? '/broker/my-profile' : '/profile'}
+                        role="menuitem"
                         className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                         onClick={() => setProfileMenuOpen(false)}
                       >
@@ -178,6 +206,7 @@ const Header: React.FC = () => {
                       {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'MODERATOR') && (
                         <Link 
                           to="/admin" 
+                          role="menuitem"
                           className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                           onClick={() => setProfileMenuOpen(false)}
                         >
@@ -185,6 +214,7 @@ const Header: React.FC = () => {
                         </Link>
                       )}
                       <button
+                        role="menuitem"
                         onClick={() => {
                           setProfileMenuOpen(false);
                           handleLogout();

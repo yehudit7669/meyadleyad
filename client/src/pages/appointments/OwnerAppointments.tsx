@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { appointmentsService } from '../../services/api';
 import { Link } from 'react-router-dom';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
 
 export default function OwnerAppointments() {
   const queryClient = useQueryClient();
@@ -16,6 +17,11 @@ export default function OwnerAppointments() {
     open: false,
     appointment: null,
     action: null,
+  });
+
+  const { dialogRef } = useDialogA11y({ 
+    isOpen: actionModal.open, 
+    onClose: () => setActionModal({ open: false, appointment: null, action: null }) 
   });
 
   const { data: appointments = [], isLoading } = useQuery({
@@ -210,8 +216,15 @@ export default function OwnerAppointments() {
       {/* Action Modal */}
       {actionModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full" dir="rtl">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <div 
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="action-modal-title"
+            className="bg-white rounded-lg p-6 max-w-md w-full" 
+            dir="rtl"
+          >
+            <h2 id="action-modal-title" className="text-2xl font-bold text-gray-900 mb-4">
               {actionModal.action === 'APPROVE' && 'אישור פגישה'}
               {actionModal.action === 'REJECT' && 'דחיית פגישה'}
               {actionModal.action === 'RESCHEDULE' && 'הצעת מועד חלופי'}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileService, categoriesService, citiesService } from '../../services/api';
+import { useDialogA11y } from '../../hooks/useDialogA11y';
 
 interface NotificationFilters {
   categoryIds?: string[];
@@ -20,6 +21,7 @@ interface NewsletterFiltersProps {
 export default function NewsletterFilters({ isOpen, onClose, currentFilters }: NewsletterFiltersProps) {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<Partial<NotificationFilters>>(currentFilters);
+  const { dialogRef } = useDialogA11y({ isOpen, onClose });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -83,9 +85,15 @@ export default function NewsletterFilters({ isOpen, onClose, currentFilters }: N
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" dir="rtl">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div 
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="newsletter-filters-title"
+        className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-black">הגדרת מסננים להתראות</h2>
+          <h2 id="newsletter-filters-title" className="text-xl font-bold text-black">הגדרת מסננים להתראות</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"

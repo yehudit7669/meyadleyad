@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminService, pendingApprovalsService } from '../services/api';
 import { Link } from 'react-router-dom';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 
 export default function UserManagement() {
   const queryClient = useQueryClient();
@@ -258,6 +259,11 @@ function PendingApprovalsTab() {
   const [selectedApproval, setSelectedApproval] = useState<any>(null);
   const [adminNotes, setAdminNotes] = useState('');
 
+  const { dialogRef } = useDialogA11y({ 
+    isOpen: !!selectedApproval, 
+    onClose: () => setSelectedApproval(null) 
+  });
+
   const { data: approvals, isLoading } = useQuery({
     queryKey: ['pending-approvals', filterStatus],
     queryFn: () => pendingApprovalsService.getAll(filterStatus === 'ALL' ? {} : { status: filterStatus }),
@@ -410,8 +416,14 @@ function PendingApprovalsTab() {
       {/* Approval Details Modal */}
       {selectedApproval && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">פרטי בקשה</h2>
+          <div 
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="approval-details-title"
+            className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <h2 id="approval-details-title" className="text-2xl font-bold mb-4">פרטי בקשה</h2>
 
             <div className="space-y-4">
               <div>

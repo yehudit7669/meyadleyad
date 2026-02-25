@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 import { getImageUrl } from '../utils/imageUrl';
 
 interface ImageLightboxProps {
@@ -9,6 +10,8 @@ interface ImageLightboxProps {
 }
 
 export default function ImageLightbox({ images, currentIndex, onClose, onNavigate }: ImageLightboxProps) {
+  const { dialogRef } = useDialogA11y({ isOpen: true, onClose });
+
   const goToPrevious = useCallback(() => {
     const newIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
     onNavigate(newIndex);
@@ -39,6 +42,10 @@ export default function ImageLightbox({ images, currentIndex, onClose, onNavigat
 
   return (
     <div 
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="תצוגת תמונות"
       className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-[100]"
       onClick={onClose}
       dir="rtl"

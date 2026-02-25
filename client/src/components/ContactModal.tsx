@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Send, Mail, MessageCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 import api from '../services/api';
 
 interface ContactModalProps {
@@ -10,6 +11,7 @@ interface ContactModalProps {
 
 const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+  const { dialogRef } = useDialogA11y({ isOpen, onClose });
   const [message, setMessage] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,12 +60,18 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4" dir="rtl">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div 
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contact-modal-title"
+        className="bg-white rounded-lg shadow-xl max-w-md w-full"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-2 space-x-reverse">
             <MessageCircle className="w-6 h-6 text-[#C9A24D]" />
-            <h2 className="text-xl font-bold text-[#1F3F3A]">יצירת קשר</h2>
+            <h2 id="contact-modal-title" className="text-xl font-bold text-[#1F3F3A]">יצירת קשר</h2>
           </div>
           <button
             onClick={onClose}
