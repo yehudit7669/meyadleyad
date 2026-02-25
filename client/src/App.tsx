@@ -43,6 +43,7 @@ import Messages from './pages/Messages';
 import TestColors from './pages/TestColors';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import About from './pages/About';
 import PublishAdSelection from './pages/PublishAdSelection';
 import ResidentialWizard from './components/wizard/residential/ResidentialWizard';
 import SharedOwnershipWizard from './components/wizard/shared-ownership/SharedOwnershipWizard';
@@ -136,6 +137,7 @@ const App: React.FC = () => {
                   {/* Legal Pages */}
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/about" element={<About />} />
                   
                   {/* Search Route */}
                   <Route path="/search" element={<SearchResults />} />

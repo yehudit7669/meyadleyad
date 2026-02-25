@@ -76,8 +76,8 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-bold mb-4">משפטי</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/our-story" className="text-gray-400 hover:text-white transition">
-                  הסיפור שלנו
+                <Link to="/about" className="text-gray-400 hover:text-white transition">
+                  אודות
                 </Link>
               </li>
               <li>
