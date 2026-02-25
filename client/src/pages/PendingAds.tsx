@@ -1082,6 +1082,14 @@ export default function PendingAds() {
                       >
                         ❌ דחה מודעה
                       </button>
+                      <a
+                        href={`/ads/${previewAd.id}/edit`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition text-center"
+                      >
+                        ✏️ ערוך מודעה
+                      </a>
                       <button
                         onClick={() => setPreviewAdId(null)}
                         className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"

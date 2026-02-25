@@ -503,12 +503,22 @@ export default function ManageAdsStatus() {
                               </div>
                             </div>
                           ) : (
-                            <button
-                              onClick={() => setEditingAdId(ad.id)}
-                              className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition"
-                            >
-                              ✏️ שנה סטטוס
-                            </button>
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={() => setEditingAdId(ad.id)}
+                                className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded transition"
+                              >
+                                ✏️ שנה סטטוס
+                              </button>
+                              <a
+                                href={`/ads/${ad.id}/edit`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1 text-sm text-green-600 hover:bg-green-50 rounded transition text-center"
+                              >
+                                📝 ערוך מודעה
+                              </a>
+                            </div>
                           )}
                         </td>
                       )}
