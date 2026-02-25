@@ -25,6 +25,7 @@ const HomeHero: React.FC = () => {
                     type="text"
                     placeholder="חפש לפי עיר, רחוב או מאפיינים..."
                     className="flex-1 px-6 py-4 text-lg outline-none bg-transparent"
+                    style={{ color: '#3f504f' }}
                   />
                   <button
                     type="submit"

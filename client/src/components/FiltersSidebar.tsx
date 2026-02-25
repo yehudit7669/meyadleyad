@@ -38,9 +38,9 @@ export default function FiltersSidebar({
     filters.categoryId || filters.cityId || filters.minPrice || filters.maxPrice;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 sticky top-4" dir="rtl">
+    <div className="bg-white rounded-lg shadow-md p-6 sticky top-4" dir="rtl" style={{ fontFamily: 'Assistant, sans-serif' }}>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">סינון תוצאות</h2>
+        <h2 className="text-xl font-bold" style={{ color: '#3f504f' }}>סינון תוצאות</h2>
         {hasActiveFilters && (
           <button
             onClick={onReset}
@@ -64,7 +64,8 @@ export default function FiltersSidebar({
             value={filters.search}
             onChange={handleChange}
             placeholder="חפש מילות מפתח..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+            style={{ color: '#3f504f' }}
           />
         </div>
 
@@ -78,6 +79,7 @@ export default function FiltersSidebar({
             value={filters.categoryId}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+            style={{ color: '#3f504f' }}
           >
             <option value="">כל הקטגוריות</option>
             {categories?.map((cat: any) => (
@@ -98,6 +100,7 @@ export default function FiltersSidebar({
             value={filters.cityId}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+            style={{ color: '#3f504f' }}
           >
             <option value="">כל הערים</option>
             {cities?.map((city: any) => (
@@ -121,7 +124,8 @@ export default function FiltersSidebar({
                 value={filters.minPrice}
                 onChange={handleChange}
                 placeholder="מינימום"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                style={{ color: '#3f504f' }}
                 min="0"
               />
             </div>
@@ -132,7 +136,8 @@ export default function FiltersSidebar({
                 value={filters.maxPrice}
                 onChange={handleChange}
                 placeholder="מקסימום"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                style={{ color: '#3f504f' }}
                 min="0"
               />
             </div>
@@ -143,7 +148,10 @@ export default function FiltersSidebar({
         <button
           onClick={onSearch}
           aria-label="חפש לפי המסננים"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+          className="w-full text-white py-3 rounded-lg font-bold transition"
+          style={{ backgroundColor: '#c89b4c' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b88a3d'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c89b4c'}
         >
           🔍 חפש
         </button>

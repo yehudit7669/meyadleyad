@@ -69,7 +69,10 @@ export default function GeolocationSearch({ onLocationFound }: GeolocationSearch
         disabled={loading}
         aria-label="חפש מודעות בסביבתי"
         aria-busy={loading}
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-6 rounded-lg font-bold hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+        className="w-full text-white py-3 px-6 rounded-lg font-bold disabled:opacity-50 transition flex items-center justify-center gap-2"
+        style={{ backgroundColor: '#c89b4c' }}
+        onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#b88a3d')}
+        onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#c89b4c')}
       >
         {loading ? (
           <>

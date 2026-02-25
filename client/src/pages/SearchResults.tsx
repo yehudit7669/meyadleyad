@@ -6,7 +6,6 @@ import AdCardCompact from '../components/home/AdCardCompact';
 import FiltersSidebar from '../components/FiltersSidebar';
 import Pagination from '../components/Pagination';
 import { GridSkeleton } from '../components/LoadingSkeletons';
-import SearchAutocomplete from '../components/SearchAutocomplete';
 import GeolocationSearch from '../components/GeolocationSearch';
 import { useAnalytics } from '../utils/analytics';
 import SEO from '../components/SEO';
@@ -121,11 +120,6 @@ export default function SearchResults() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* פילטרים */}
             <div className="lg:col-span-1">
-              {/* Search Autocomplete */}
-              <div className="mb-6 bg-white rounded-lg shadow-md p-4">
-                <SearchAutocomplete />
-              </div>
-
               {/* Geolocation Search */}
               <div className="mb-6 bg-white rounded-lg shadow-md p-4">
                 <GeolocationSearch onLocationFound={handleLocationFound} />
@@ -141,10 +135,8 @@ export default function SearchResults() {
 
             {/* תוצאות */}
             <div className="lg:col-span-3">
-              <div className="mb-6">
-                   filters.street ? `חיפוש ברחוב: ${filters.street}` :
-                   
-                <h1 className="text-3xl font-bold mb-2">
+              <div className="mb-6">                   
+                <h1 className="text-3xl font-bold mb-2" style={{ color: '#3f504f', fontFamily: 'Assistant, sans-serif' }}>
                   {filters.lat ? 'מודעות בסביבתך' : 'תוצאות חיפוש'}
                 </h1>
                 {adsData && (
@@ -164,9 +156,11 @@ export default function SearchResults() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                <div className="flex flex-wrap gap-8">
                   {adsData.ads.map((ad: any) => (
-                    <AdCardCompact key={ad.id} ad={ad} />
+                    <div key={ad.id} className="w-[200px]">
+                      <AdCardCompact ad={ad} />
+                    </div>
                   ))}
                 </div>
 

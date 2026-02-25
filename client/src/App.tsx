@@ -34,6 +34,7 @@ import UserProfilePage from './pages/admin/UserProfilePage';
 import CityPage from './pages/CityPage';
 import CategoryPage from './pages/CategoryPage';
 import WantedAdsPage from './pages/WantedAdsPage';
+import SearchResults from './pages/SearchResults';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -135,6 +136,9 @@ const App: React.FC = () => {
                   {/* Legal Pages */}
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
+                  
+                  {/* Search Route */}
+                  <Route path="/search" element={<SearchResults />} />
                   
                   {/* Publish Routes - New Wizard */}
                   <Route path="/publish" element={<ProtectedRoute><PublishAdSelection /></ProtectedRoute>} />
