@@ -13,7 +13,7 @@ const WhatsAppSection: React.FC = () => {
       dir="rtl"
     >
       {/* Hand Image - Absolute positioning to stick to screen right edge */}
-      <img 
+      {/* <img 
         src="/images/hand-for-whatsapp.jpg" 
         alt="WhatsApp" 
         className="absolute bottom-0"
@@ -23,7 +23,7 @@ const WhatsAppSection: React.FC = () => {
           width: 'auto',
           zIndex: 1
         }}
-      />
+      /> */}
       
       <div className="relative w-full flex justify-center">
         {/* Left Column - All content centered in the middle of the page */}
