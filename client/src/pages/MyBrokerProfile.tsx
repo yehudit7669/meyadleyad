@@ -88,15 +88,22 @@ const MyBrokerProfile: React.FC = () => {
           )}
         </div>
 
-        {/* Tabs Navigation - Desktop */}
-        <div className="hidden lg:block bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex gap-2 overflow-x-auto">
+        {/* Tabs Navigation - Scrollable */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+          <div 
+            className="flex gap-2 overflow-x-auto scrollbar-hide"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors
+                  flex items-center gap-2 px-4 py-3 rounded-lg whitespace-nowrap transition-colors flex-shrink-0
                   ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white'
@@ -109,25 +116,6 @@ const MyBrokerProfile: React.FC = () => {
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Tabs Navigation - Mobile */}
-        <div className="lg:hidden bg-white rounded-lg shadow-md p-4 mb-6">
-          <label htmlFor="tab-select" className="block text-sm font-medium text-gray-700 mb-2">
-            בחר טאב:
-          </label>
-          <select
-            id="tab-select"
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value as TabType)}
-            className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            {tabs.map((tab) => (
-              <option key={tab.id} value={tab.id}>
-                {tab.icon} {tab.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Tab Content */}

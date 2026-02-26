@@ -168,7 +168,7 @@ export default function AdDetails() {
               <div className="flex flex-col md:flex-row gap-3">
                 {/* Thumbnails - Vertical list on right */}
                 {ad.images && ad.images.length > 1 && (
-                  <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-visible md:order-2 md:w-28">
+                  <div className="flex md:flex-col gap-3 overflow-x-auto scrollbar-hide md:overflow-visible md:order-2 md:w-28">
                     {ad.images.map((image: any, index: number) => (
                       <button
                         key={index}

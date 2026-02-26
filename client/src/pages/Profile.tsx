@@ -49,16 +49,24 @@ export default function Profile() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProfileHeader userName={user?.name} />
 
-        {/* Tabs - Desktop */}
-        <div className="hidden md:block bg-white rounded-lg shadow-sm mb-6">
+        {/* Tabs - Scrollable on Mobile/Tablet */}
+        <div className="bg-white rounded-lg shadow-sm mb-6">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-reverse space-x-8 px-6" aria-label="Tabs">
+            <nav 
+              className="flex space-x-reverse space-x-8 px-6 overflow-x-auto scrollbar-hide" 
+              aria-label="Tabs"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap
+                    py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0
                     ${
                       activeTab === tab.id
                         ? 'border-blue-500 text-blue-600'
@@ -72,25 +80,6 @@ export default function Profile() {
               ))}
             </nav>
           </div>
-        </div>
-
-        {/* Tabs - Mobile */}
-        <div className="md:hidden mb-6">
-          <label htmlFor="tabs" className="sr-only">
-            בחר טאב
-          </label>
-          <select
-            id="tabs"
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value as TabType)}
-            className="block w-full rounded-md border-gray-300 py-2 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-          >
-            {tabs.map((tab) => (
-              <option key={tab.id} value={tab.id}>
-                {tab.icon} {tab.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Tab Content */}

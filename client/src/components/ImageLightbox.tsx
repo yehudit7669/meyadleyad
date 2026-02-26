@@ -111,7 +111,7 @@ export default function ImageLightbox({ images, currentIndex, onClose, onNavigat
 
       {/* Thumbnail strip at bottom (optional, for quick navigation) */}
       {images.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-black bg-opacity-50 p-3 rounded-lg max-w-[90vw] overflow-x-auto">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-black bg-opacity-50 p-3 rounded-lg max-w-[90vw] overflow-x-auto scrollbar-hide">
           {images.map((image, index) => (
             <button
               key={image.id || index}

@@ -1139,7 +1139,14 @@ export default function SecuritySettingsPage() {
 
       {/* Tabs Navigation */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
-        <div className="flex overflow-x-auto">
+        <div 
+          className="flex overflow-x-auto scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -1149,7 +1156,7 @@ export default function SecuritySettingsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap border-b-2 transition-colors
+                  flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap border-b-2 transition-colors flex-shrink-0
                   ${isActive
                     ? 'border-blue-600 text-blue-600 bg-blue-50'
                     : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'

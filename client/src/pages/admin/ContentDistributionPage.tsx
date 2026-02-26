@@ -26,7 +26,14 @@ export default function ContentDistributionPage() {
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="border-b border-gray-200">
-          <nav className="flex -mb-px">
+          <nav 
+            className="flex -mb-px overflow-x-auto scrollbar-hide"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -34,7 +41,7 @@ export default function ContentDistributionPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors
+                    flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0
                     ${
                       activeTab === tab.id
                         ? 'border-blue-500 text-blue-600'
