@@ -91,71 +91,62 @@ export class WhatsAppMessageBuilderService {
   private formatAdMessage(ad: AdWithRelations): string {
     let message = '';
 
-    // כותרת עם אייקון
-    const icon = this.getCategoryIcon(ad.Category?.slug);
-    message += `${icon} *${this.sanitizeText(ad.title)}*\n\n`;
-
-    // סוג הנכס (קטגוריה בעברית)
+    // 1. קטגוריה (למשל דירה למכירה)
     if (ad.Category?.nameHe) {
-      message += `📂 ${ad.Category.nameHe}\n`;
+      message += `${ad.Category.nameHe}\n\n`;
     }
 
-    // חדרים | קומה | מ"ר (במרכז בשורה נפרדת)
-    const propertyDetails: string[] = [];
+    // 2. מספר חדרים, רחוב, שכונה ועיר
+    const locationParts: string[] = [];
+    
     if (ad.customFields && typeof ad.customFields === 'object') {
       const custom = ad.customFields as any;
-      
       if (custom.rooms) {
-        propertyDetails.push(`${custom.rooms} חדרים`);
-      }
-      
-      if (custom.floor !== undefined && custom.floor !== null) {
-        propertyDetails.push(`קומה ${custom.floor}`);
-      }
-      
-      if (custom.squareMeters || custom.size) {
-        const size = custom.squareMeters || custom.size;
-        propertyDetails.push(`${size} מ\"ר`);
+        locationParts.push(`${custom.rooms} חדרים`);
       }
     }
     
-    if (propertyDetails.length > 0) {
-      message += propertyDetails.join(' | ') + '\n';
+    if (ad.Street?.name) {
+      locationParts.push(ad.Street.name);
     }
-
-    // מיקום ומחיר
-    const locationPrice: string[] = [];
+    
+    if (ad.neighborhood) {
+      locationParts.push(ad.neighborhood);
+    }
     
     if (ad.City?.nameHe) {
-      let location = `📍 ${ad.City.nameHe}`;
-      if (ad.Street?.name) {
-        location += `, ${ad.Street.name}`;
-      } else if (ad.neighborhood) {
-        location += `, ${ad.neighborhood}`;
-      }
-      locationPrice.push(location);
-    }
-
-    if (ad.price && ad.price > 0) {
-      locationPrice.push(`💰 ${this.formatPrice(ad.price)}`);
-    }
-
-    if (locationPrice.length > 0) {
-      message += locationPrice.join(' | ') + '\n';
+      locationParts.push(ad.City.nameHe);
     }
     
-    message += '\n';
-
-    // תיאור (קצר)
-    if (ad.description) {
-      const shortDesc = this.truncateText(ad.description, 200);
-      message += `${this.sanitizeText(shortDesc)}\n\n`;
+    if (locationParts.length > 0) {
+      message += locationParts.join(', ') + '\n\n';
     }
 
-    // קישור
+    // 3. מאפיינים (כל מאפיין בשורה אחרת עם אייקון)
+    const features = this.getFeaturesList(ad);
+    if (features.length > 0) {
+      features.forEach(feature => {
+        message += `${feature}\n`;
+      });
+      message += '\n';
+    }
+
+    // 4. תיאור הנכס
+    if (ad.description && ad.description.trim()) {
+      message += `${this.sanitizeText(ad.description.trim())}\n\n`;
+    }
+
+    // 5. מחיר
+    if (ad.price && ad.price > 0) {
+      message += `מחיר: ${this.formatPrice(ad.price)}\n\n`;
+    }
+
+    // 6. קישור לצפייה בתמונות ולפרטים נוספים
     const url = this.buildListingUrl(ad);
-    message += `🔗 *לצפייה מלאה:* ${url}\n`;
-    message += `📞 מודעה מספר: *${ad.adNumber}*`;
+    message += `לצפייה בתמונות ולפרטים נוספים לחצו כאן: ${url}\n\n`;
+
+    // 7. קישור לקבוצת WhatsApp
+    message += `רוצים לראות נכסים נוספים? הצטרפו לקבוצת הווצאפ מבית המקום: https://chat.whatsapp.com/DStrETiPZGJCLLrR9WP0Q3?mode=gi_t`;
 
     // Validate length
     if (message.length > this.MAX_TEXT_LENGTH) {
@@ -163,6 +154,58 @@ export class WhatsAppMessageBuilderService {
     }
 
     return message;
+  }
+
+  /**
+   * קבלת רשימת מאפיינים עם אייקונים
+   */
+  private getFeaturesList(ad: AdWithRelations): string[] {
+    const features: string[] = [];
+    
+    if (!ad.customFields || typeof ad.customFields !== 'object') {
+      return features;
+    }
+
+    const custom = ad.customFields as any;
+    const featuresObj = custom.features || {};
+
+    // מיפוי מאפיינים עם אייקונים
+    const featureMap: Array<{ key: string; label: string; icon: string }> = [
+      { key: 'storage', label: 'מחסן', icon: '📦' },
+      { key: 'balcony', label: 'מרפסת', icon: '🏡' },
+      { key: 'safeRoom', label: 'ממ"ד', icon: '🛡️' },
+      { key: 'upgradedKitchen', label: 'מטבח משודרג', icon: '🍳' },
+      { key: 'hasOption', label: 'אופציה', icon: '⭐' },
+      { key: 'parking', label: 'חניה', icon: '🅿️' },
+      { key: 'elevator', label: 'מעלית', icon: '🛗' },
+      { key: 'airConditioning', label: 'מיזוג אוויר', icon: '❄️' },
+      { key: 'sukkaBalcony', label: 'מרפסת סוכה', icon: '🌿' },
+      { key: 'view', label: 'נוף', icon: '🌄' },
+      { key: 'yard', label: 'חצר', icon: '🌳' },
+      { key: 'garden', label: 'גינה', icon: '🌺' },
+      { key: 'frontFacing', label: 'חזית', icon: '🏛️' },
+      { key: 'accessibleForDisabled', label: 'נגישה לנכים', icon: '♿' },
+      { key: 'housingUnit', label: 'יחידת דיור', icon: '🏘️' },
+      { key: 'parentalUnit', label: 'יחידת הורים', icon: '👨‍👩‍👧' },
+      { key: 'masterUnit', label: 'יחידת הורים', icon: '👨‍👩‍👧' },
+      { key: 'pool', label: 'בריכה', icon: '🏊' },
+      { key: 'kidsGames', label: 'משחקי ילדים', icon: '🎮' },
+      { key: 'babyBed', label: 'מיטת תינוק', icon: '👶' },
+      { key: 'gallery', label: 'גלריה', icon: '🎨' },
+      { key: 'kitchenette', label: 'מטבחון', icon: '🍽️' },
+      { key: 'toilets', label: 'שירותים', icon: '🚻' },
+      { key: 'storefront', label: 'חלון ראווה לרחוב', icon: '🪟' },
+      { key: 'internet', label: 'אינטרנט', icon: '📶' },
+      { key: 'upgraded', label: 'מושפץ', icon: '✨' },
+    ];
+
+    featureMap.forEach(({ key, label, icon }) => {
+      if (featuresObj[key]) {
+        features.push(`${icon} ${label}`);
+      }
+    });
+
+    return features;
   }
 
   /**
