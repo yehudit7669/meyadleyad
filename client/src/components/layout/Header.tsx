@@ -84,7 +84,7 @@ const Header: React.FC = () => {
           </Link>
 
           {/* Center - Navigation Categories */}
-          <nav className="hidden md:flex items-center space-x-8 space-x-reverse flex-1 justify-center" aria-label="ניווט ראשי">
+          <nav className="hidden xl:flex items-center space-x-8 space-x-reverse flex-1 justify-center" aria-label="ניווט ראשי">
             <CategoryWithCities 
               categorySlug="apartments-for-sale"
               categoryName="דירות למכירה"
@@ -133,7 +133,7 @@ const Header: React.FC = () => {
           </nav>
 
           {/* Left Side (RTL) - Actions */}
-          <div className="hidden md:flex items-center space-x-4 space-x-reverse">
+          <div className="hidden xl:flex items-center space-x-4 space-x-reverse">
             {/* Contact Button */}
             <button
               onClick={() => setContactModalOpen(true)}
@@ -247,7 +247,7 @@ const Header: React.FC = () => {
           </div>
 
           <button
-            className="md:hidden p-2 text-[#E6D3A3] hover:text-[#C9A24D] focus-visible:ring-2 focus-visible:ring-[#C9A24D] rounded"
+            className="xl:hidden p-2 text-[#E6D3A3] hover:text-[#C9A24D] focus-visible:ring-2 focus-visible:ring-[#C9A24D] rounded"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? "סגור תפריט" : "פתח תפריט"}
             aria-expanded={mobileMenuOpen}
@@ -279,7 +279,7 @@ const Header: React.FC = () => {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-[#C9A24D]/30 bg-[#1F3F3A]">
+          <div className="xl:hidden py-4 border-t border-[#C9A24D]/30 bg-[#1F3F3A]">
             <nav className="flex flex-col space-y-4">
               {/* Categories */}
               <div className="border-b border-[#C9A24D]/30 pb-4">
