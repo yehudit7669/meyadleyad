@@ -328,21 +328,21 @@ const Header: React.FC = () => {
                 </div>
                 <Link
                   to="/service-providers"
-                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  className="block text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
                   onClick={closeMobileMenu}
                 >
                   🔧 נותני שירות
                 </Link>
                 <Link
                   to="/brokers"
-                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  className="block text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
                   onClick={closeMobileMenu}
                 >
                   👔 מתווכים
                 </Link>
                 <Link
                   to="/wanted"
-                  className="text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
+                  className="block text-[#E6D3A3] hover:text-[#C9A24D] px-2 py-2 transition"
                   onClick={closeMobileMenu}
                 >
                   🔍 דרושים
