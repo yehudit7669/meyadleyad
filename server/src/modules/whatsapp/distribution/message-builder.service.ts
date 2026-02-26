@@ -340,26 +340,13 @@ export class WhatsAppMessageBuilderService {
   }
 
   /**
-   * בניית טקסט מלא להעתקה - כולל תמונות + טקסט
+   * בניית טקסט מלא להעתקה - רק טקסט ללא תמונות
    */
   buildClipboardText(ad: AdWithRelations): string {
     const payload = this.buildAdMessage(ad);
-    let clipboardText = '';
-
-    // Add all images first (not just the main one)
-    if (ad.AdImage && ad.AdImage.length > 0) {
-      const sortedImages = [...ad.AdImage].sort((a, b) => a.order - b.order);
-      sortedImages.forEach((img, index) => {
-        const imageUrl = img.brandedUrl || img.url;
-        clipboardText += `${imageUrl}\n`;
-      });
-      clipboardText += '\n'; // Empty line after images
-    }
-
-    // Add the message text
-    clipboardText += payload.messageText;
-
-    return clipboardText;
+    
+    // Return only the message text (no image URLs)
+    return payload.messageText;
   }
 
   /**
