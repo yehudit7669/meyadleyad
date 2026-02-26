@@ -86,11 +86,6 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-gray-400 hover:text-white transition">
-                  תקנון האתר ותנאי שימוש
-                </Link>
-              </li>
-              <li>
                 <Link to="/privacy" className="text-gray-400 hover:text-white transition">
                   מדיניות פרטיות
                 </Link>
@@ -98,11 +93,6 @@ const Footer: React.FC = () => {
               <li>
                 <Link to="/accessibility" className="text-gray-400 hover:text-white transition">
                   הסדרי נגישות
-                </Link>
-              </li>
-              <li>
-                <Link to="/business-login" className="text-gray-400 hover:text-white transition">
-                  כניסה לעסקים
                 </Link>
               </li>
             </ul>

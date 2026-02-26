@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import GoogleLoginButton from './GoogleLoginButton';
 import ServiceProviderWizard from './ServiceProviderWizard';
+import TermsModal from './TermsModal';
 import { ServiceProviderRegistrationData } from '../types';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -28,6 +29,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Terms modal state
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -531,24 +535,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
                   required
                 />
                 <label htmlFor="signup-terms" className="text-sm text-gray-700">
-                  קראתי ואישרתי את{' '}
-                  <a
-                    href="/terms"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  אני מאשר שקראתי ואני מסכים{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowTermsModal(true)}
                     className="text-primary-600 hover:underline"
                   >
-                    תנאי השימוש
-                  </a>
-                  {' '}ואת{' '}
-                  <a
-                    href="/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-600 hover:underline"
-                  >
-                    מדיניות הפרטיות
-                  </a>
+                    לתקנון ולתנאי השימוש
+                  </button>
+                  {' '}<span className="text-red-500">*</span>
                 </label>
               </div>
 
@@ -603,9 +598,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ initialMode = 'login' }) => {
             </div>
           )}
         </div>
-          </>
-        )}
+        </>
+      )}
       </div>
+
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
     </div>
   );
 };

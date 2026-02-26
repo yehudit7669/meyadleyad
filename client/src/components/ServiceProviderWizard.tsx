@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ServiceProviderType } from '../types';
 import { Eye, EyeOff } from 'lucide-react';
 import { useCities } from '../hooks/useCities';
+import TermsModal from './TermsModal';
 
 interface WizardData {
   // שלב 1
@@ -51,6 +52,7 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
 }) => {
   const { data: cities, isLoading: citiesLoading } = useCities();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [data, setData] = useState<WizardData>({
     serviceProviderType: '',
     firstName: '',
@@ -274,6 +276,7 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
             declarationAccepted={data.declarationAccepted}
             onChangeTerms={(value) => updateData('termsAccepted', value)}
             onChangeDeclaration={(value) => updateData('declarationAccepted', value)}
+            onOpenTermsModal={() => setShowTermsModal(true)}
           />
         )}
       </div>
@@ -309,6 +312,8 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
           </button>
         )}
       </div>
+
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
     </div>
   );
 };
@@ -647,7 +652,8 @@ const Step6Terms: React.FC<{
   declarationAccepted: boolean;
   onChangeTerms: (value: boolean) => void;
   onChangeDeclaration: (value: boolean) => void;
-}> = ({ termsAccepted, declarationAccepted, onChangeTerms, onChangeDeclaration }) => (
+  onOpenTermsModal: () => void;
+}> = ({ termsAccepted, declarationAccepted, onChangeTerms, onChangeDeclaration, onOpenTermsModal }) => (
   <div>
     <h2 className="text-2xl font-bold text-black mb-2">תנאים והצהרות</h2>
     <p className="text-black mb-6">יש לאשר את התנאים הבאים להשלמת ההרשמה</p>
@@ -664,7 +670,15 @@ const Step6Terms: React.FC<{
         />
         <div className="flex-1">
           <div className="font-medium text-black">
-            אני מאשר שקראתי ואני מסכים לתקנון ולתנאי השימוש <span className="text-red-500">*</span>
+            אני מאשר שקראתי ואני מסכים{' '}
+            <button
+              type="button"
+              onClick={onOpenTermsModal}
+              className="text-primary-600 hover:underline"
+            >
+              לתקנון ולתנאי השימוש
+            </button>
+            {' '}<span className="text-red-500">*</span>
           </div>
           <div className="text-sm text-black mt-1">
             תנאי השימוש כוללים הסכמה למדיניות הפרטיות ולכללי השימוש באתר
