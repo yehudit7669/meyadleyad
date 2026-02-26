@@ -30,7 +30,25 @@ body {
 }
 
 .container {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  @apply mx-auto px-4;
+}
+
+/* Tablet: Nearly full width with 16px padding */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .container {
+    max-width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Desktop: Max width constraint */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 80rem; /* 1280px */
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 .btn {
