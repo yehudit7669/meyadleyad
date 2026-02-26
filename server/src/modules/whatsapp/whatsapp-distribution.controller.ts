@@ -358,27 +358,8 @@ export class WhatsAppDistributionController {
 
       const payload = await distributionService.markInProgress(itemId, userId);
 
-      // Build clipboard text with images
-      let clipboardText = '';
-      
-      // Add all image URLs first
-      const item = await distributionService.getItemWithAd(itemId);
-      const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://amakom.co.il';
-      if (item?.Ad?.AdImage && item.Ad.AdImage.length > 0) {
-        const sortedImages = [...item.Ad.AdImage].sort((a, b) => a.order - b.order);
-        sortedImages.forEach((img) => {
-          let imageUrl = img.brandedUrl || img.url;
-          // Add base URL if it's a relative path
-          if (imageUrl.startsWith('/')) {
-            imageUrl = `${baseUrl}${imageUrl}`;
-          }
-          clipboardText += `${imageUrl}\n`;
-        });
-        clipboardText += '\n'; // Empty line after images
-      }
-      
-      // Add the message text
-      clipboardText += payload.messageText;
+      // Build clipboard text - only message text, no images
+      const clipboardText = payload.messageText;
 
       // Build WhatsApp links
       const webLink = messageBuilder.buildWhatsAppWebLink(payload.messageText);
@@ -393,10 +374,6 @@ export class WhatsAppDistributionController {
           whatsappWebLink: webLink,
           whatsappAppLink: appLink,
           clipboardText,
-          images: item?.Ad?.AdImage?.map(img => ({
-            url: img.brandedUrl || img.url,
-            order: img.order
-          })) || [],
         },
       });
     } catch (error) {
@@ -472,27 +449,8 @@ export class WhatsAppDistributionController {
       // Update status to IN_PROGRESS and get payload
       const payload = await distributionService.markInProgress(itemId, userId);
 
-      // Build clipboard text with images
-      let clipboardText = '';
-      
-      // Add all image URLs first
-      const itemWithAd = await distributionService.getItemWithAd(itemId);
-      const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://amakom.co.il';
-      if (itemWithAd?.Ad?.AdImage && itemWithAd.Ad.AdImage.length > 0) {
-        const sortedImages = [...itemWithAd.Ad.AdImage].sort((a, b) => a.order - b.order);
-        sortedImages.forEach((img) => {
-          let imageUrl = img.brandedUrl || img.url;
-          // Add base URL if it's a relative path
-          if (imageUrl.startsWith('/')) {
-            imageUrl = `${baseUrl}${imageUrl}`;
-          }
-          clipboardText += `${imageUrl}\n`;
-        });
-        clipboardText += '\n'; // Empty line after images
-      }
-      
-      // Add the message text
-      clipboardText += payload.messageText;
+      // Build clipboard text - only message text, no images
+      const clipboardText = payload.messageText;
 
       res.status(200).json({
         status: 'success',
@@ -500,10 +458,6 @@ export class WhatsAppDistributionController {
         data: {
           payload,
           clipboardText,
-          images: itemWithAd?.Ad?.AdImage?.map(img => ({
-            url: img.brandedUrl || img.url,
-            order: img.order
-          })) || [],
         },
       });
     } catch (error) {
@@ -606,41 +560,17 @@ export class WhatsAppDistributionController {
         });
       }
 
-      // Build clipboard text with images
+      // Build clipboard text - only message text, no images
       let clipboardText = '';
-      
-      // Add all image URLs first
-      const baseUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'https://amakom.co.il';
-      if (item.Ad?.AdImage && item.Ad.AdImage.length > 0) {
-        const sortedImages = [...item.Ad.AdImage].sort((a, b) => a.order - b.order);
-        sortedImages.forEach((img) => {
-          let imageUrl = img.brandedUrl || img.url;
-          // Add base URL if it's a relative path
-          if (imageUrl.startsWith('/')) {
-            imageUrl = `${baseUrl}${imageUrl}`;
-          }
-          clipboardText += `${imageUrl}\n`;
-        });
-        clipboardText += '\n'; // Empty line after images
-      }
-      
-      // Add the message text - always rebuild for latest format
-      let messageText = '';
       if (item.Ad) {
         const payload = messageBuilder.buildAdMessage(item.Ad);
-        messageText = payload.messageText;
+        clipboardText = payload.messageText;
       }
-      
-      clipboardText += messageText;
 
       res.status(200).json({
         status: 'success',
         data: {
           clipboardText,
-          images: item.Ad?.AdImage?.map(img => ({
-            url: img.brandedUrl || img.url,
-            order: img.order
-          })) || [],
         },
       });
     } catch (error) {
