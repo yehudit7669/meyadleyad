@@ -292,157 +292,157 @@ export default function AdDetails() {
                     {/* Features - Left side with icons */}
                     {hasFeatures && (
                       <div className="w-full md:w-[50%]">
-                        <h2 className="font-bold text-xl mb-4 text-[#C9A24D]">מה בנכס</h2>
+                        <h2 className="font-bold text-xl -mb-1 text-[#C9A24D]">מה בנכס</h2>
 
                         {/* Features Grid with Icons */}
                         <div className="grid grid-cols-3 gap-1">
                       {/* Holiday Rent Features */}
                       {(ad.customFields as any).features.plata && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🔥</div>
-                          <span className="text-xs text-[#1F3F3A]">פלטה</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/פלטה.png" alt="פלטה" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">פלטה</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.urn && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">☕</div>
-                          <span className="text-xs text-[#1F3F3A]">מיחם</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מיחם.png" alt="מיחם" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מיחם</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.linens && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🛏️</div>
-                          <span className="text-xs text-[#1F3F3A]">מצעים</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מצעים.png" alt="מצעים" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מצעים</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.pool && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🏊</div>
-                          <span className="text-xs text-[#1F3F3A]">בריכה</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/בריכה.png" alt="בריכה" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">בריכה</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.kidsGames && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🎮</div>
-                          <span className="text-xs text-[#1F3F3A]">משחקי ילדים</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/משחקי ילדים.png" alt="משחקי ילדים" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">משחקי ילדים</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.babyBed && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">👶</div>
-                          <span className="text-xs text-[#1F3F3A]">מיטת תינוק</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מיטת תינוק.png" alt="מיטת תינוק" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מיטת תינוק</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.parking && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🅿️</div>
-                          <span className="text-xs text-[#1F3F3A]">חניה</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/חניה.png" alt="חניה" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">חניה</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.storage && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">📦</div>
-                          <span className="text-xs text-[#1F3F3A]">מחסן</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מחסן.png" alt="מחסן" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מחסן</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.safeRoom && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🛡️</div>
-                          <span className="text-xs text-[#1F3F3A]">ממ״ד</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/ממד.png" alt="ממד" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">ממ״ד</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.sukkaBalcony && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🏡</div>
-                          <span className="text-xs text-[#1F3F3A]">מרפסת סוכה</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מרפסת סוכה.png" alt="מרפסת סוכה" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מרפסת סוכה</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.elevator && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🛗</div>
-                          <span className="text-xs text-[#1F3F3A]">מעלית</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מעלית.png" alt="מעלית" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מעלית</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.view && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🏞️</div>
-                          <span className="text-xs text-[#1F3F3A]">נוף</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/נוף.png" alt="נוף" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">נוף</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.parentalUnit && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🚪</div>
-                          <span className="text-xs text-[#1F3F3A]">יחידת הורים</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/יחידת הורים.png" alt="יחידת הורים" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">יחידת הורים</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.housingUnit && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🏠</div>
-                          <span className="text-xs text-[#1F3F3A]">יחידת דיור</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/יחידת דיור.png" alt="יחידת דיור" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">יחידת דיור</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.yard && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🌳</div>
-                          <span className="text-xs text-[#1F3F3A]">חצר</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/חצר.png" alt="חצר" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">חצר</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.garden && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🌻</div>
-                          <span className="text-xs text-[#1F3F3A]">גינה</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/גינה.png" alt="גינה" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">גינה</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.frontFacing && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🏢</div>
-                          <span className="text-xs text-[#1F3F3A]">חזית</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/חזית.png" alt="חזית" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">חזית</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.upgradedKitchen && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">👨‍🍳</div>
-                          <span className="text-xs text-[#1F3F3A]">מטבח משודרג</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מטבח משודרג.png" alt="מטבח משודרג" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מטבח משודרג</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.accessibleForDisabled && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">♿</div>
-                          <span className="text-xs text-[#1F3F3A]">נגיש לנכים</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/נגישות.png" alt="נגישות" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">נגיש לנכים</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.ac && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">❄️</div>
-                          <span className="text-xs text-[#1F3F3A]">מיזוג</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מיזוג.png" alt="מיזוג" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מיזוג</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.airConditioning && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">❄️</div>
-                          <span className="text-xs text-[#1F3F3A]">מיזוג</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מיזוג.png" alt="מיזוג" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מיזוג</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.balcony && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🏡</div>
-                          <span className="text-xs text-[#1F3F3A]">מרפסת</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/מרפסת.png" alt="מרפסת" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">מרפסת</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.masterUnit && (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="text-2xl text-[#C9A24D]">🚪</div>
-                          <span className="text-xs text-[#1F3F3A]">יחידת הורים</span>
+                        <div className="flex flex-col items-center">
+                          <img src="/images/icons/יחידת הורים.png" alt="יחידת הורים" className="w-20 h-20" />
+                          <span className="text-xs text-[#1F3F3A] -mt-5">יחידת הורים</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.sleepingOnly && (
-                        <div className="flex flex-col items-start gap-1">
+                        <div className="flex flex-col items-center gap-1">
                           <div className="text-2xl text-[#C9A24D]">😴</div>
                           <span className="text-xs text-[#1F3F3A]">לינה בלבד</span>
                         </div>
                       )}
                       {(ad.customFields as any).features.hasOption && ad.category?.slug === 'apartments-for-sale' && (
-                        <div className="flex flex-col items-start gap-1">
+                        <div className="flex flex-col items-center gap-1">
                           <div className="text-2xl text-[#C9A24D]">✅</div>
                           <span className="text-xs text-[#1F3F3A]">אופציה</span>
                         </div>
