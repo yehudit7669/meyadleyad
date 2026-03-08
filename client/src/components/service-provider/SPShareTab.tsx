@@ -18,8 +18,8 @@ const SPShareTab: React.FC<Props> = ({ profile }) => {
     queryFn: () => usersService.getMyAds(),
   });
 
-  // Ensure ads is always an array
-  const ads = Array.isArray(data) ? data : [];
+  // Extract ads array from response
+  const ads = data?.ads || [];
 
   const handleCopyProviderLink = async () => {
     try {

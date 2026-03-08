@@ -9,10 +9,13 @@ const SPHighlightRequestTab: React.FC = () => {
   const [notes, setNotes] = useState('');
 
   // Fetch user's ads
-  const { data: ads = [] } = useQuery({
+  const { data: adsData } = useQuery({
     queryKey: ['my-ads'],
     queryFn: () => usersService.getMyAds(),
   });
+
+  // Extract ads array from response
+  const ads = adsData?.ads || [];
 
   // Fetch user's approval requests
   const { data: myApprovals } = useQuery({
