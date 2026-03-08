@@ -203,7 +203,7 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
   const totalSteps = data.serviceProviderType === 'BROKER' ? 6 : 5;
 
   return (
-    <div className="bg-white rounded-lg shadow-xl p-8">
+    <div className="bg-white rounded-lg shadow-xl p-8" dir="rtl">
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
@@ -282,7 +282,7 @@ const ServiceProviderWizard: React.FC<ServiceProviderWizardProps> = ({
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between mt-8 pt-6 border-t">
+      <div className="flex justify-between mt-8 pt-6 border-t flex-row-reverse">
         <button
           type="button"
           onClick={currentStep === 1 ? onCancel : handleBack}
@@ -362,7 +362,7 @@ const Step2PersonalDetails: React.FC<{
       <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-black mb-1">
+          <label htmlFor="firstName" className="block text-sm font-medium text-black mb-1 text-right">
             שם פרטי <span className="text-red-500">*</span>
           </label>
           <input
@@ -370,14 +370,14 @@ const Step2PersonalDetails: React.FC<{
             type="text"
             value={data.firstName}
             onChange={(e) => onChange('firstName', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
             required
             aria-required="true"
           />
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-black mb-1">
+          <label htmlFor="lastName" className="block text-sm font-medium text-black mb-1 text-right">
             שם משפחה <span className="text-red-500">*</span>
           </label>
           <input
@@ -385,7 +385,7 @@ const Step2PersonalDetails: React.FC<{
             type="text"
             value={data.lastName}
             onChange={(e) => onChange('lastName', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
             required
             aria-required="true"
           />
@@ -393,7 +393,7 @@ const Step2PersonalDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="phonePersonal" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="phonePersonal" className="block text-sm font-medium text-black mb-1 text-right">
           טלפון אישי <span className="text-red-500">*</span>
         </label>
         <input
@@ -401,7 +401,7 @@ const Step2PersonalDetails: React.FC<{
           type="tel"
           value={data.phonePersonal}
           onChange={(e) => onChange('phonePersonal', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           placeholder="050-1234567"
           required
           aria-required="true"
@@ -409,7 +409,7 @@ const Step2PersonalDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="email" className="block text-sm font-medium text-black mb-1 text-right">
           אימייל <span className="text-red-500">*</span>
         </label>
         <input
@@ -417,14 +417,14 @@ const Step2PersonalDetails: React.FC<{
           type="email"
           value={data.email}
           onChange={(e) => onChange('email', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           required
           aria-required="true"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="password" className="block text-sm font-medium text-black mb-1 text-right">
           סיסמה <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -433,7 +433,7 @@ const Step2PersonalDetails: React.FC<{
             type={showPassword ? "text" : "password"}
             value={data.password}
             onChange={(e) => onChange('password', e.target.value)}
-            className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
             minLength={6}
             required
             aria-required="true"
@@ -447,11 +447,11 @@ const Step2PersonalDetails: React.FC<{
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        <p className="text-xs text-black mt-1">לפחות 6 תווים</p>
+        <p className="text-xs text-black mt-1 text-right">לפחות 6 תווים</p>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1 text-right">
           אימות סיסמה <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -460,7 +460,7 @@ const Step2PersonalDetails: React.FC<{
             type={showConfirmPassword ? "text" : "password"}
             value={data.confirmPassword}
             onChange={(e) => onChange('confirmPassword', e.target.value)}
-            className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
             required
             aria-required="true"
           />
@@ -490,7 +490,7 @@ const Step3BusinessDetails: React.FC<{
 
     <div className="space-y-4">
       <div>
-        <label htmlFor="businessName" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="businessName" className="block text-sm font-medium text-black mb-1 text-right">
           שם העסק/המשרד <span className="text-red-500">*</span>
         </label>
         <input
@@ -498,14 +498,14 @@ const Step3BusinessDetails: React.FC<{
           type="text"
           value={data.businessName}
           onChange={(e) => onChange('businessName', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           required
           aria-required="true"
         />
       </div>
 
       <div>
-        <label htmlFor="businessAddress" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="businessAddress" className="block text-sm font-medium text-black mb-1 text-right">
           כתובת משרד <span className="text-red-500">*</span>
         </label>
         <input
@@ -513,7 +513,7 @@ const Step3BusinessDetails: React.FC<{
           type="text"
           value={data.businessAddress}
           onChange={(e) => onChange('businessAddress', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           placeholder="רחוב, מספר בית, עיר"
           required
           aria-required="true"
@@ -521,7 +521,7 @@ const Step3BusinessDetails: React.FC<{
       </div>
 
       <div>
-        <label htmlFor="businessPhone" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="businessPhone" className="block text-sm font-medium text-black mb-1 text-right">
           טלפון עסק (אופציונלי)
         </label>
         <input
@@ -529,13 +529,13 @@ const Step3BusinessDetails: React.FC<{
           type="tel"
           value={data.businessPhone}
           onChange={(e) => onChange('businessPhone', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           placeholder="03-1234567"
         />
       </div>
 
       <div>
-        <label htmlFor="website" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="website" className="block text-sm font-medium text-black mb-1 text-right">
           אתר אינטרנט (אופציונלי)
         </label>
         <input
@@ -543,7 +543,7 @@ const Step3BusinessDetails: React.FC<{
           type="url"
           value={data.website}
           onChange={(e) => onChange('website', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           placeholder="https://www.example.com"
         />
       </div>
@@ -564,7 +564,7 @@ const Step4BrokerDetails: React.FC<{
 
     <div className="space-y-4">
       <div>
-        <label htmlFor="brokerLicenseNumber" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="brokerLicenseNumber" className="block text-sm font-medium text-black mb-1 text-right">
           מספר רישיון תיווך <span className="text-red-500">*</span>
         </label>
         <input
@@ -572,21 +572,21 @@ const Step4BrokerDetails: React.FC<{
           type="text"
           value={data.brokerLicenseNumber}
           onChange={(e) => onChange('brokerLicenseNumber', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           required
           aria-required="true"
         />
       </div>
 
       <div>
-        <label htmlFor="brokerCityId" className="block text-sm font-medium text-black mb-1">
+        <label htmlFor="brokerCityId" className="block text-sm font-medium text-black mb-1 text-right">
           אזור פעילות <span className="text-red-500">*</span>
         </label>
         <select
           id="brokerCityId"
           value={data.brokerCityId}
           onChange={(e) => onChange('brokerCityId', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-right"
           required
           aria-required="true"
           disabled={citiesLoading}
@@ -605,7 +605,7 @@ const Step4BrokerDetails: React.FC<{
           )}
         </select>
         {cities && cities.length > 0 && (
-          <p className="text-xs text-black mt-1">
+          <p className="text-xs text-black mt-1 text-right">
             בחר את אזור הפעילות העיקרי שלך
           </p>
         )}
