@@ -35,7 +35,7 @@ const CATEGORY = 'הרשמה';  // שם הקטגוריה
 const FIELD_MAPPING = {
   // שדות חובה
   email: 'מהי הכתובת אימייל שלך ?',
-  name: 'שם',
+  name: 'שם:',  // שים לב לנקודותיים!
   password: 'סיסמה',
   passwordConfirm: 'אימות סיסמה',
   
@@ -43,7 +43,7 @@ const FIELD_MAPPING = {
   phone: 'טלפון',
   city: 'עיר',
   agreeToTerms: 'אשר את מדיניות הפרטיות',
-  weeklyDigestOptIn: 'רוצה לקבל את הגיליון השבועי של "המקום" עם כל הדירות במקום אחד ?',
+  weeklyDigestOptIn: 'רוצה לקבל את הגיליון השבועי של "המקום" עם כל הדירות במקום אחד?',  // בלי רווח לפני ?
 };
 
 // ===============================
@@ -194,7 +194,12 @@ function buildPayload(responses) {
 
 function getFieldValue(responses, fieldName) {
   if (!fieldName) return null;
-  return responses[fieldName] || null;
+  var value = responses[fieldName];
+  // אם זה מערך, קח את הערך הראשון
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value[0] : null;
+  }
+  return value || null;
 }
 
 function convertYesNo(value) {
@@ -231,13 +236,13 @@ function testSubmission() {
   // צור כאן נתוני דמה לבדיקה
   const testResponses = {
     'מהי הכתובת אימייל שלך ?': 'test@example.com',
-    'שם': 'דוד כהן',
+    'שם:': 'דוד כהן',  // שים לב לנקודותיים!
     'סיסמה': 'Test123456',
     'אימות סיסמה': 'Test123456',
     'טלפון': '050-1234567',
     'עיר': 'ירושלים',
-    'אשר את מדיניות הפרטיות': 'כן',
-    'רוצה לקבל את הגיליון השבועי של "המקום" עם כל הדירות במקום אחד ?': 'כן',
+    'אשר את מדיניות הפרטיות': ['כן'],  // כמערך כמו בטופס האמיתי
+    'רוצה לקבל את הגיליון השבועי של "המקום" עם כל הדירות במקום אחד?': ['כן'],  // בלי רווח לפני ? וכמערך
   };
   
   try {

@@ -561,11 +561,25 @@ export class EmailOperationsFormController {
       
       if (weeklyDigestOptIn === true || weeklyDigestOptIn === 'true' || weeklyDigestOptIn === 'כן') {
         try {
+          // עדכון User.weeklyDigestOptIn
           await prisma.user.update({
             where: { id: result.user.id },
             data: { weeklyDigestOptIn: true },
           });
-          console.log('✅ User opted in to weekly digest successfully');
+          
+          // יצירה/עדכון של UserPreference עם weeklyDigest: true
+          await prisma.userPreference.upsert({
+            where: { userId: result.user.id },
+            create: {
+              userId: result.user.id,
+              weeklyDigest: true,
+            },
+            update: {
+              weeklyDigest: true,
+            },
+          });
+          
+          console.log('✅ User opted in to weekly digest successfully (User + UserPreference)');
         } catch (error) {
           console.error('⚠️ Failed to update weekly digest preference:', error);
         }
