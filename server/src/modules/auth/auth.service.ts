@@ -34,7 +34,7 @@ export class AuthService {
 
     if (existingUser) {
       console.log('User already exists:', data.email);
-      throw new ConflictError('Email already registered');
+      throw new ConflictError('האימייל כבר רשום במערכת');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -124,7 +124,7 @@ export class AuthService {
 
     if (existingUser) {
       console.log('User already exists:', data.email);
-      throw new ConflictError('Email already registered');
+      throw new ConflictError('האימייל כבר רשום במערכת');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -246,7 +246,7 @@ export class AuthService {
 
     if (!user || !user.password) {
       console.log('Login failed: user not found or no password');
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('פרטי התחברות שגויים');
     }
 
     console.log('User found, comparing password');
@@ -254,7 +254,7 @@ export class AuthService {
 
     if (!isPasswordValid) {
       console.log('Login failed: invalid password');
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('פרטי התחברות שגויים');
     }
 
     console.log('Password valid, generating tokens');
@@ -293,7 +293,7 @@ export class AuthService {
       const payload = ticket.getPayload();
       
       if (!payload || !payload.email) {
-        throw new ValidationError('Invalid Google token');
+        throw new ValidationError('טוקן Google לא תקין');
       }
 
       let user = await prisma.user.findUnique({
@@ -333,7 +333,7 @@ export class AuthService {
         ...tokens,
       };
     } catch (error) {
-      throw new ValidationError('Invalid Google token');
+      throw new ValidationError('טוקן Google לא תקין');
     }
   }
 
@@ -347,7 +347,7 @@ export class AuthService {
       });
 
       if (!storedToken || storedToken.expiresAt < new Date()) {
-        throw new UnauthorizedError('Invalid or expired refresh token');
+        throw new UnauthorizedError('טוקן רענון לא תקין או פג תוקף');
       }
 
       await prisma.refreshToken.delete({
@@ -363,7 +363,7 @@ export class AuthService {
       return tokens;
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedError('Invalid refresh token');
+        throw new UnauthorizedError('טוקן רענון לא תקין');
       }
       throw error;
     }
@@ -418,7 +418,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ValidationError('Invalid or expired verification token');
+      throw new ValidationError('קישור אימות לא תקין או פג תוקף');
     }
 
     await prisma.user.update({
@@ -431,7 +431,7 @@ export class AuthService {
       },
     });
 
-    return { message: 'Email verified successfully' };
+    return { message: 'האימייל אומת בהצלחה' };
   }
 
   async requestPasswordReset(email: string) {
@@ -441,7 +441,7 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if email exists (security best practice)
-      return { message: 'If the email exists, a reset link has been sent' };
+      return { message: 'אם האימייל קיים במערכת, נשלח קישור לאיפוס סיסמה' };
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -467,7 +467,7 @@ export class AuthService {
       // Don't throw error - we don't want to reveal if email exists
     }
 
-    return { message: 'If the email exists, a reset link has been sent' };
+    return { message: 'אם האימייל קיים במערכת, נשלח קישור לאיפוס סיסמה' };
   }
 
   async resetPassword(token: string, newPassword: string) {
@@ -479,7 +479,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ValidationError('Invalid or expired reset token');
+      throw new ValidationError('קישור איפוס סיסמה לא תקין או פג תוקף');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -497,7 +497,7 @@ export class AuthService {
     });
 
     console.log('✅ Password reset successfully for user:', user.email);
-    return { message: 'Password reset successfully' };
+    return { message: 'הסיסמה אופסה בהצלחה' };
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
