@@ -44,10 +44,10 @@ export class EmailOperationsTemplatesService {
         </head>
         <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
           <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #2563eb; text-align: center;">🔐 נדרשת הרשמה למערכת „המקום"</h2>
+            <h2 style="color: #2563eb; text-align: center;">🔐 נדרשת הרשמה למערכת - המקום</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              קיבלנו את פנייתך למערכת „המקום".
+              קיבלנו את פנייתך למערכת - המקום
             </p>
             <div style="background-color: #fef3c7; padding: 15px; border-right: 4px solid #f59e0b; border-radius: 5px; margin: 20px 0; text-align: right;">
               <p style="margin: 0; font-size: 15px; font-weight: bold; color: #92400e;">📝 לפרסום מודעות נדרשת הרשמה</p>
@@ -90,7 +90,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      '🔐 נדרשת הרשמה למערכת „המקום"',
+      '🔐 נדרשת הרשמה למערכת - המקום',
       html
     );
   }
@@ -187,7 +187,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      '✅ ההרשמה הושלמה בהצלחה – „המקום"',
+      '✅ ההרשמה הושלמה בהצלחה – המקום',
       html
     );
   }
@@ -321,7 +321,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">המודעה פורסמה – מספר המודעה שלך: ${adNumber}</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">,שלום</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              המודעה שלך "${adTitle}" פורסמה בהצלחה באתר „המקום."
+              המודעה שלך "${adTitle}" פורסמה בהצלחה באתר - המקום.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               <strong>מספר המודעה שלך הוא: ${adNumber}</strong>
@@ -393,7 +393,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">הבקשה פורסמה – מספר הבקשה שלך: ${requestNumber}</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              הבקשה שלך "${requestTitle}" פורסמה בהצלחה באתר „המקום."
+              הבקשה שלך "${requestTitle}" פורסמה בהצלחה באתר - המקום.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               <strong>מספר הבקשה שלך הוא: ${requestNumber}</strong>
@@ -436,7 +436,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #2563eb; text-align: center;">פנייתך התקבלה – בקשת עדכון מודעה</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              קיבלנו את פנייתך בנושא עדכון מודעה ב„המקום.“
+              קיבלנו את פנייתך בנושא עדכון מודעה באתר - המקום.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               כדי לעדכן מודעה קיימת, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם שורת הנושא:
@@ -480,7 +480,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #2563eb; text-align: center;">פנייתך התקבלה – בקשת הסרת מודעה</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              קיבלנו את פנייתך בנושא הסרת מודעה ב„המקום.“
+              קיבלנו את פנייתך בנושא הסרת מודעה באתר - המקום.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               כדי להסיר מודעה קיימת, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם שורת הנושא:
@@ -527,7 +527,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">המודעה עודכנה בהצלחה – מספר המודעה שלך: ${adNumber}</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר „המקום.“
+              המודעה שלך מספר ${adNumber} עודכנה בהצלחה והשינויים מוצגים כעת באתר - המקום.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               להמשך עדכון או הסרה, שלח מייל חדש ל-<strong>publish@amakom.co.il</strong> עם מספר המודעה:
@@ -583,7 +583,7 @@ export class EmailOperationsTemplatesService {
               המודעה שלך מספר ${adNumber} הוסרה מהאתר ואינה מוצגת עוד לציבור.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              תודה שהשתמשת בשירותי „המקום."
+              תודה שהשתמשת בשירותי המקום
             </p>
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
             <p style="font-size: 12px; color: #999; text-align: center;">
@@ -617,7 +617,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #10b981; text-align: center;">הצטרפת בהצלחה לרשימת התפוצה</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              הצטרפת בהצלחה לרשימת התפוצה של „המקום.“
+              הצטרפת בהצלחה לרשימת התפוצה של - המקום
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               תקבל את קובץ הדירות השבועי למייל שלך.
@@ -640,7 +640,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'הצטרפת בהצלחה לרשימת התפוצה – „המקום"',
+      'הצטרפת בהצלחה לרשימת התפוצה – המקום',
       html
     );
   }
@@ -660,7 +660,7 @@ export class EmailOperationsTemplatesService {
             <h2 style="color: #ef4444; text-align: center;">הוסרת מרשימת התפוצה</h2>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">שלום,</p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
-              הוסרת בהצלחה מרשימת התפוצה של „המקום.“
+              הוסרת בהצלחה מרשימת התפוצה של - המקום.
             </p>
             <p style="font-size: 16px; line-height: 1.6; text-align: right;">
               לא תקבל עוד את קובץ הדירות השבועי.
@@ -746,7 +746,7 @@ export class EmailOperationsTemplatesService {
 
     await this.emailService.sendEmail(
       to,
-      'הבקשה לא זוהתה – „המקום"',
+      'הבקשה לא זוהתה – המקום',
       html
     );
   }
