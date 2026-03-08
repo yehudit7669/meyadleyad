@@ -85,8 +85,14 @@ export class NewspaperSheetService {
                 title: true,
                 description: true,
                 address: true,
+                neighborhood: true,
                 price: true,
                 customFields: true,
+                Street: {
+                  select: {
+                    name: true
+                  }
+                },
                 User: {
                   select: {
                     name: true,
@@ -151,8 +157,14 @@ export class NewspaperSheetService {
                   id: true,
                   title: true,
                   address: true,
+                  neighborhood: true,
                   price: true,
                   customFields: true,
+                  Street: {
+                    select: {
+                      name: true
+                    }
+                  },
                   User: {
                     select: {
                       name: true,
@@ -371,8 +383,14 @@ export class NewspaperSheetService {
                 title: true,
                 description: true,
                 address: true,
+                neighborhood: true,
                 price: true,
                 customFields: true,
+                Street: {
+                  select: {
+                    name: true
+                  }
+                },
                 User: {
                   select: {
                     name: true,

@@ -576,23 +576,40 @@ export class NewspaperSheetPDFService {
         const contactName = customFields.contactName || 'פרטים נוספים';
         const contactPhone = customFields.contactPhone || listing.User?.phone || '050-000-0000';
 
-        // הסרת שם העיר מהכתובת (רק רחוב ומספר)
-        const formatAddress = (fullAddress: string) => {
-          if (!fullAddress) return 'נכס';
-          const parts = fullAddress.split(',');
-          return parts[0].trim();
+        // בניית כתובת מרחוב ושכונה
+        const formatAddress = (): string => {
+          const streetName = (listing as any).Street?.name;
+          const neighborhood = (listing as any).neighborhood;
+          const houseNumber = customFields.houseNumber;
+          
+          if (streetName) {
+            // יש רחוב - נציג רחוב + מספר בית + שכונה
+            let address = streetName;
+            if (houseNumber) {
+              address += ` ${houseNumber}`;
+            }
+            if (neighborhood) {
+              address += `, ${neighborhood}`;
+            }
+            return address;
+          } else if (neighborhood) {
+            // אין רחוב אבל יש שכונה - נציג רק שכונה
+            return neighborhood;
+          }
+          
+          return 'נכס';
         };
-
+        
         // 🔗 יצירת URL לנכס באתר
         const adUrl = `${config.clientUrl}/ads/${listing.id}`;
-
+          
         return `
           <a href="${adUrl}" class="newspaper-property-card-link" style="text-decoration: none; color: inherit; display: block;">
             <div class="newspaper-property-card">
               ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
               
               <div class="property-card-header">
-                <div class="property-title">${this.escapeHtml(formatAddress(address))}</div>
+                <div class="property-title">${this.escapeHtml(formatAddress())}</div>
               </div>
 
               <div class="property-card-body">
@@ -725,10 +742,28 @@ export class NewspaperSheetPDFService {
     const contactName = customFields.contactName || 'פרטים נוספים';
     const contactPhone = customFields.contactPhone || (listing.User?.phone) || '';
 
-    const formatAddress = (fullAddress: string) => {
-      if (!fullAddress) return 'נכס';
-      const parts = fullAddress.split(',');
-      return this.escapeHtml(parts[0].trim());
+    // בניית כתובת מרחוב ושכונה
+    const formatAddress = (): string => {
+      const streetName = (listing as any).Street?.name;
+      const neighborhood = listing.neighborhood;
+      const houseNumber = customFields.houseNumber;
+      
+      if (streetName) {
+        // יש רחוב - נציג רחוב + מספר בית + שכונה
+        let address = streetName;
+        if (houseNumber) {
+          address += ` ${houseNumber}`;
+        }
+        if (neighborhood) {
+          address += `, ${neighborhood}`;
+        }
+        return this.escapeHtml(address);
+      } else if (neighborhood) {
+        // אין רחוב אבל יש שכונה - נציג רק שכונה
+        return this.escapeHtml(neighborhood);
+      }
+      
+      return 'נכס';
     };
 
     return `
@@ -737,7 +772,7 @@ export class NewspaperSheetPDFService {
           ${isBrokerage ? '<div class="brokerage-badge">תיווך</div>' : ''}
           
           <div class="property-card-header">
-            <div class="property-title">${formatAddress(listing.address)}</div>
+            <div class="property-title">${formatAddress()}</div>
           </div>
 
           <div class="property-card-body">

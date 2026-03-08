@@ -315,6 +315,33 @@ function PropertyCard({ listing }: { listing: typeof DEMO_DATA.listings[0] }) {
   const formatAddress = (fullAddress: string) => {
     if (!fullAddress) return 'נכס';
     const parts = fullAddress.split(',');
+    
+    // אם יש רחוב (שני חלקים מופרדים בפסיק)
+    if (parts.length >= 2) {
+      let streetPart = parts[1].trim();  // "רח׳ הרצל 10 (נווה שרת)"
+      
+      // חילוץ השכונה מהסוגריים
+      const neighborhoodMatch = streetPart.match(/\(([^)]+)\)/);
+      const neighborhood = neighborhoodMatch ? neighborhoodMatch[1] : null;
+      
+      // הסרת הסוגריים מהרחוב
+      const streetWithoutNeighborhood = streetPart.replace(/\s*\([^)]*\)/, '').trim();
+      
+      // אם יש שכונה, נציג גם רחוב וגם שכונה
+      if (neighborhood) {
+        return `${streetWithoutNeighborhood}, ${neighborhood}`;
+      }
+      
+      return streetWithoutNeighborhood;
+    }
+    
+    // אם אין פסיק - זו כנראה רק שכונה או עיר
+    // נבדוק אם יש סוגריים
+    const neighborhoodMatch = parts[0].match(/\(([^)]+)\)/);
+    if (neighborhoodMatch) {
+      return neighborhoodMatch[1];  // מחזיר רק את השכונה
+    }
+    
     return parts[0].trim();
   };
 

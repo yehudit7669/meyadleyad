@@ -145,11 +145,28 @@ function SortablePropertyCard({ listing, onRemove }: { listing: Listing; onRemov
   const contactName = customFields.contactName || 'פרטים נוספים';
   const contactPhone = customFields.contactPhone || (listing.listing as any).User?.phone || '050-000-0000';
 
-  // Extract street and house number only (remove city)
-  const formatAddress = (fullAddress: string) => {
-    if (!fullAddress) return 'נכס';
-    const parts = fullAddress.split(',');
-    return parts[0].trim();
+  // בניית כתובת מרחוב ושכונה
+  const formatAddress = (): string => {
+    const streetName = (listing.listing as any).Street?.name;
+    const neighborhood = (listing.listing as any).neighborhood;
+    const houseNumber = customFields.houseNumber;
+    
+    if (streetName) {
+      // יש רחוב - נציג רחוב + מספר בית + שכונה
+      let address = streetName;
+      if (houseNumber) {
+        address += ` ${houseNumber}`;
+      }
+      if (neighborhood) {
+        address += `, ${neighborhood}`;
+      }
+      return address;
+    } else if (neighborhood) {
+      // אין רחוב אבל יש שכונה - נציג רק שכונה
+      return neighborhood;
+    }
+    
+    return 'נכס';
   };
 
   return (
@@ -180,7 +197,7 @@ function SortablePropertyCard({ listing, onRemove }: { listing: Listing; onRemov
 
       {/* Card Header: Address */}
       <div className="property-card-header">
-        <div className="property-title">{formatAddress(listing.listing.address)}</div>
+        <div className="property-title">{formatAddress()}</div>
       </div>
 
       {/* Card Body */}
@@ -266,10 +283,28 @@ function PropertyCardOverlay({ listing }: { listing: Listing }) {
   const contactName = customFields.contactName || 'פרטים נוספים';
   const contactPhone = customFields.contactPhone || (listing.listing as any).User?.phone || '050-000-0000';
 
-  const formatAddress = (fullAddress: string) => {
-    if (!fullAddress) return 'נכס';
-    const parts = fullAddress.split(',');
-    return parts[0].trim();
+  // בניית כתובת מרחוב ושכונה
+  const formatAddress = (): string => {
+    const streetName = (listing.listing as any).Street?.name;
+    const neighborhood = (listing.listing as any).neighborhood;
+    const houseNumber = customFields.houseNumber;
+    
+    if (streetName) {
+      // יש רחוב - נציג רחוב + מספר בית + שכונה
+      let address = streetName;
+      if (houseNumber) {
+        address += ` ${houseNumber}`;
+      }
+      if (neighborhood) {
+        address += `, ${neighborhood}`;
+      }
+      return address;
+    } else if (neighborhood) {
+      // אין רחוב אבל יש שכונה - נציג רק שכונה
+      return neighborhood;
+    }
+    
+    return 'נכס';
   };
 
   return (
@@ -282,7 +317,7 @@ function PropertyCardOverlay({ listing }: { listing: Listing }) {
       {isBrokerage && <div className="brokerage-badge">תיווך</div>}
       
       <div className="property-card-header">
-        <div className="property-title">{formatAddress(listing.listing.address)}</div>
+        <div className="property-title">{formatAddress()}</div>
       </div>
 
       <div className="property-card-body">

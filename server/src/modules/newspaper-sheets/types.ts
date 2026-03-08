@@ -88,8 +88,12 @@ export interface SheetWithListings {
       id: string;
       title: string;
       address: string | null;
+      neighborhood: string | null;
       price: number | null;
       customFields: any;
+      Street?: {
+        name: string;
+      };
       User?: {
         name: string | null;
         email: string;
