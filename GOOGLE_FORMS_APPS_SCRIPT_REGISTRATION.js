@@ -105,10 +105,11 @@ function buildPayload(responses) {
                 getFieldValue(responses, 'אימייל') ||
                 getFieldValue(responses, 'Email Address');
   
-  // שם
+  // שם - ללא ברירת מחדל, שהשרת ידאג לזה
   const name = getFieldValue(responses, FIELD_MAPPING.name) || 
                getFieldValue(responses, 'שם') ||
-               'משתמש';
+               getFieldValue(responses, 'שם מלא') ||
+               '';
   
   // סיסמה וסיסמה לאישור
   const password = getFieldValue(responses, FIELD_MAPPING.password);
@@ -116,6 +117,14 @@ function buildPayload(responses) {
   
   // טלפון
   const phone = getFieldValue(responses, FIELD_MAPPING.phone);
+  
+  // לוגים למעקב
+  Logger.log('📋 Extracted values:');
+  Logger.log('  Email: ' + email);
+  Logger.log('  Name: ' + name);
+  Logger.log('  Phone: ' + phone);
+  Logger.log('  Has password: ' + (!!password));
+  Logger.log('  Has password confirm: ' + (!!passwordConfirm));
   
   // וידוא שיש אימייל (שדה חובה!)
   if (!email) {
@@ -130,12 +139,12 @@ function buildPayload(responses) {
   // שדות בסיסיים
   const payload = {
     senderEmail: email,
-    userName: name,
+    userName: name || undefined, // שלח undefined במקום string ריק
     userPhone: phone,
     formType: FORM_TYPE,
     category: CATEGORY,
     title: 'הרשמה למערכת המקום',
-    description: `הרשמה חדשה: ${name}`,
+    description: `הרשמה חדשה: ${name || email}`,
   };
   
   // שדות מותאמים אישית
@@ -165,11 +174,16 @@ function buildPayload(responses) {
   
   // רישום ללוח שבועי
   const weeklyDigestOptIn = getFieldValue(responses, FIELD_MAPPING.weeklyDigestOptIn);
+  Logger.log('  Weekly digest opt-in raw value: ' + weeklyDigestOptIn);
   if (weeklyDigestOptIn) {
-    customFields.weeklyDigestOptIn = convertYesNo(weeklyDigestOptIn);
+    const convertedValue = convertYesNo(weeklyDigestOptIn);
+    customFields.weeklyDigestOptIn = convertedValue;
+    Logger.log('  Weekly digest opt-in converted: ' + convertedValue);
   }
   
   payload.customFields = customFields;
+  
+  Logger.log('📦 Final payload: ' + JSON.stringify(payload, null, 2));
   
   return payload;
 }

@@ -471,22 +471,41 @@ export class EmailOperationsFormController {
   async handleRegistrationFormSubmission(formData: FormSubmissionData, res: Response) {
     try {
       console.log('📝 Processing registration form submission');
+      console.log('📋 Form data received:', {
+        email: formData.senderEmail,
+        userName: formData.userName,
+        userPhone: formData.userPhone,
+        customFields: formData.customFields,
+      });
       
       const email = formData.senderEmail.toLowerCase().trim();
-      const name = formData.userName || 'משתמש';
+      // אם אין שם, השתמש בחלק לפני @ במייל
+      const name = formData.userName && formData.userName.trim() !== '' 
+        ? formData.userName.trim() 
+        : email.split('@')[0];
       const phone = formData.userPhone;
+      
+      console.log('✅ Parsed user data:', { email, name, phone });
       
       // בדיקה שיש סיסמה
       const password = formData.customFields?.password;
       const passwordConfirm = formData.customFields?.passwordConfirm;
       
+      console.log('🔐 Password check:', { 
+        hasPassword: !!password, 
+        hasPasswordConfirm: !!passwordConfirm,
+        passwordsMatch: password === passwordConfirm 
+      });
+      
       if (!password) {
+        console.error('❌ Registration failed: No password provided');
         res.status(400).json({ error: 'Password is required for registration' });
         return;
       }
       
       // בדיקה שהסיסמאות תואמות
       if (password !== passwordConfirm) {
+        console.error('❌ Registration failed: Passwords do not match');
         res.status(400).json({ error: 'Passwords do not match' });
         return;
       }
@@ -516,7 +535,12 @@ export class EmailOperationsFormController {
       
       const result = await authService.register(registrationData);
       
-      console.log('✅ User created successfully:', result.user.id);
+      console.log('✅ User created successfully:', {
+        userId: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        phone: result.user.phone,
+      });
       
       // שליחת אימייל השלמת הרשמה
       await emailOperationsTemplates.sendRegistrationCompletedEmail(
@@ -529,16 +553,24 @@ export class EmailOperationsFormController {
       
       // אם המשתמש רוצה לקבל את הגיליון השבועי, הרשם אותו
       const weeklyDigestOptIn = formData.customFields?.weeklyDigestOptIn;
+      console.log('📧 Weekly digest opt-in check:', {
+        weeklyDigestOptIn,
+        type: typeof weeklyDigestOptIn,
+        shouldOptIn: weeklyDigestOptIn === true || weeklyDigestOptIn === 'true' || weeklyDigestOptIn === 'כן'
+      });
+      
       if (weeklyDigestOptIn === true || weeklyDigestOptIn === 'true' || weeklyDigestOptIn === 'כן') {
         try {
           await prisma.user.update({
             where: { id: result.user.id },
             data: { weeklyDigestOptIn: true },
           });
-          console.log('✅ User opted in to weekly digest');
+          console.log('✅ User opted in to weekly digest successfully');
         } catch (error) {
           console.error('⚠️ Failed to update weekly digest preference:', error);
         }
+      } else {
+        console.log('ℹ️ User did not opt in to weekly digest');
       }
       
       res.status(201).json({ 
@@ -1004,6 +1036,13 @@ export class EmailOperationsFormController {
       };
 
       console.log('✅ Normalized form data:', JSON.stringify(formData, null, 2));
+      console.log('📊 Extracted fields:', {
+        email: formData.senderEmail,
+        name: formData.userName,
+        phone: formData.userPhone,
+        formType: formData.formType,
+        customFields: formData.customFields,
+      });
 
       // קריאה לטיפול הרגיל - זה ישלח תשובה בעצמו
       req.body = formData;

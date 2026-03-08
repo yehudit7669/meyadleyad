@@ -39,7 +39,12 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    console.log('Creating user with data - email:', data.email);
+    console.log('Creating user with data:', { 
+      email: data.email, 
+      name: data.name,
+      phone: data.phone,
+      hasPassword: true 
+    });
 
     // יצירת verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
